@@ -316,7 +316,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: InkWell(
-                            onTap: () => context.push('/forgot-password'),
+                            onTap: () => context.push('/auth/forgot-password'),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Text(

@@ -119,7 +119,7 @@ class _ActivityTile extends StatelessWidget {
       color: colors.card,
       borderRadius: BorderRadius.circular(4),
       child: InkWell(
-        onTap: () => context.push('/cardio/draft?type=$type'),
+        onTap: () => context.push('/cardio/session?type=$type'),
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),

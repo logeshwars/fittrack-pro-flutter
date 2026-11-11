@@ -33,7 +33,7 @@ class NutritionScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/nutrition/draft'),
+        onPressed: () => context.push('/nutrition/log'),
         backgroundColor: colors.accent,
         foregroundColor: colors.accentText,
         child: const Icon(Icons.add),
@@ -79,7 +79,7 @@ class NutritionScreen extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: FilledButton.icon(
-                              onPressed: () => context.push('/nutrition/draft'),
+                              onPressed: () => context.push('/nutrition/log'),
                               icon: const Icon(Icons.edit_outlined, size: 16),
                               label: const Text('Log manually'),
                             ),
@@ -104,7 +104,7 @@ class NutritionScreen extends ConsumerWidget {
                       ),
                     ),
                     if (todayItems.isEmpty)
-                      _Empty(onTap: () => context.push('/nutrition/draft'))
+                      _Empty(onTap: () => context.push('/nutrition/log'))
                     else
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
