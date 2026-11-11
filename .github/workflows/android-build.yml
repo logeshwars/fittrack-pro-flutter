@@ -1,0 +1,89 @@
+name: Android APK build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'feature/**']
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/bootstrap_native.sh'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'tool/bootstrap_native.sh'
+      - '.github/workflows/android-build.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-debug:
+    name: Analyze, test and build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate development Android project
+        run: bash tool/bootstrap_native.sh
+      - name: Install Android NDK with retries
+        shell: bash
+        run: |
+          set -euo pipefail
+          NDK_VERSION="28.2.13676358"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [[ ! -x "$SDKMANAGER" ]]; then
+            echo "::error::Android sdkmanager not found at $SDKMANAGER"
+            exit 1
+          fi
+          for attempt in 1 2 3; do
+            echo "Installing NDK $NDK_VERSION (attempt $attempt/3)"
+            rm -rf "$SDK_ROOT/ndk/$NDK_VERSION"
+            if yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;$NDK_VERSION" && \
+               [[ -f "$SDK_ROOT/ndk/$NDK_VERSION/source.properties" ]]; then
+              echo "Android NDK installed successfully"
+              break
+            fi
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "::error::NDK download/install failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 10))
+          done
+      - name: Fetch packages
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build debug APK
+        run: flutter build apk --debug --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY=
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: fittrack-pro-flutter-debug-apk-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
