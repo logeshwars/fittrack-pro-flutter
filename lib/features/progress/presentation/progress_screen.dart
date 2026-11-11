@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
@@ -24,6 +25,7 @@ class ProgressScreen extends ConsumerWidget {
         Text('Progress', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         const Text('Weight and sleep history. Logging remains disabled until account migration is verified.'),
+        FilledButton.icon(onPressed: () => context.push('/progress/draft'), icon: const Icon(Icons.edit_note), label: const Text('Create local weight / sleep draft')),
         const SizedBox(height: 20),
         progress.when(
           loading: () => const Center(child: CircularProgressIndicator()),

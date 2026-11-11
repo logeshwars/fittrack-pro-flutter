@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
@@ -23,6 +24,7 @@ class CardioScreen extends ConsumerWidget {
         Text('Cardio', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         const Text('Recent sessions. Tracking will be enabled after identity verification.'),
+        FilledButton.icon(onPressed: () => context.push('/cardio/draft'), icon: const Icon(Icons.edit_note), label: const Text('Create local cardio draft')),
         const SizedBox(height: 20),
         sessions.when(
           loading: () => const Center(child: CircularProgressIndicator()),
