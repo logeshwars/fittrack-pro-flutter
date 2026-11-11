@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/l10n/app_strings.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
@@ -12,66 +11,132 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    final strings = AppStrings.of(context);
-    final index = _paths.indexWhere((path) => location == path || location.startsWith('$path/'));
+    final colors = AppPalette.of(context);
+    final index = _paths.indexWhere(
+      (path) => location == path || location.startsWith('$path/'),
+    );
+    final selectedIndex = index < 0 ? 0 : index;
+
+    const icons = [
+      Icons.today_outlined,
+      Icons.fitness_center_outlined,
+      Icons.restaurant_outlined,
+      Icons.directions_run_outlined,
+      Icons.insights_outlined,
+    ];
+    const selectedIcons = [
+      Icons.today,
+      Icons.fitness_center,
+      Icons.restaurant,
+      Icons.directions_run,
+      Icons.insights,
+    ];
+    const domains = [
+      AppColors.recovery,
+      AppColors.workout,
+      AppColors.nutrition,
+      AppColors.cardio,
+      AppColors.xp,
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('FITTRACK PRO', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-        actions: [
-          IconButton(
-            tooltip: strings.get('achievements'),
-            onPressed: () => context.push('/achievements'),
-            icon: const Icon(Icons.emoji_events_outlined),
-          ),
-          IconButton(
-            tooltip: strings.get('account'),
-            onPressed: () => context.push('/account'),
-            icon: const Icon(Icons.person_outline),
-          ),
-        ],
+      body: SafeArea(
+        bottom: false,
+        child: child,
       ),
-      body: SafeArea(child: child),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index < 0 ? 0 : index,
-        onDestinationSelected: (value) => context.go(_paths[value]),
-        destinations: [
-          NavigationDestination(icon: const Icon(Icons.today_outlined), selectedIcon: const Icon(Icons.today), label: strings.get('today')),
-          NavigationDestination(icon: const Icon(Icons.fitness_center_outlined), selectedIcon: const Icon(Icons.fitness_center), label: strings.get('workout')),
-          NavigationDestination(icon: const Icon(Icons.restaurant_outlined), selectedIcon: const Icon(Icons.restaurant), label: strings.get('nutrition')),
-          NavigationDestination(icon: const Icon(Icons.directions_run_outlined), selectedIcon: const Icon(Icons.directions_run), label: strings.get('cardio')),
-          NavigationDestination(icon: const Icon(Icons.insights_outlined), selectedIcon: const Icon(Icons.insights), label: strings.get('progress')),
-        ],
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.header,
+          border: Border(top: BorderSide(color: colors.border)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 66,
+            child: Row(
+              children: List.generate(_paths.length, (tabIndex) {
+                final selected = selectedIndex == tabIndex;
+                final color = selected ? domains[tabIndex] : colors.faint;
+                return Expanded(
+                  child: InkResponse(
+                    key: Key('fittrack-tab-$tabIndex'),
+                    onTap: () => context.go(_paths[tabIndex]),
+                    radius: 30,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 150),
+                          scale: selected ? 1.08 : 1,
+                          child: Icon(
+                            selected ? selectedIcons[tabIndex] : icons[tabIndex],
+                            size: 26,
+                            color: color,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: selected ? 16 : 4,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: selected ? color : Colors.transparent,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
 class FeaturePlaceholder extends StatelessWidget {
-  const FeaturePlaceholder({required this.title, required this.subtitle, super.key});
+  const FeaturePlaceholder({
+    required this.title,
+    required this.subtitle,
+    super.key,
+  });
+
   final String title;
   final String subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppPalette.of(context);
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         const SizedBox(height: 24),
-        Text(title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: 8),
-        Text(subtitle, style: TextStyle(color: isDark ? AppColors.darkMuted : AppColors.lightMuted)),
+        Text(subtitle, style: TextStyle(color: colors.muted)),
         const SizedBox(height: 28),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Icon(Icons.construction_outlined, size: 36),
-                const SizedBox(height: 12),
-                Text('$title module coming in a later batch', textAlign: TextAlign.center),
-              ],
-            ),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: colors.card,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.construction_outlined, size: 36, color: colors.faint),
+              const SizedBox(height: 12),
+              Text(
+                '$title module coming in a later batch',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.subtext),
+              ),
+            ],
           ),
         ),
       ],
