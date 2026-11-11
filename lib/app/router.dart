@@ -11,12 +11,14 @@ import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/cardio/presentation/cardio_draft_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
 import '../features/progress/presentation/health_draft_screen.dart';
+import '../features/profile/presentation/profile_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/today',
   routes: [
     GoRoute(path: '/account', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
+    GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [

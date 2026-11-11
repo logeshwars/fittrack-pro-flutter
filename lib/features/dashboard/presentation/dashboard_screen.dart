@@ -150,7 +150,7 @@ class _DashboardBody extends StatelessWidget {
                       ),
                     ),
                     InkWell(
-                      onTap: () => context.push('/account'),
+                      onTap: () => context.push('/profile'),
                       borderRadius: BorderRadius.circular(8),
                       child: Column(
                         children: [
