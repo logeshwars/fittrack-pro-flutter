@@ -15,10 +15,12 @@ jobs:
           channel: stable
       - name: Generate platform scaffolding
         run: |
-          flutter create --platforms=android,ios .
-          # flutter create generates an unrelated template test when no
-          # native folders exist; keep our own app_smoke_test.dart instead.
+          flutter create --platforms=android,ios --org com.logesh .
+          # Native platform folders are generated for CI only until their
+          # release identifiers and signing configurations are audited.
           rm -f test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+      - name: Build Android debug APK
+        run: flutter build apk --debug --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY=
