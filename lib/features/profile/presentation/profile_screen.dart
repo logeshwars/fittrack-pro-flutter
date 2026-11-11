@@ -144,27 +144,34 @@ class ProfileScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       _SettingsRow(
-                        icon: Icons.track_changes,
-                        label: 'Daily goals',
-                        onTap: () => context.push('/progress'),
+                        icon: Icons.monitor_heart_outlined,
+                        label: 'Personal Settings',
+                        onTap: () => context.push('/settings/personal'),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.notifications_none,
+                        label: 'Supplement Alerts',
+                        onTap: () => context.push('/settings/alerts'),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.local_fire_department_outlined,
+                        label: 'Daily Goals',
+                        onTap: () => context.push('/settings/goals'),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.palette_outlined,
+                        label: 'Appearance',
+                        onTap: () => context.push('/settings/theme'),
+                      ),
+                      _SettingsRow(
+                        icon: Icons.settings_outlined,
+                        label: 'App Settings',
+                        onTap: () => context.push('/settings/app-settings'),
                       ),
                       _SettingsRow(
                         icon: Icons.emoji_events_outlined,
                         label: 'Achievements',
                         onTap: () => context.push('/achievements'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.person_outline,
-                        label: 'Account',
-                        onTap: () => context.push('/account'),
-                      ),
-                      const _SettingsRow(
-                        icon: Icons.palette_outlined,
-                        label: 'Appearance',
-                      ),
-                      const _SettingsRow(
-                        icon: Icons.lock_outline,
-                        label: 'Privacy & security',
                         last: true,
                       ),
                     ],
