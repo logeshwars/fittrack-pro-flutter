@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
 import '../features/authentication/presentation/login_screen.dart';
+import '../features/authentication/presentation/forgot_password_screen.dart';
+import '../core/config/app_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/gamification/presentation/gamification_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
@@ -16,8 +19,19 @@ import '../features/settings/presentation/settings_screens.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/today',
+  redirect: (context, state) {
+    if (!AppConfig.hasSupabase) return null;
+    final signedIn = Supabase.instance.client.auth.currentUser != null;
+    final path = state.uri.path;
+    final isPublicAuth = path == '/account' || path == '/forgot-password';
+
+    if (!signedIn && !isPublicAuth) return '/account';
+    if (signedIn && path == '/account') return '/today';
+    return null;
+  },
   routes: [
     GoRoute(path: '/account', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     GoRoute(path: '/settings/personal', builder: (context, state) => const PersonalSettingsScreen()),

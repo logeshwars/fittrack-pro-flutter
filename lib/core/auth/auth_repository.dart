@@ -18,6 +18,9 @@ class AuthRepository {
 
   Future<void> signOut() => _client.auth.signOut();
 
+  Future<void> resetPassword(String email) =>
+      _client.auth.resetPasswordForEmail(email.trim());
+
   /// Only reads the profile matching the authenticated Supabase UUID.
   /// The historical Google-ID mapping must be verified before writes.
   Future<Map<String, dynamic>?> readOwnProfile() async {

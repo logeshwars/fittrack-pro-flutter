@@ -299,12 +299,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         alignment: Alignment.centerRight,
                         child: Padding(
                           padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            'Forgot password?',
-                            style: TextStyle(
-                              color: colors.accent,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                          child: InkWell(
+                            onTap: () => context.push('/forgot-password'),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Forgot password?',
+                                style: TextStyle(
+                                  color: colors.accent,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
