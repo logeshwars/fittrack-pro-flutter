@@ -18,10 +18,8 @@
 16. Local cardio, weight and sleep drafts.
 17. Guarded offline sync planner.
 18. Read-only gamification and disabled external integration gates.
+19. Nine-language navigation labels and explicit feature-parity audit.
 
 ## Outstanding release gates
-- Confirm Android and iOS CI builds.
-- Implement verified identity migration and safe server writes.
-- Implement transactional offline storage and replay.
-- Integrate RevenueCat and Health Connect/HealthKit on real devices.
-- Complete UI parity, translations and release tests.
+See `docs/FEATURE_PARITY.md` for a complete list. The migration is not yet
+production-ready; the remaining work exceeds a fixed two-batch estimate.

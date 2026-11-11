@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/l10n/app_strings.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
@@ -11,18 +12,19 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
+    final strings = AppStrings.of(context);
     final index = _paths.indexWhere((path) => location == path || location.startsWith('$path/'));
     return Scaffold(
       appBar: AppBar(
         title: const Text('FITTRACK PRO', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
         actions: [
           IconButton(
-            tooltip: 'Achievements',
+            tooltip: strings.get('achievements'),
             onPressed: () => context.push('/achievements'),
             icon: const Icon(Icons.emoji_events_outlined),
           ),
           IconButton(
-            tooltip: 'Account',
+            tooltip: strings.get('account'),
             onPressed: () => context.push('/account'),
             icon: const Icon(Icons.person_outline),
           ),
@@ -32,12 +34,12 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: index < 0 ? 0 : index,
         onDestinationSelected: (value) => context.go(_paths[value]),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Today'),
-          NavigationDestination(icon: Icon(Icons.fitness_center_outlined), selectedIcon: Icon(Icons.fitness_center), label: 'Workout'),
-          NavigationDestination(icon: Icon(Icons.restaurant_outlined), selectedIcon: Icon(Icons.restaurant), label: 'Nutrition'),
-          NavigationDestination(icon: Icon(Icons.directions_run_outlined), selectedIcon: Icon(Icons.directions_run), label: 'Cardio'),
-          NavigationDestination(icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Progress'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.today_outlined), selectedIcon: const Icon(Icons.today), label: strings.get('today')),
+          NavigationDestination(icon: const Icon(Icons.fitness_center_outlined), selectedIcon: const Icon(Icons.fitness_center), label: strings.get('workout')),
+          NavigationDestination(icon: const Icon(Icons.restaurant_outlined), selectedIcon: const Icon(Icons.restaurant), label: strings.get('nutrition')),
+          NavigationDestination(icon: const Icon(Icons.directions_run_outlined), selectedIcon: const Icon(Icons.directions_run), label: strings.get('cardio')),
+          NavigationDestination(icon: const Icon(Icons.insights_outlined), selectedIcon: const Icon(Icons.insights), label: strings.get('progress')),
         ],
       ),
     );
