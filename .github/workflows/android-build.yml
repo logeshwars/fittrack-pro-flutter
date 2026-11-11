@@ -61,7 +61,7 @@ jobs:
           for attempt in 1 2 3; do
             echo "Installing NDK $NDK_VERSION (attempt $attempt/3)"
             rm -rf "$SDK_ROOT/ndk/$NDK_VERSION"
-            if yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;$NDK_VERSION" && \
+            if "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;$NDK_VERSION" < /dev/null && \
                [[ -f "$SDK_ROOT/ndk/$NDK_VERSION/source.properties" ]]; then
               echo "Android NDK installed successfully"
               break
