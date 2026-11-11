@@ -12,7 +12,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/account', builder: (context, state) => const LoginScreen()),
     ShellRoute(
-      builder: (context, state, child: child) => AppShell(child: child),
+      builder: (context, state, child) => AppShell(child: child),
       routes: [
         GoRoute(path: '/today', builder: (context, state) => const FeaturePlaceholder(title: 'Today', subtitle: 'Your daily fitness overview')),
         GoRoute(path: '/workout', builder: (context, state) => const WorkoutScreen()),
