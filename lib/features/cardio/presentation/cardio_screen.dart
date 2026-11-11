@@ -99,6 +99,7 @@ class CardioScreen extends ConsumerWidget {
 
 class _ActivityTile extends StatelessWidget {
   const _ActivityTile({
+    required this.type,
     required this.label,
     required this.hint,
     required this.icon,
@@ -116,10 +117,10 @@ class _ActivityTile extends StatelessWidget {
     final colors = AppPalette.of(context);
     return Material(
       color: colors.card,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(4),
       child: InkWell(
         onTap: () => context.push('/cardio/draft?type=$type'),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
           child: Column(
