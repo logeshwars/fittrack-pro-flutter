@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
 import '../../cardio/data/cardio_repository.dart';
+import '../../cardio/domain/cardio_session.dart';
 import '../../nutrition/data/nutrition_repository.dart';
 import '../../nutrition/domain/nutrition_models.dart';
 import '../../progress/data/progress_repository.dart';
+import '../../progress/domain/progress_models.dart';
 import '../../workouts/data/workout_repository.dart';
+import '../../workouts/domain/workout_models.dart';
 
 class DashboardData {
   const DashboardData({required this.configured, required this.signedIn, this.workouts = 0, this.proteinG = 0, this.cardioMinutes = 0, this.latestWeightKg});
@@ -29,16 +32,16 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
     CardioRepository(client).recent(authenticatedUserId: id),
     ProgressRepository(client).recent(authenticatedUserId: id),
   ]);
-  final workouts = results[0] as List;
+  final workouts = results[0] as List<Workout>;
   final nutrition = results[1] as List<NutritionLog>;
-  final cardio = results[2] as List;
-  final progress = results[3] as ({List<dynamic> weights, List<dynamic> sleep});
+  final cardio = results[2] as List<CardioSession>;
+  final progress = results[3] as ({List<WeightLog> weights, List<SleepLog> sleep});
   return DashboardData(
     configured: true,
     signedIn: true,
     workouts: workouts.length,
     proteinG: NutritionTotals.fromLogs(nutrition).proteinG,
-    cardioMinutes: cardio.fold<int>(0, (sum, item) => sum + ((item.durationSeconds as int? ?? 0) ~/ 60)),
-    latestWeightKg: progress.weights.isEmpty ? null : progress.weights.first.weightKg as double,
+    cardioMinutes: cardio.fold<int>(0, (sum, item) => sum + ((item.durationSeconds ?? 0) ~/ 60)),
+    latestWeightKg: progress.weights.isEmpty ? null : progress.weights.first.weightKg,
   );
 });
