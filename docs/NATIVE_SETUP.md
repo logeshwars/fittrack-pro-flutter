@@ -1,30 +1,28 @@
 # Native project setup
 
-The Flutter repository does not yet commit generated Android/iOS folders.
-The GitHub Actions workflow now generates both and compiles a debug Android
-APK to catch platform-specific dependency problems early.
+The Flutter repository currently does not commit generated Android/iOS
+directories. CI generates native projects to validate dependency compatibility.
+Run `bash tool/bootstrap_native.sh` locally after installing Flutter.
 
-## Reproduce locally
-1. Install the stable Flutter SDK and run `flutter doctor`.
-2. Run `flutter create --platforms=android,ios --org com.logesh .`.
-3. Run `flutter pub get && flutter analyze && flutter test`.
-4. Run `flutter build apk --debug` for an Android smoke build.
-5. On macOS with Xcode, run `flutter build ios --no-codesign`.
+## Android
+The bootstrap script creates Android/iOS scaffolding and attempts to assign
+the development Android application ID `com.logesh.fittrackpro.flutterdev`.
+It fails rather than silently continuing if the generated Gradle format differs.
+Inspect the Android namespace and MainActivity package before release.
 
-## Release identity
-- React Native production application ID: `com.logesh.fittrackpro`.
-- Never use this production identifier for an experimental Flutter install
-  until signing, data migration and release rollout have been verified.
-- Use a distinct development application ID (e.g. `com.logesh.fittrackpro.flutterdev`)
-  when preparing committed native folders.
-- iOS bundle IDs, capabilities, entitlement groups and signing must be
-  reviewed before distribution.
+## iOS
+Set a unique development bundle ID in Xcode and select your signing team.
+Do not reuse the original app's bundle ID or keychain access groups until the
+migration and release strategy are confirmed.
 
-## Production safety
-The debug build does not require Supabase credentials; it displays
-configuration guidance instead. Never embed service-role credentials or
-production signing secrets in the repository.
+## CI
+- Ubuntu: Flutter analysis, tests and Android debug APK compilation.
+- macOS: Flutter iOS simulator debug compilation (no distribution signing).
+- Neither job signs production artifacts or publishes them.
 
-## Current limitations
-The CI debug APK is not uploaded as a downloadable artifact. iOS native
-compilation requires a macOS runner and is not yet part of CI.
+## Release gates
+- Confirm both platform CI jobs pass.
+- Commit reviewed native project folders and app identity settings.
+- Review permissions for camera, health integrations and notifications.
+- Set up provisioning profiles, signing and store distribution.
+- Verify deployed Supabase RLS and Google identity mapping before writes.
