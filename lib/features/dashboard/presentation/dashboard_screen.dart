@@ -115,7 +115,7 @@ class _DashboardBody extends StatelessWidget {
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.5,
-                                    color: AppColors.darkAccentText,
+                                    color: colors.accentText,
                                   ),
                                 ),
                               ),
@@ -433,7 +433,7 @@ class _DashboardBody extends StatelessWidget {
                         : _sleepDuration(data.latestSleepMinutes!),
                     sublabel: data.sleepQuality == null
                         ? 'Last night'
-                        : '${'★' * data.sleepQuality!}${'☆' * (5 - data.sleepQuality!)}',
+                        : _qualityStars(data.sleepQuality!),
                     accent: AppColors.sleep,
                   ),
                 ),
