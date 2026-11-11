@@ -6,10 +6,11 @@ import '../data/progress_repository.dart';
 import '../domain/progress_models.dart';
 
 final progressProvider = FutureProvider.autoDispose<({List<WeightLog> weights, List<SleepLog> sleep})>((ref) async {
-  if (!AppConfig.hasSupabase) return (weights: [], sleep: []);
+  if (!AppConfig.hasSupabase) return (weights: <WeightLog>[], sleep: <SleepLog>[]);
   final client = Supabase.instance.client;
   final user = client.auth.currentUser;
-  return user == null ? (weights: [], sleep: []) : ProgressRepository(client).recent(authenticatedUserId: user.id);
+  if (user == null) return (weights: <WeightLog>[], sleep: <SleepLog>[]);
+  return await ProgressRepository(client).recent(authenticatedUserId: user.id);
 });
 
 class ProgressScreen extends ConsumerWidget {

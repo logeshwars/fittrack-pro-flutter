@@ -9,7 +9,7 @@ Future<void> main() async {
   if (AppConfig.hasSupabase) {
     await Supabase.initialize(
       url: AppConfig.supabaseUrl,
-      anonKey: AppConfig.supabaseAnonKey,
+      publishableKey: AppConfig.supabaseAnonKey,
     );
   }
   runApp(const ProviderScope(child: FitTrackApp()));

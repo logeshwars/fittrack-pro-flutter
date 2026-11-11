@@ -13,9 +13,12 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      # Native platform folders are intentionally not committed yet.
-      # Generate them in CI so Flutter tooling can validate the app.
-      - run: flutter create --platforms=android,ios .
+      - name: Generate platform scaffolding
+        run: |
+          flutter create --platforms=android,ios .
+          # flutter create generates an unrelated template test when no
+          # native folders exist; keep our own app_smoke_test.dart instead.
+          rm -f test/widget_test.dart
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
