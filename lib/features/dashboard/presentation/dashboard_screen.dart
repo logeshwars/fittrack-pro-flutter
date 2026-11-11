@@ -111,7 +111,7 @@ class _DashboardBody extends StatelessWidget {
                                 ),
                                 child: Text(
                                   DateFormat('EEE').format(now).toUpperCase(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.5,
@@ -496,6 +496,11 @@ class _DashboardBody extends StatelessWidget {
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
     return mins == 0 ? '${hours}h' : '${hours}h ${mins}m';
+  }
+
+  static String _qualityStars(int quality) {
+    final safe = quality.clamp(0, 5).toInt();
+    return '${List.filled(safe, '★').join()}${List.filled(5 - safe, '☆').join()}';
   }
 }
 
