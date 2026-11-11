@@ -54,12 +54,12 @@ class CardioScreen extends ConsumerWidget {
               mainAxisSpacing: 10,
               childAspectRatio: .88,
               children: const [
-                _ActivityTile(label: 'Running', hint: 'Road · Treadmill', icon: Icons.directions_run, accent: AppColors.cardio),
-                _ActivityTile(label: 'Cycling', hint: 'Indoor · Outdoor', icon: Icons.directions_bike, accent: Color(0xFF4CAF50)),
-                _ActivityTile(label: 'Walking', hint: 'Walk · Hike', icon: Icons.directions_walk, accent: Color(0xFF2196F3)),
-                _ActivityTile(label: 'HIIT', hint: 'Intervals', icon: Icons.timer_outlined, accent: Color(0xFF9C27B0)),
-                _ActivityTile(label: 'Swimming', hint: 'Pool · Open water', icon: Icons.pool, accent: Color(0xFF00BCD4)),
-                _ActivityTile(label: 'Other', hint: 'Custom cardio', icon: Icons.favorite_outline, accent: Color(0xFF607D8B)),
+                _ActivityTile(type: 'running', label: 'Running', hint: 'Road · Treadmill', icon: Icons.directions_run, accent: AppColors.cardio),
+                _ActivityTile(type: 'cycling', label: 'Cycling', hint: 'Indoor · Outdoor', icon: Icons.directions_bike, accent: Color(0xFF4CAF50)),
+                _ActivityTile(type: 'walking', label: 'Walking', hint: 'Walk · Hike', icon: Icons.directions_walk, accent: Color(0xFF2196F3)),
+                _ActivityTile(type: 'hiit', label: 'HIIT', hint: 'Intervals', icon: Icons.timer_outlined, accent: Color(0xFF9C27B0)),
+                _ActivityTile(type: 'swimming', label: 'Swimming', hint: 'Pool · Open water', icon: Icons.pool, accent: Color(0xFF00BCD4)),
+                _ActivityTile(type: 'other', label: 'Other', hint: 'Custom cardio', icon: Icons.favorite_outline, accent: Color(0xFF607D8B)),
               ],
             ),
           ),
@@ -105,6 +105,7 @@ class _ActivityTile extends StatelessWidget {
     required this.accent,
   });
 
+  final String type;
   final String label;
   final String hint;
   final IconData icon;
@@ -117,7 +118,7 @@ class _ActivityTile extends StatelessWidget {
       color: colors.card,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: () => context.push('/cardio/draft'),
+        onTap: () => context.push('/cardio/draft?type=$type'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),

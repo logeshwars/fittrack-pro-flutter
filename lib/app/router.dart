@@ -30,7 +30,7 @@ final appRouter = GoRouter(
           GoRoute(path: 'draft', builder: (context, state) => const FoodDraftScreen()),
         ]),
         GoRoute(path: '/cardio', builder: (context, state) => const CardioScreen(), routes: [
-          GoRoute(path: 'draft', builder: (context, state) => const CardioDraftScreen()),
+          GoRoute(path: 'draft', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
         ]),
         GoRoute(path: '/progress', builder: (context, state) => const ProgressScreen(), routes: [
           GoRoute(path: 'draft', builder: (context, state) => const HealthDraftScreen()),
