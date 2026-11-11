@@ -1,20 +1,29 @@
-# Identity compatibility gate
+# Identity compatibility and RLS audit — release gate
 
-## Current findings from the React Native repository
-- `src/services/googleAuth.ts` stores Google identity tokens and checks `profiles.google_user_id` using Google account ID.
-- `src/services/emailAuth.ts` uses Supabase Auth UUID as `google_user_id` for email users.
-- `src/services/supabase.ts` sets `persistSession: false` and `autoRefreshToken: false`.
-- `supabase/migrations/008_rls_policies.sql` compares `google_user_id` to `auth.uid()::text`.
+## Verified from React Native source
+- Direct Google Sign-In stores the Google subject ID locally and queries
+  `profiles.google_user_id` using that ID.
+- Email sign-up stores the Supabase Auth UUID as `profiles.google_user_id`
+  and `email_user_id`.
+- Migration 008 RLS compares `google_user_id = auth.uid()::text`.
+- The Google login implementation does not call Supabase
+  `signInWithIdToken`, despite the comment in migration 008.
+- These are conflicting identity schemes. Source migrations alone cannot
+  establish which policies are deployed or whether older Google accounts can
+  be read under current RLS.
 
-## Safety policy for Flutter migration
-1. Flutter email sign-in uses Supabase Auth. Read-only profile access is available for authenticated UUIDs.
-2. Do not enable Google sign-in until deployed Supabase Auth, RLS, and historical Google ID mappings are verified.
-3. Do not migrate or update existing profile rows automatically.
-4. Never bypass RLS with a service-role key on device.
-5. Test existing Google and email users in a non-production Supabase environment first.
+## Flutter behavior
+- Email/password Supabase sign-in is available.
+- A read-only profile inspection helper checks for an exact UUID match.
+- No email-based automatic account linking, Google OAuth, profile upserts,
+  cross-account data reads or production writes are enabled.
+- The ID format classifier is only a diagnostic; it is NOT proof of identity.
 
-## Verification required
-- Inspect deployed policies, not just migration files.
-- Verify actual Google OAuth/Supabase session behavior in the existing app.
-- Confirm account linking and identity migration procedure.
-- Validate subscriptions and history under each identity provider.
+## Required manual production audit
+1. Inspect actual Supabase auth provider settings and deployed RLS policies.
+2. Test a disposable existing Google account and email account, read-only.
+3. Determine how old Google subject IDs map to Supabase auth identities.
+4. Design a server-side migration with audit log, verified identity ownership,
+   transactional foreign-key updates and rollback.
+5. Check RevenueCat identity mapping and pending offline operations.
+6. Do not enable write APIs until the migration is tested and approved.

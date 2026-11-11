@@ -10,10 +10,11 @@
 8. Dashboard: aggregate read-only metrics and navigation shortcuts.
 9. Offline: user-scoped persistent queue prototype, replay disabled.
 10. CI remediation: corrected analyzer errors and generated test issue.
-11. Verification and Android smoke build: prior CI run passed; add Android debug APK compilation to CI.
+11. Verification and Android smoke build: prior CI passed; add Android debug APK compilation.
+12. iOS simulator CI and native bootstrap.
+13. Identity compatibility: legacy Google vs Supabase UUID classification, read-only profile audit and tests.
 
 ## Verification gates
-- Confirm the new Android debug build passes.
-- Generate and commit reviewed native Android/iOS scaffolding before release.
+- Confirm Android and iOS CI builds pass.
 - Verify deployed Supabase identity/RLS policies before enabling writes.
 - Audit historical Google user ID mapping and offline queue transfer.
