@@ -4,6 +4,7 @@ import '../features/authentication/presentation/login_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
 import '../features/workouts/presentation/workout_screen.dart';
 import '../features/nutrition/presentation/nutrition_screen.dart';
+import '../features/cardio/presentation/cardio_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/today',
@@ -15,7 +16,7 @@ final appRouter = GoRouter(
         GoRoute(path: '/today', builder: (context, state) => const FeaturePlaceholder(title: 'Today', subtitle: 'Your daily fitness overview')),
         GoRoute(path: '/workout', builder: (context, state) => const WorkoutScreen()),
         GoRoute(path: '/nutrition', builder: (context, state) => const NutritionScreen()),
-        GoRoute(path: '/cardio', builder: (context, state) => const FeaturePlaceholder(title: 'Cardio', subtitle: 'Track cardio sessions')),
+        GoRoute(path: '/cardio', builder: (context, state) => const CardioScreen()),
         GoRoute(path: '/progress', builder: (context, state) => const FeaturePlaceholder(title: 'Progress', subtitle: 'Review your progress')),
       ],
     ),
