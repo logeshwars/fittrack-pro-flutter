@@ -26,10 +26,13 @@ class AuthRepository {
   Future<Map<String, dynamic>?> readOwnProfile() async {
     final user = currentUser;
     if (user == null) return null;
+    final provider = user.appMetadata['provider']?.toString();
+    final identityColumn =
+        provider == 'email' ? 'email_user_id' : 'google_user_id';
     final data = await _client
         .from('profiles')
         .select()
-        .eq('google_user_id', user.id)
+        .eq(identityColumn, user.id)
         .maybeSingle();
     return data;
   }

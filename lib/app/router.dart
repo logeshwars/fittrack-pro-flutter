@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../features/authentication/presentation/login_screen.dart';
 import '../features/authentication/presentation/forgot_password_screen.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../core/config/app_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/gamification/presentation/gamification_screen.dart';
@@ -32,6 +33,7 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/account', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
+    GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     GoRoute(path: '/settings/personal', builder: (context, state) => const PersonalSettingsScreen()),

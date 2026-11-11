@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/auth_providers.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
@@ -50,7 +51,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await repository.signInWithEmail(_email.text, _password.text);
       if (!mounted) return;
-      context.go('/today');
+      var needsOnboarding = false;
+      try {
+        final profile = await repository.readOwnProfile();
+        if (profile == null) {
+          final userId = repository.currentUser?.id;
+          final prefs = await SharedPreferences.getInstance();
+          final completed = userId == null
+              ? false
+              : prefs.getBool('fittrack_onboarding_complete_$userId') ?? false;
+          needsOnboarding = !completed;
+        }
+      } catch (_) {
+        // A profile-read failure must not block a valid sign-in.
+      }
+      if (!mounted) return;
+      context.go(needsOnboarding ? '/onboarding' : '/today');
     } catch (_) {
       if (mounted) {
         setState(() {
