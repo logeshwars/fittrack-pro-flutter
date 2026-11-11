@@ -13,6 +13,16 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.path;
     final index = _paths.indexWhere((path) => location == path || location.startsWith('$path/'));
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('FITTRACK PRO', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+        actions: [
+          IconButton(
+            tooltip: 'Account',
+            onPressed: () => context.push('/account'),
+            icon: const Icon(Icons.person_outline),
+          ),
+        ],
+      ),
       body: SafeArea(child: child),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index < 0 ? 0 : index,
