@@ -119,6 +119,70 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _XpCard(level: data.level, totalXp: data.totalXp),
               Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: InkWell(
+                  onTap: () => context.push('/subscription'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.xp.withValues(alpha: .08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.xp.withValues(alpha: .22),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.xp.withValues(alpha: .12),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.workspace_premium_outlined,
+                            color: AppColors.xp,
+                            size: 21,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'FitTrack Pro',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Manage subscription',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 13,
+                          color: colors.faint,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                 child: Align(
                   alignment: Alignment.centerLeft,

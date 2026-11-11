@@ -74,6 +74,28 @@ class NutritionScreen extends ConsumerWidget {
                   children: [
                     _BudgetCard(totals: totals),
                     Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () => context.push('/nutrition/draft'),
+                              icon: const Icon(Icons.edit_outlined, size: 16),
+                              label: const Text('Log manually'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => context.push('/nutrition/scan'),
+                              icon: const Icon(Icons.qr_code_scanner, size: 16),
+                              label: const Text('Scan barcode'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                       child: FitTrackSectionLabel(
                         title: 'Food Log',
