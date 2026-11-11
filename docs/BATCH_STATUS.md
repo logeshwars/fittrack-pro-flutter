@@ -2,15 +2,19 @@
 
 ## Batch 1 — App foundation
 Committed: Riverpod entry point, GoRouter five-tab shell, theme tokens, smoke test, CI workflow.
-Pending: Generate Android/iOS platform scaffolding using Flutter SDK; run Flutter analysis and tests.
+Pending: Flutter analysis/tests, native platform generation.
 
 ## Batch 2 — Authentication groundwork
 Committed: build-time Supabase configuration, guarded email sign-in/out, read-only profile query, identity compatibility audit.
-Pending: verify deployed RLS and Google user mapping. No production writes have been added.
+Pending: deployed RLS and Google account identity mapping. No production writes.
 
-## Batch 3 — Workout domain foundation
-Committed: workout and set models, read-only history repository, PR and protein goal parity calculations, unit tests.
-Pending: workout screens, offline queue, actual device/integration tests.
+## Batch 3 — Workout domain
+Committed: workout/set models, read-only history repository, calculation tests.
+Pending: device/integration tests and offline writes.
 
-## Important
-All code is unverified until `flutter pub get && flutter analyze && flutter test` passes in a Flutter SDK environment. This repository does not yet contain generated Android/iOS directories.
+## Batch 4 — Workout browsing
+Committed: workout history screen, read-only exercise repository, nullable legacy workout names, tests.
+Pending: live Supabase verification and pagination UI.
+
+## Blocking gates
+Flutter SDK analysis/test run and Android/iOS scaffolding. Google account migration requires deployed auth/RLS verification.
