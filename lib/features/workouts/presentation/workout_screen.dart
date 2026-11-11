@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
@@ -27,6 +28,8 @@ class WorkoutScreen extends ConsumerWidget {
           Text('Workout', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           const Text('Your completed workouts. Logging will be enabled after the account migration audit.'),
+          const SizedBox(height: 12),
+          FilledButton.icon(onPressed: () => context.push('/workout/draft'), icon: const Icon(Icons.edit_note), label: const Text('Create local workout draft')),
           const SizedBox(height: 20),
           history.when(
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
