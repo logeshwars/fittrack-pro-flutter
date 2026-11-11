@@ -9,6 +9,7 @@ import '../features/shell/presentation/app_shell.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/workouts/presentation/workout_screen.dart';
 import '../features/workouts/presentation/workout_draft_screen.dart';
+import '../features/workouts/presentation/workout_secondary_screens.dart';
 import '../features/nutrition/presentation/nutrition_screen.dart';
 import '../features/nutrition/presentation/food_draft_screen.dart';
 import '../features/cardio/presentation/cardio_screen.dart';
@@ -50,22 +51,21 @@ final appRouter = GoRouter(
     GoRoute(path: '/settings/alerts', builder: (context, state) => const AlertsSettingsScreen()),
     GoRoute(path: '/settings/theme', builder: (context, state) => const ThemeSettingsScreen()),
     GoRoute(path: '/settings/app-settings', builder: (context, state) => const AppSettingsScreen()),
+    GoRoute(path: '/workout/draft', builder: (context, state) => const WorkoutDraftScreen()),
+    GoRoute(path: '/workout/history/:id', builder: (context, state) => WorkoutHistoryDetailScreen(workoutId: state.pathParameters['id']!)),
+    GoRoute(path: '/workout/split/:id', builder: (context, state) => WorkoutSplitScreen(splitId: state.pathParameters['id']!)),
+    GoRoute(path: '/workout/preset/:id', builder: (context, state) => WorkoutPresetScreen(presetId: state.pathParameters['id']!)),
+    GoRoute(path: '/nutrition/draft', builder: (context, state) => const FoodDraftScreen()),
+    GoRoute(path: '/cardio/draft', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
+    GoRoute(path: '/progress/draft', builder: (context, state) => const HealthDraftScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
         GoRoute(path: '/today', builder: (context, state) => const DashboardScreen()),
-        GoRoute(path: '/workout', builder: (context, state) => const WorkoutScreen(), routes: [
-          GoRoute(path: 'draft', builder: (context, state) => const WorkoutDraftScreen()),
-        ]),
-        GoRoute(path: '/nutrition', builder: (context, state) => const NutritionScreen(), routes: [
-          GoRoute(path: 'draft', builder: (context, state) => const FoodDraftScreen()),
-        ]),
-        GoRoute(path: '/cardio', builder: (context, state) => const CardioScreen(), routes: [
-          GoRoute(path: 'draft', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
-        ]),
-        GoRoute(path: '/progress', builder: (context, state) => const ProgressScreen(), routes: [
-          GoRoute(path: 'draft', builder: (context, state) => const HealthDraftScreen()),
-        ]),
+        GoRoute(path: '/workout', builder: (context, state) => const WorkoutScreen()),
+        GoRoute(path: '/nutrition', builder: (context, state) => const NutritionScreen()),
+        GoRoute(path: '/cardio', builder: (context, state) => const CardioScreen()),
+        GoRoute(path: '/progress', builder: (context, state) => const ProgressScreen()),
       ],
     ),
   ],

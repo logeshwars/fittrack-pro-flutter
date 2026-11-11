@@ -217,9 +217,9 @@ class _Routines extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           const FitTrackSectionLabel(title: 'Workout Splits'),
-          const _Split(title: 'Push / Pull / Legs', subtitle: '3 days · Balanced strength split'),
-          const _Split(title: 'Upper / Lower', subtitle: '4 days · Strength and hypertrophy'),
-          const _Split(title: 'Full Body', subtitle: '3 days · Efficient total-body training'),
+          _Split(id: 'ppl', title: 'Push / Pull / Legs', subtitle: '3 days · Balanced strength split'),
+          _Split(id: 'upper-lower', title: 'Upper / Lower', subtitle: '4 days · Strength and hypertrophy'),
+          _Split(id: 'full-body', title: 'Full Body', subtitle: '3 days · Efficient total-body training'),
         ],
       ),
     );
@@ -227,17 +227,25 @@ class _Routines extends StatelessWidget {
 }
 
 class _Split extends StatelessWidget {
-  const _Split({required this.title, required this.subtitle});
+  const _Split({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+  });
+  final String id;
   final String title;
   final String subtitle;
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [
+    return InkWell(
+      onTap: () => context.push('/workout/split/$id'),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
+        child: Row(children: [
         Container(width: 44, height: 44, decoration: BoxDecoration(color: colors.accentTint, shape: BoxShape.circle), alignment: Alignment.center, child: Icon(Icons.fitness_center, color: colors.accent, size: 20)),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -247,6 +255,7 @@ class _Split extends StatelessWidget {
         ])),
         Icon(Icons.arrow_forward, size: 14, color: colors.faint),
       ]),
+      ),
     );
   }
 }
@@ -298,7 +307,10 @@ class _HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final duration = workout.finishedAt == null ? '—' : '${workout.finishedAt!.difference(workout.startedAt).inMinutes} Min';
-    return Container(
+    return InkWell(
+      onTap: () => context.push('/workout/history/${workout.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
       child: Row(children: [
@@ -315,6 +327,7 @@ class _HistoryCard extends StatelessWidget {
           ]),
         ]))),
       ]),
+      ),
     );
   }
 }
