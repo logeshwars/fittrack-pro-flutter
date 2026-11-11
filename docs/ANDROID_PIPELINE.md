@@ -41,3 +41,17 @@ keystore from an Actions secret to a temporary file, inject signing
 properties from secrets, build `flutter build appbundle --release`,
 upload the AAB as a restricted artifact, and remove temporary key files.
 Only enable this after native release signing is audited.
+
+## Android pipeline troubleshooting
+
+Run 42990014253 failed during Gradle's NDK 28.2.13676358 download:
+`Error reading Zip content from a SeekableByteChannel`.
+Flutter analyze succeeded and all 29 tests passed. No APK was produced.
+
+The dedicated Android workflow now pre-installs the required NDK with up
+to three clean attempts, validating `source.properties`. The download
+may still fail if GitHub's runner or Android's package servers are
+unavailable; inspect the **Install Android NDK with retries** job step.
+
+Do not treat this as a Flutter source error. Verify an actual successful
+APK build before distributing artifacts.
