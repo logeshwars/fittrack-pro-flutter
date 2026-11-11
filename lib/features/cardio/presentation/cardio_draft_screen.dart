@@ -23,11 +23,13 @@ class _CardioDraftScreenState extends State<CardioDraftScreen> {
   Future<void> _load() async {
     try {
       final store = LocalDraftStore(await SharedPreferences.getInstance());
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _store = store;
         final raw = store.read(_key);
         _drafts = raw == null ? const CardioDrafts([]) : CardioDrafts.decode(raw);
-      });
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Unable to load local cardio drafts');
     }
