@@ -228,3 +228,114 @@ class FitTrackMiniRing extends StatelessWidget {
     );
   }
 }
+
+
+class FitTrackScreenHeader extends StatelessWidget {
+  const FitTrackScreenHeader({
+    required this.title,
+    this.subtitle,
+    this.icon,
+    this.trailing,
+    super.key,
+  });
+
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
+      decoration: BoxDecoration(
+        color: colors.header,
+        border: Border(bottom: BorderSide(color: colors.border)),
+      ),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 26, color: colors.accent),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: FitTrackText.screenTitle.copyWith(color: colors.text)),
+                if (subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 10, color: colors.muted),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+class FitTrackSegmentedTabs extends StatelessWidget {
+  const FitTrackSegmentedTabs({
+    required this.labels,
+    required this.selectedIndex,
+    required this.onSelected,
+    super.key,
+  });
+
+  final List<String> labels;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Row(
+      children: List.generate(labels.length, (index) {
+        final active = index == selectedIndex;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: index == 0 ? 0 : 3,
+              right: index == labels.length - 1 ? 0 : 3,
+            ),
+            child: Material(
+              color: active ? colors.accent : colors.card,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                onTap: () => onSelected(index),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: active ? colors.accent : colors.border2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    labels[index],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: active ? colors.accentText : colors.subtext,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
