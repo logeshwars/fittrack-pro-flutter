@@ -1,18 +1,31 @@
-# Offline sync design (prototype, not active)
+# Offline sync design — Batch 17
 
-The original React Native queue handles seven operations: startWorkout, logSet,
-finishWorkout, logFood, logCardioSession, logSleep and logWeight.
+## Current implementation
+- SharedPreferences persists a prototype FIFO operation queue.
+- Operations have stable IDs, user IDs, timestamps and retry counts.
+- `SyncPlanner` is a pure read-only planner: replay is disabled by default.
+- It rejects mixed-user batches and signed-out replay, and quarantines
+  operations that exceed the retry threshold.
+- `SyncStatus` exposes only the current authenticated user's pending count.
+- No Supabase mutation adapter or automatic replay is connected.
 
-The Flutter queue currently serializes the same seven operation categories with
-stable IDs, per-user scoping and attempt counters. It does not replay operations
-or write to Supabase. SharedPreferences is a prototype persistence layer only;
-migrate to a transactional Drift/SQLite queue before release.
+## Release architecture (not implemented)
+1. Replace SharedPreferences with encrypted, transactional SQLite storage.
+2. Store a schema version, immutable operation ID, authenticated account ID,
+   dependency IDs, attempts, next retry time, and dead-letter status.
+3. Write drafts and outbox records in one local transaction.
+4. Add a server-side idempotency key enforced by a unique constraint or RPC.
+5. Verify deployed RLS and historical Google identity mapping before enabling
+   writes; do not infer account ownership from email or a Google subject alone.
+6. Replay in dependency order (workout before sets, sets before finish).
+7. Use exponential backoff with jitter; retry transient failures only.
+8. Require server acknowledgement before deleting an outbox operation.
+9. Protect queue storage across logout/account switching; never replay
+   another account's records under the active session.
+10. Test duplicate delivery, interrupted transactions, revoked sessions,
+    schema upgrades, conflict resolution and offline-to-online transitions.
 
-## Release blockers
-1. Resolve Supabase Auth UUID versus historical Google ID and deployed RLS.
-2. Guarantee backend idempotency for replayed writes (stable operation IDs).
-3. Preserve causal order (start workout -> log sets -> finish workout).
-4. Separate permanent authorization failures from transient network failures.
-5. Add bounded retries, dead-letter visibility, and crash/restart tests.
-6. Plan transfer of any unsynced React Native AsyncStorage queue data.
-7. Never replay another user's queued operations after account switching.
+## Known limitations
+The current planner does not execute writes or provide a production-ready
+SQLite database. The existing local workout, nutrition, cardio, sleep and
+weight draft editors are not yet connected to the outbox.
