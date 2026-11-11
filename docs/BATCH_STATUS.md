@@ -1,25 +1,16 @@
-# Implementation status
+# Migration batches
 
-## Batch 1 — App foundation
-Riverpod, GoRouter, five tabs, theme, smoke test and CI.
+1. Foundation: Riverpod, GoRouter, theme and CI.
+2. Authentication: guarded email auth and identity/RLS audit.
+3. Workout domain: models, read-only history and metrics.
+4. Workout UI: history and exercise catalog.
+5. Nutrition: history and macro summaries.
+6. Cardio: session history.
+7. Progress: weight and sleep history.
+8. Dashboard: aggregate read-only metrics and navigation shortcuts.
 
-## Batch 2 — Authentication groundwork
-Build-time Supabase configuration, guarded email sign-in/out, read-only profile query, identity audit.
-
-## Batch 3 — Workout domain
-Workout/set models, read-only history repository, calculation tests.
-
-## Batch 4 — Workout history
-Workout history UI, read-only exercise catalog, nullable legacy names.
-
-## Batch 5 — Nutrition history
-Nutrition models, macro aggregation, read-only food log repository and screen.
-
-## Batch 6 — Cardio history
-Cardio session model, read-only repository, cardio history screen.
-
-## Batch 7 — Progress and sleep
-Weight and sleep models, read-only repositories, summary metrics and history screen.
-
-## Blocking verification
-Flutter SDK analyze/test and Android/iOS scaffolding; deployed Google identity and RLS verification. No production writes implemented.
+## Verification gates
+- Run Flutter analyze/test in CI; local Flutter SDK is not installed.
+- Generate and commit native Android/iOS scaffolding before mobile release.
+- Verify deployed Supabase identity/RLS policies before enabling writes.
+- Audit historical Google user ID mapping and offline queue transfer.
