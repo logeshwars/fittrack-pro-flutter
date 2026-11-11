@@ -8,7 +8,9 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../domain/health_drafts.dart';
 
 class HealthDraftScreen extends StatefulWidget {
-  const HealthDraftScreen({super.key});
+  const HealthDraftScreen({this.initialTab = 0, super.key});
+
+  final int initialTab;
 
   @override
   State<HealthDraftScreen> createState() => _HealthDraftScreenState();
@@ -24,7 +26,7 @@ class _HealthDraftScreenState extends State<HealthDraftScreen> {
   LocalDraftStore? _store;
   HealthDrafts _drafts = const HealthDrafts();
   String? _error;
-  int _tab = 0;
+  late int _tab;
 
   int _bedHour = 22;
   int _bedMinute = 0;
@@ -35,6 +37,7 @@ class _HealthDraftScreenState extends State<HealthDraftScreen> {
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialTab.clamp(0, 1).toInt();
     _load();
   }
 

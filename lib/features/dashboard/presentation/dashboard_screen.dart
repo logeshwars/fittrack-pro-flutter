@@ -435,6 +435,7 @@ class _DashboardBody extends StatelessWidget {
                         ? 'Last night'
                         : _qualityStars(data.sleepQuality!),
                     accent: AppColors.sleep,
+                    onTap: () => context.push('/sleep'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -449,7 +450,7 @@ class _DashboardBody extends StatelessWidget {
                         ? 'Tap to log'
                         : 'Latest entry',
                     accent: AppColors.weight,
-                    onTap: () => context.go('/progress/draft'),
+                    onTap: () => context.push('/progress/weight'),
                   ),
                 ),
               ],

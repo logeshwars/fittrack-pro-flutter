@@ -17,6 +17,7 @@ import '../features/progress/presentation/progress_screen.dart';
 import '../features/progress/presentation/health_draft_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screens.dart';
+import '../features/sleep/presentation/sleep_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/today',
@@ -36,6 +37,9 @@ final appRouter = GoRouter(
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+    GoRoute(path: '/sleep', builder: (context, state) => const SleepScreen()),
+    GoRoute(path: '/sleep/log', builder: (context, state) => const HealthDraftScreen(initialTab: 1)),
+    GoRoute(path: '/progress/weight', builder: (context, state) => const HealthDraftScreen(initialTab: 0)),
     GoRoute(path: '/settings/personal', builder: (context, state) => const PersonalSettingsScreen()),
     GoRoute(path: '/settings/goals', builder: (context, state) => const GoalsSettingsScreen()),
     GoRoute(path: '/settings/alerts', builder: (context, state) => const AlertsSettingsScreen()),
