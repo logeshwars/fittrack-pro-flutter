@@ -364,7 +364,7 @@ class _MealCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${item.quantityG.round()} g · ${item.proteinG.toStringAsFixed(1)} g protein¤calories',
+                    '${item.quantityG.round()} g · ${item.proteinG.toStringAsFixed(1)} g protein$calories',
                     style: TextStyle(fontSize: 11, color: colors.subtext),
                   ),
                 ],
