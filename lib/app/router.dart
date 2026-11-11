@@ -5,6 +5,7 @@ import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/workouts/presentation/workout_screen.dart';
 import '../features/workouts/presentation/workout_draft_screen.dart';
 import '../features/nutrition/presentation/nutrition_screen.dart';
+import '../features/nutrition/presentation/food_draft_screen.dart';
 import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
 
@@ -19,7 +20,9 @@ final appRouter = GoRouter(
         GoRoute(path: '/workout', builder: (context, state) => const WorkoutScreen(), routes: [
           GoRoute(path: 'draft', builder: (context, state) => const WorkoutDraftScreen()),
         ]),
-        GoRoute(path: '/nutrition', builder: (context, state) => const NutritionScreen()),
+        GoRoute(path: '/nutrition', builder: (context, state) => const NutritionScreen(), routes: [
+          GoRoute(path: 'draft', builder: (context, state) => const FoodDraftScreen()),
+        ]),
         GoRoute(path: '/cardio', builder: (context, state) => const CardioScreen()),
         GoRoute(path: '/progress', builder: (context, state) => const ProgressScreen()),
       ],

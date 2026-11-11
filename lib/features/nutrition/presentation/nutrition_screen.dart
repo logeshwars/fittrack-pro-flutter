@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
@@ -27,6 +28,7 @@ class NutritionScreen extends ConsumerWidget {
           Text('Nutrition', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           const Text('Recent food logs. Food logging will be enabled after identity verification.'),
+          FilledButton.icon(onPressed: () => context.push('/nutrition/draft'), icon: const Icon(Icons.edit_note), label: const Text('Create local food draft')),
           const SizedBox(height: 20),
           logs.when(
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
