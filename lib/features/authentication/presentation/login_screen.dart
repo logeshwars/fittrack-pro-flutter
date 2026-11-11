@@ -44,6 +44,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild on Supabase session changes, including sign-in and sign-out.
+    ref.watch(authStateProvider);
     final repository = ref.watch(authRepositoryProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Account')),
