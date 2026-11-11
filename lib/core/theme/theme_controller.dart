@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// System theme by default; persistent preference will be added in Batch 2.
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+/// Matches the React Native app: dark is the first-launch default.
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
