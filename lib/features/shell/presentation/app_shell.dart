@@ -17,6 +17,11 @@ class AppShell extends StatelessWidget {
         title: const Text('FITTRACK PRO', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
         actions: [
           IconButton(
+            tooltip: 'Achievements',
+            onPressed: () => context.push('/achievements'),
+            icon: const Icon(Icons.emoji_events_outlined),
+          ),
+          IconButton(
             tooltip: 'Account',
             onPressed: () => context.push('/account'),
             icon: const Icon(Icons.person_outline),
