@@ -208,7 +208,7 @@ class _GoalsSettingsScreenState extends State<GoalsSettingsScreen> {
       'fiber': _fiber,
     };
     final values = pairs.values.map((c) => double.tryParse(c.text)).toList();
-    if (values.any((v) => v == null || !v!.isFinite || v <= 0)) {
+    if (values.any((v) => v == null || !v.isFinite || v <= 0)) {
       setState(() => _message = 'All goals must be positive numbers.');
       return;
     }
