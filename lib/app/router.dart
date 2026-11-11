@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../features/authentication/presentation/login_screen.dart';
+import '../features/gamification/presentation/gamification_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/workouts/presentation/workout_screen.dart';
@@ -15,6 +16,7 @@ final appRouter = GoRouter(
   initialLocation: '/today',
   routes: [
     GoRoute(path: '/account', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
