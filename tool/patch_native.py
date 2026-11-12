@@ -56,6 +56,41 @@ def patch_android() -> None:
     manifest.write_text(s)
 
 
+NOTIFICATION_RECEIVERS = """        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+"""
+
+
+def patch_android_notifications() -> None:
+    """Scheduled reminders need the plugin receivers and core-library desugaring."""
+    manifest = Path("android/app/src/main/AndroidManifest.xml")
+    if manifest.exists():
+        s = manifest.read_text()
+        if "ScheduledNotificationReceiver" not in s:
+            s = s.replace("</application>", NOTIFICATION_RECEIVERS + "    </application>", 1)
+            manifest.write_text(s)
+    gradle = Path("android/app/build.gradle.kts")
+    if not gradle.exists():
+        return
+    s = gradle.read_text()
+    if "isCoreLibraryDesugaringEnabled" not in s and "compileOptions {" in s:
+        s = s.replace("compileOptions {", "compileOptions {\n        isCoreLibraryDesugaringEnabled = true", 1)
+    if "coreLibraryDesugaring" not in s:
+        deps = 'dependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
+        if "\ndependencies {" in s:
+            s = s.replace("\ndependencies {", "\ndependencies {\n    coreLibraryDesugaring(\"com.android.tools:desugar_jdk_libs:2.1.4\")", 1)
+        else:
+            s = s.rstrip() + "\n\n" + deps
+    gradle.write_text(s)
+
+
 def patch_android_build() -> None:
     """Health Connect needs FlutterFragmentActivity and minSdk 26."""
     for activity in Path("android/app/src/main").glob("**/MainActivity.*"):
@@ -96,5 +131,6 @@ def patch_ios() -> None:
 if __name__ == "__main__":
     patch_android()
     patch_android_build()
+    patch_android_notifications()
     patch_ios()
     print("Native permissions patched.")

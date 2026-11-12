@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../core/l10n/app_strings.dart';
 import '../core/theme/theme_controller.dart';
+import '../features/reminders/application/reminders_controller.dart';
 import '../features/subscription/application/subscription_controller.dart';
 import 'router.dart';
 
@@ -12,6 +13,8 @@ class FitTrackApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    // Loads saved reminders and re-registers them with the OS on every launch.
+    ref.listen(remindersProvider, (_, __) {});
     return MaterialApp.router(
       title: 'FitTrack Pro',
       debugShowCheckedModeBanner: false,

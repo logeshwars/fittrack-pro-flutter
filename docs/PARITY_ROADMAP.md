@@ -104,3 +104,10 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - `tool/patch_native.py` now also switches `MainActivity` to `FlutterFragmentActivity` and sets `minSdk = 26` (Health Connect requirements). Idempotent.
 - Manual iOS step: enable the HealthKit capability for the Runner target in Xcode (adds the `com.apple.developer.healthkit` entitlement); it cannot be patched reliably from a script. HealthKit never reveals read access, so iOS treats "permission asked" as ready.
 - Removed `IntegrationGates` (all integrations were hard-disabled flags that nothing read).
+
+## Batch 29 – Notifications and reminders
+- 17 reminders (morning, nutrition, hydration, fitness, sleep) and 8 supplement alerts ported from the RN stores. Each has a toggle and a time picker; reminders repeat daily at a wall-clock time, so DST shifts are handled by the OS match on local time.
+- Preferences (`fittrack_reminders_v1`) are the source of truth. `RemindersController` rebuilds the OS pending set from them through one `replaceAll` call on launch and after every change, using stable notification ids (1-17, 101-108) so nothing needs to be stored per notification.
+- Everything OS-facing is behind `NotificationGateway` (flutter_local_notifications + timezone); the scheduling rules (`buildSchedule`, `firstFireDate`) are pure and unit tested. Enabling a reminder requests permission first and stays off when denied.
+- `tool/patch_native.py` adds the plugin receivers to the manifest (boot re-arm) and enables core-library desugaring. Scheduling is inexact (no `SCHEDULE_EXACT_ALARM`), so delivery can drift a few minutes on Android.
+- The old four-switch alerts screen and its `fittrack_alert_*` keys were dropped; they never scheduled anything.

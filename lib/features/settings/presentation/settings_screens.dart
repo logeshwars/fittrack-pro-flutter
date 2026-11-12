@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../reminders/application/reminders_controller.dart';
+import '../../reminders/domain/reminder_catalog.dart';
+import '../../reminders/domain/reminder_schedule.dart';
 import '../../workouts/domain/workout_metrics.dart';
 
 class PersonalSettingsScreen extends ConsumerStatefulWidget {
@@ -373,139 +376,186 @@ class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
   }
 }
 
-class AlertsSettingsScreen extends StatefulWidget {
+class AlertsSettingsScreen extends ConsumerWidget {
   const AlertsSettingsScreen({super.key});
 
+  static Color _color(ReminderCategory c) => switch (c) {
+        ReminderCategory.morning => AppColors.xp,
+        ReminderCategory.nutrition => AppColors.nutrition,
+        ReminderCategory.hydration => AppColors.water,
+        ReminderCategory.fitness => AppColors.workout,
+        ReminderCategory.sleep => AppColors.sleep,
+        ReminderCategory.supplement => AppColors.recovery,
+      };
+
+  static IconData _icon(ReminderCategory c) => switch (c) {
+        ReminderCategory.morning => Icons.wb_sunny_outlined,
+        ReminderCategory.nutrition => Icons.restaurant,
+        ReminderCategory.hydration => Icons.water_drop_outlined,
+        ReminderCategory.fitness => Icons.fitness_center,
+        ReminderCategory.sleep => Icons.bedtime_outlined,
+        ReminderCategory.supplement => Icons.medication_outlined,
+      };
+
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    ReminderDef def,
+    bool enabled,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await ref
+        .read(remindersProvider.notifier)
+        .setEnabled(def.id, enabled: enabled);
+    if (result == ToggleResult.permissionDenied) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Enable notifications for FitTrack in system settings to get reminders.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickTime(
+    BuildContext context,
+    WidgetRef ref,
+    ReminderDef def,
+    String current,
+  ) async {
+    final t = parseTime(current) ?? parseTime(def.defaultTime)!;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: t.hour, minute: t.minute),
+    );
+    if (picked == null) {
+      return;
+    }
+    await ref
+        .read(remindersProvider.notifier)
+        .setTime(def.id, formatTime24(picked.hour, picked.minute));
+  }
+
   @override
-  State<AlertsSettingsScreen> createState() => _AlertsSettingsScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppPalette.of(context);
+    final settings = ref.watch(remindersProvider);
+
+    return settings.when(
+      loading: () => _LoadingScreen(title: 'Notifications', colors: colors),
+      error: (_, __) => Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const _Header(title: 'Notifications'),
+              Expanded(
+                child: Center(
+                  child: TextButton(
+                    onPressed: () => ref.invalidate(remindersProvider),
+                    child: const Text('Could not load reminders. Retry'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (value) => Scaffold(
+        backgroundColor: colors.bg,
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 44),
+            children: [
+              _Header(
+                title: 'Notifications',
+                subtitle: '${value.enabledCount} reminders on',
+              ),
+              for (final category in ReminderCategory.values) ...[
+                _SectionTitle(category.label.toUpperCase()),
+                _Surface(
+                  children: [
+                    for (final def in reminderCatalog.where((d) => d.category == category))
+                      _ReminderRow(
+                        def: def,
+                        pref: value.of(def),
+                        color: _color(category),
+                        icon: _icon(category),
+                        last: def == reminderCatalog.where((d) => d.category == category).last,
+                        onToggle: (on) => _toggle(context, ref, def, on),
+                        onTime: () => _pickTime(context, ref, def, value.of(def).time),
+                      ),
+                  ],
+                ),
+              ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                child: Text(
+                  'Reminders repeat daily at the time you choose and work offline.',
+                  style: TextStyle(fontSize: 11, height: 1.5, color: colors.faint),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
-  bool _workout = true;
-  bool _nutrition = false;
-  bool _sleep = true;
-  bool _supplements = false;
-  bool _loading = true;
+class _ReminderRow extends StatelessWidget {
+  const _ReminderRow({
+    required this.def,
+    required this.pref,
+    required this.color,
+    required this.icon,
+    required this.onToggle,
+    required this.onTime,
+    required this.last,
+  });
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _workout = prefs.getBool('fittrack_alert_workout') ?? true;
-      _nutrition = prefs.getBool('fittrack_alert_nutrition') ?? false;
-      _sleep = prefs.getBool('fittrack_alert_sleep') ?? true;
-      _supplements = prefs.getBool('fittrack_alert_supplements') ?? false;
-      _loading = false;
-    });
-  }
-
-  Future<void> _set(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('fittrack_alert_$key', value);
-  }
+  final ReminderDef def;
+  final ReminderPref pref;
+  final Color color;
+  final IconData icon;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onTime;
+  final bool last;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    if (_loading) {
-      return _LoadingScreen(title: 'Notifications', colors: colors);
-    }
-
-    return Scaffold(
-      backgroundColor: colors.bg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 44),
-          children: [
-            const _Header(
-              title: 'Notifications',
-              subtitle: 'Reminders & supplement alerts',
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              def.label,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.text),
             ),
-            const _SectionTitle('REMINDERS'),
-            _Surface(
-              children: [
-                _ToggleRow(
-                  icon: Icons.fitness_center,
-                  color: AppColors.workout,
-                  title: 'Workout reminder',
-                  subtitle: 'Keep your training schedule consistent',
-                  value: _workout,
-                  onChanged: (value) {
-                    setState(() => _workout = value);
-                    _set('workout', value);
-                  },
-                ),
-                _ToggleRow(
-                  icon: Icons.restaurant,
-                  color: AppColors.nutrition,
-                  title: 'Nutrition reminder',
-                  subtitle: 'Remember to log your meals',
-                  value: _nutrition,
-                  onChanged: (value) {
-                    setState(() => _nutrition = value);
-                    _set('nutrition', value);
-                  },
-                ),
-                _ToggleRow(
-                  icon: Icons.bedtime,
-                  color: AppColors.sleep,
-                  title: 'Sleep reminder',
-                  subtitle: 'Wind down and protect recovery',
-                  value: _sleep,
-                  onChanged: (value) {
-                    setState(() => _sleep = value);
-                    _set('sleep', value);
-                  },
-                ),
-                _ToggleRow(
-                  icon: Icons.medication_outlined,
-                  color: AppColors.water,
-                  title: 'Supplement alerts',
-                  subtitle: 'Local preference only for now',
-                  value: _supplements,
-                  last: true,
-                  onChanged: (value) {
-                    setState(() => _supplements = value);
-                    _set('supplements', value);
-                  },
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.warning_amber, size: 14, color: colors.faint),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Preferences are stored locally. Native notification scheduling remains gated until platform permissions are migrated.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.5,
-                          color: colors.faint,
-                        ),
-                      ),
-                    ),
-                  ],
+          ),
+          InkWell(
+            onTap: onTime,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Text(
+                formatTime12(pref.time),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: pref.enabled ? colors.accent : colors.faint,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          Switch(value: pref.enabled, onChanged: onToggle),
+        ],
       ),
     );
   }
