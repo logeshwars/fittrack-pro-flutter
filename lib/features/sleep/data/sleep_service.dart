@@ -83,8 +83,8 @@ class SleepService {
         totalXp: 0,
       );
     }
-    final totalMinutes =
-        logs.fold<int>(0, (a, l) => a + ((l['duration_minutes'] as num?)?.toInt() ?? 0));
+    final totalMinutes = logs.fold<int>(
+        0, (a, l) => a + ((l['duration_minutes'] as num?)?.toInt() ?? 0));
     final rated = logs.where((l) => l['quality'] != null).toList();
     final avgQuality = rated.isEmpty
         ? 0.0
@@ -97,7 +97,8 @@ class SleepService {
       totalNights: logs.length,
       avgDurationMinutes: (totalMinutes / logs.length).round(),
       avgQuality: avgQuality,
-      totalXp: logs.fold<int>(0, (a, l) => a + ((l['xp_awarded'] as num?)?.toInt() ?? 0)),
+      totalXp: logs.fold<int>(
+          0, (a, l) => a + ((l['xp_awarded'] as num?)?.toInt() ?? 0)),
       lastNight: logs.first,
     );
   }
@@ -113,7 +114,8 @@ class SleepService {
     if (quality < 1 || quality > 5) {
       throw ArgumentError.value(quality, 'quality', 'Quality is 1-5');
     }
-    final minutes = (wakeTime.difference(bedtime).inMilliseconds / 60000).round();
+    final minutes =
+        (wakeTime.difference(bedtime).inMilliseconds / 60000).round();
     if (minutes <= 0) {
       throw ArgumentError('Wake time must be after bedtime');
     }

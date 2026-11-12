@@ -32,7 +32,8 @@ class IdentityCompatibility {
     if (authenticatedUserId == null || profileGoogleUserId == null) {
       return false;
     }
-    return classify(authenticatedUserId) == LegacyIdentityKind.supabaseAuthUuid &&
+    return classify(authenticatedUserId) ==
+            LegacyIdentityKind.supabaseAuthUuid &&
         authenticatedUserId == profileGoogleUserId;
   }
 }

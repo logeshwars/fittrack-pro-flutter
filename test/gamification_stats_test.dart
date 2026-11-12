@@ -10,7 +10,8 @@ void main() {
     expect(GamificationStats.levelFromXp(1500), 4);
   });
   test('maps nullable stats safely', () {
-    final stats = GamificationStats.fromJson({'total_xp': 1200, 'total_volume_kg': 123.5});
+    final stats = GamificationStats.fromJson(
+        {'total_xp': 1200, 'total_volume_kg': 123.5});
     expect(stats.totalXp, 1200);
     expect(stats.totalVolumeKg, 123.5);
     expect(stats.currentStreak, 0);

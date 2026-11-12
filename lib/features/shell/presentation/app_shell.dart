@@ -6,7 +6,13 @@ class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
   final Widget child;
 
-  static const _paths = ['/today', '/workout', '/nutrition', '/cardio', '/progress'];
+  static const _paths = [
+    '/today',
+    '/workout',
+    '/nutrition',
+    '/cardio',
+    '/progress'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +75,9 @@ class AppShell extends StatelessWidget {
                           duration: const Duration(milliseconds: 150),
                           scale: selected ? 1.08 : 1,
                           child: Icon(
-                            selected ? selectedIcons[tabIndex] : icons[tabIndex],
+                            selected
+                                ? selectedIcons[tabIndex]
+                                : icons[tabIndex],
                             size: 26,
                             color: color,
                           ),

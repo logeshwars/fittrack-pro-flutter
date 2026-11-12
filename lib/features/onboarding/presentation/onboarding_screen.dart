@@ -78,13 +78,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final repository = ref.watch(authRepositoryProvider);
-    final metadata = repository?.currentUser?.userMetadata ?? const <String, dynamic>{};
-    final rawName = (
-      metadata['full_name'] ??
-      metadata['name'] ??
-      repository?.currentUser?.email?.split('@').first ??
-      'Athlete'
-    ).toString();
+    final metadata =
+        repository?.currentUser?.userMetadata ?? const <String, dynamic>{};
+    final rawName = (metadata['full_name'] ??
+            metadata['name'] ??
+            repository?.currentUser?.email?.split('@').first ??
+            'Athlete')
+        .toString();
     final firstName = rawName.trim().split(' ').first;
 
     return Scaffold(

@@ -1,10 +1,16 @@
 import 'offline_operation.dart';
 
 /// Pure, read-only planning layer. It never executes mutations.
-enum SyncBlockReason { signedOut, identityMismatch, writesNotApproved, retryLimit }
+enum SyncBlockReason {
+  signedOut,
+  identityMismatch,
+  writesNotApproved,
+  retryLimit
+}
 
 class SyncPlan {
-  const SyncPlan({required this.ready, required this.blocked, required this.reason});
+  const SyncPlan(
+      {required this.ready, required this.blocked, required this.reason});
   final List<OfflineOperation> ready;
   final List<OfflineOperation> blocked;
   final SyncBlockReason? reason;
@@ -24,16 +30,22 @@ class SyncPlanner {
     bool writesApproved = false,
   }) {
     if (authenticatedUserId == null || authenticatedUserId.isEmpty) {
-      return SyncPlan(ready: const [], blocked: List.unmodifiable(pending),
-        reason: SyncBlockReason.signedOut);
+      return SyncPlan(
+          ready: const [],
+          blocked: List.unmodifiable(pending),
+          reason: SyncBlockReason.signedOut);
     }
     if (pending.any((operation) => operation.userId != authenticatedUserId)) {
-      return SyncPlan(ready: const [], blocked: List.unmodifiable(pending),
-        reason: SyncBlockReason.identityMismatch);
+      return SyncPlan(
+          ready: const [],
+          blocked: List.unmodifiable(pending),
+          reason: SyncBlockReason.identityMismatch);
     }
     if (!writesApproved) {
-      return SyncPlan(ready: const [], blocked: List.unmodifiable(pending),
-        reason: SyncBlockReason.writesNotApproved);
+      return SyncPlan(
+          ready: const [],
+          blocked: List.unmodifiable(pending),
+          reason: SyncBlockReason.writesNotApproved);
     }
     final ready = <OfflineOperation>[];
     final blocked = <OfflineOperation>[];

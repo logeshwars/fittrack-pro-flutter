@@ -40,9 +40,8 @@ class _PersonalSettingsScreenState extends State<PersonalSettingsScreen> {
 
   Future<void> _save() async {
     final weight = double.tryParse(_weight.text);
-    final height = _height.text.trim().isEmpty
-        ? null
-        : double.tryParse(_height.text);
+    final height =
+        _height.text.trim().isEmpty ? null : double.tryParse(_height.text);
     if (_name.text.trim().isEmpty ||
         weight == null ||
         weight < 30 ||
@@ -1040,7 +1039,8 @@ class _GoalField extends StatelessWidget {
             child: TextField(
               controller: controller,
               textAlign: TextAlign.right,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
@@ -1162,7 +1162,8 @@ class _ThemeChoice extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: active ? colors.accentTint : Colors.transparent,
-          border: last ? null : Border(bottom: BorderSide(color: colors.border)),
+          border:
+              last ? null : Border(bottom: BorderSide(color: colors.border)),
         ),
         child: Row(
           children: [
@@ -1262,7 +1263,8 @@ class _ChoiceRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         decoration: BoxDecoration(
           color: active ? colors.accentTint : Colors.transparent,
-          border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
+          border:
+              last ? null : Border(bottom: BorderSide(color: colors.border2)),
         ),
         child: Row(
           children: [

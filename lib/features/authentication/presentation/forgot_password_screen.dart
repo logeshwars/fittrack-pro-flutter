@@ -110,7 +110,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               ),
                               const SizedBox(height: 24),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 decoration: BoxDecoration(
                                   color: colors.border,
                                   borderRadius: BorderRadius.circular(12),

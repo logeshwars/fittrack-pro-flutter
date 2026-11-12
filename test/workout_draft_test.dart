@@ -8,7 +8,8 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('draft round trip preserves sets and volume', () {
-    final draft = WorkoutDraft(name: 'Push', startedAt: DateTime.utc(2026, 1, 1))
+    final draft = WorkoutDraft(
+            name: 'Push', startedAt: DateTime.utc(2026, 1, 1))
         .addSet(const DraftSet(exerciseName: 'Bench', weightKg: 60, reps: 8));
     final decoded = WorkoutDraft.decode(draft.encode());
     expect(decoded.name, 'Push');
@@ -19,7 +20,8 @@ void main() {
 
   test('draft is stored locally and can be discarded', () async {
     final store = WorkoutDraftStore(await SharedPreferences.getInstance());
-    final draft = WorkoutDraft(name: 'Legs', startedAt: DateTime.utc(2026, 1, 1));
+    final draft =
+        WorkoutDraft(name: 'Legs', startedAt: DateTime.utc(2026, 1, 1));
     await store.save(draft);
     expect(store.load()?.name, 'Legs');
     await store.clear();

@@ -29,25 +29,34 @@ class OfflineOperation {
   final int attempts;
 
   OfflineOperation withAttempts(int value) => OfflineOperation(
-    id: id, userId: userId, type: type, payload: payload,
-    createdAt: createdAt, attempts: value,
-  );
+        id: id,
+        userId: userId,
+        type: type,
+        payload: payload,
+        createdAt: createdAt,
+        attempts: value,
+      );
 
   Map<String, dynamic> toJson() => {
-    'id': id, 'user_id': userId, 'type': type.name,
-    'payload': payload, 'created_at': createdAt.toUtc().toIso8601String(),
-    'attempts': attempts,
-  };
+        'id': id,
+        'user_id': userId,
+        'type': type.name,
+        'payload': payload,
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'attempts': attempts,
+      };
 
-  factory OfflineOperation.fromJson(Map<String, dynamic> json) => OfflineOperation(
-    id: json['id'] as String,
-    userId: json['user_id'] as String,
-    type: OfflineOperationType.values.byName(json['type'] as String),
-    payload: Map<String, dynamic>.from(json['payload'] as Map),
-    createdAt: DateTime.parse(json['created_at'] as String),
-    attempts: (json['attempts'] as num?)?.toInt() ?? 0,
-  );
+  factory OfflineOperation.fromJson(Map<String, dynamic> json) =>
+      OfflineOperation(
+        id: json['id'] as String,
+        userId: json['user_id'] as String,
+        type: OfflineOperationType.values.byName(json['type'] as String),
+        payload: Map<String, dynamic>.from(json['payload'] as Map),
+        createdAt: DateTime.parse(json['created_at'] as String),
+        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+      );
 
   String encode() => jsonEncode(toJson());
-  static OfflineOperation decode(String source) => OfflineOperation.fromJson(jsonDecode(source) as Map<String, dynamic>);
+  static OfflineOperation decode(String source) =>
+      OfflineOperation.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }

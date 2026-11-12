@@ -37,21 +37,21 @@ class Exercise {
   final List<String> secondaryMuscles;
 
   factory Exercise.fromJson(Map<String, dynamic> json) => Exercise(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    muscleGroup: json['muscle_group'] as String,
-    equipment: json['equipment'] as String,
-    logType: (json['log_type'] as String?) ?? 'weight_reps',
-    isBilateral: json['is_bilateral'] != false,
-    isCustom: json['is_custom'] == true,
-    level: json['level'] as String?,
-    mechanic: json['mechanic'] as String?,
-    force: json['force'] as String?,
-    category: json['category'] as String?,
-    cdnName: json['cdn_name'] as String?,
-    primaryMuscles: _stringList(json['primary_muscles']),
-    secondaryMuscles: _stringList(json['secondary_muscles']),
-  );
+        id: json['id'] as String,
+        name: json['name'] as String,
+        muscleGroup: json['muscle_group'] as String,
+        equipment: json['equipment'] as String,
+        logType: (json['log_type'] as String?) ?? 'weight_reps',
+        isBilateral: json['is_bilateral'] != false,
+        isCustom: json['is_custom'] == true,
+        level: json['level'] as String?,
+        mechanic: json['mechanic'] as String?,
+        force: json['force'] as String?,
+        category: json['category'] as String?,
+        cdnName: json['cdn_name'] as String?,
+        primaryMuscles: _stringList(json['primary_muscles']),
+        secondaryMuscles: _stringList(json['secondary_muscles']),
+      );
 
   static List<String> _stringList(Object? value) =>
       value is List ? [for (final v in value) v.toString()] : const [];
@@ -61,7 +61,10 @@ class ExerciseRepository {
   const ExerciseRepository(this._client);
   final SupabaseClient _client;
   Future<List<Exercise>> getGlobalExercises({String? muscleGroup}) async {
-    var query = _client.from('exercises').select('id,name,muscle_group,equipment').isFilter('google_user_id', null);
+    var query = _client
+        .from('exercises')
+        .select('id,name,muscle_group,equipment')
+        .isFilter('google_user_id', null);
     if (muscleGroup != null && muscleGroup.isNotEmpty) {
       query = query.eq('muscle_group', muscleGroup);
     }

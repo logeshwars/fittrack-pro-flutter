@@ -3,14 +3,14 @@ import 'app_colors.dart';
 
 abstract final class AppTheme {
   static ThemeData get dark => _build(
-    brightness: Brightness.dark,
-    palette: AppPalette.dark,
-  );
+        brightness: Brightness.dark,
+        palette: AppPalette.dark,
+      );
 
   static ThemeData get light => _build(
-    brightness: Brightness.light,
-    palette: AppPalette.light,
-  );
+        brightness: Brightness.light,
+        palette: AppPalette.light,
+      );
 
   static ThemeData _build({
     required Brightness brightness,

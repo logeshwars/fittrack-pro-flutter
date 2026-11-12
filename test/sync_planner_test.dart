@@ -33,7 +33,10 @@ void main() {
   });
 
   test('requires sign-in and quarantines exhausted retries', () {
-    final pending = [operation('1', 'alice'), operation('2', 'alice', attempts: 5)];
+    final pending = [
+      operation('1', 'alice'),
+      operation('2', 'alice', attempts: 5)
+    ];
     final signedOut = const SyncPlanner().plan(
       pending: pending,
       authenticatedUserId: null,

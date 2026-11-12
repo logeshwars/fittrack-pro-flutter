@@ -41,10 +41,9 @@ class WorkoutHistoryDetailScreen extends ConsumerWidget {
             child: CircularProgressIndicator(color: colors.accent),
           ),
           error: (_, __) => _Missing(onBack: () => context.pop()),
-          data: (workout) =>
-              workout == null
-                  ? _Missing(onBack: () => context.pop())
-                  : _WorkoutDetail(workout: workout),
+          data: (workout) => workout == null
+              ? _Missing(onBack: () => context.pop())
+              : _WorkoutDetail(workout: workout),
         ),
       ),
     );
@@ -506,53 +505,53 @@ class _Missing extends StatelessWidget {
 }
 
 _Template _split(String id) => switch (id) {
-  'upper-lower' => const _Template(
-      'Upper / Lower',
-      '4 days · Strength and hypertrophy',
-      [
-        _Day('Upper A', 'Chest · Back · Shoulders · Arms'),
-        _Day('Lower A', 'Quads · Hamstrings · Calves'),
-        _Day('Upper B', 'Chest · Back · Shoulders · Arms'),
-        _Day('Lower B', 'Glutes · Hamstrings · Quads'),
-      ],
-    ),
-  'full-body' => const _Template(
-      'Full Body',
-      '3 days · Efficient total-body training',
-      [
-        _Day('Full Body A', 'Squat · Press · Row'),
-        _Day('Full Body B', 'Hinge · Pull · Press'),
-        _Day('Full Body C', 'Legs · Push · Pull'),
-      ],
-    ),
-  _ => const _Template(
-      'Push / Pull / Legs',
-      '3 days · Balanced strength split',
-      [
-        _Day('Push', 'Chest · Shoulders · Triceps'),
-        _Day('Pull', 'Back · Biceps · Rear delts'),
-        _Day('Legs', 'Quads · Hamstrings · Glutes · Calves'),
-      ],
-    ),
-};
+      'upper-lower' => const _Template(
+          'Upper / Lower',
+          '4 days · Strength and hypertrophy',
+          [
+            _Day('Upper A', 'Chest · Back · Shoulders · Arms'),
+            _Day('Lower A', 'Quads · Hamstrings · Calves'),
+            _Day('Upper B', 'Chest · Back · Shoulders · Arms'),
+            _Day('Lower B', 'Glutes · Hamstrings · Quads'),
+          ],
+        ),
+      'full-body' => const _Template(
+          'Full Body',
+          '3 days · Efficient total-body training',
+          [
+            _Day('Full Body A', 'Squat · Press · Row'),
+            _Day('Full Body B', 'Hinge · Pull · Press'),
+            _Day('Full Body C', 'Legs · Push · Pull'),
+          ],
+        ),
+      _ => const _Template(
+          'Push / Pull / Legs',
+          '3 days · Balanced strength split',
+          [
+            _Day('Push', 'Chest · Shoulders · Triceps'),
+            _Day('Pull', 'Back · Biceps · Rear delts'),
+            _Day('Legs', 'Quads · Hamstrings · Glutes · Calves'),
+          ],
+        ),
+    };
 
 _Template _preset(String id) => switch (id) {
-  'upper' => const _Template(
-      'Upper Body',
-      'Balanced upper-body strength session',
-      [_Day('Upper Body', 'Chest · Back · Shoulders · Arms')],
-    ),
-  'lower' => const _Template(
-      'Lower Body',
-      'Lower-body strength session',
-      [_Day('Lower Body', 'Quads · Hamstrings · Glutes · Calves')],
-    ),
-  _ => const _Template(
-      'Full Body',
-      'Efficient full-body session',
-      [_Day('Full Body', 'Legs · Push · Pull')],
-    ),
-};
+      'upper' => const _Template(
+          'Upper Body',
+          'Balanced upper-body strength session',
+          [_Day('Upper Body', 'Chest · Back · Shoulders · Arms')],
+        ),
+      'lower' => const _Template(
+          'Lower Body',
+          'Lower-body strength session',
+          [_Day('Lower Body', 'Quads · Hamstrings · Glutes · Calves')],
+        ),
+      _ => const _Template(
+          'Full Body',
+          'Efficient full-body session',
+          [_Day('Full Body', 'Legs · Push · Pull')],
+        ),
+    };
 
 class _Template {
   const _Template(this.name, this.subtitle, this.days);

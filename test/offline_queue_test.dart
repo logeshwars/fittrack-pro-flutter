@@ -7,12 +7,16 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('queue persists operations, deduplicates IDs and isolates users', () async {
+  test('queue persists operations, deduplicates IDs and isolates users',
+      () async {
     final prefs = await SharedPreferences.getInstance();
     final queue = OfflineQueue(prefs);
     final op = OfflineOperation(
-      id: 'stable-id', userId: 'user-a', type: OfflineOperationType.logWeight,
-      payload: {'weight_kg': 75.5}, createdAt: DateTime.utc(2026, 1, 1),
+      id: 'stable-id',
+      userId: 'user-a',
+      type: OfflineOperationType.logWeight,
+      payload: {'weight_kg': 75.5},
+      createdAt: DateTime.utc(2026, 1, 1),
     );
     await queue.enqueue(op);
     await queue.enqueue(op);
@@ -29,8 +33,11 @@ void main() {
 
   test('offline operation serialization retains stable identity', () {
     final operation = OfflineOperation(
-      id: 'id', userId: 'user', type: OfflineOperationType.logSet,
-      payload: {'reps': 8}, createdAt: DateTime.utc(2026, 2, 1),
+      id: 'id',
+      userId: 'user',
+      type: OfflineOperationType.logSet,
+      payload: {'reps': 8},
+      createdAt: DateTime.utc(2026, 2, 1),
     );
     final restored = OfflineOperation.decode(operation.encode());
     expect(restored.id, operation.id);

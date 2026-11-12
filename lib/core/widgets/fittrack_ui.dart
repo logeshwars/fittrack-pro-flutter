@@ -229,7 +229,6 @@ class FitTrackMiniRing extends StatelessWidget {
   }
 }
 
-
 class FitTrackScreenHeader extends StatelessWidget {
   const FitTrackScreenHeader({
     required this.title,
@@ -263,7 +262,9 @@ class FitTrackScreenHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: FitTrackText.screenTitle.copyWith(color: colors.text)),
+                Text(title,
+                    style:
+                        FitTrackText.screenTitle.copyWith(color: colors.text)),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 1),
@@ -318,7 +319,8 @@ class FitTrackSegmentedTabs extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: active ? colors.accent : colors.border2),
+                    border: Border.all(
+                        color: active ? colors.accent : colors.border2),
                   ),
                   alignment: Alignment.center,
                   child: Text(

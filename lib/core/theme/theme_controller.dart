@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ThemeMode initialThemeMode = ThemeMode.dark;
 
 ThemeMode themeModeFromPreference(String? value) => switch (value) {
-  'light' => ThemeMode.light,
-  'system' => ThemeMode.system,
-  _ => ThemeMode.dark,
-};
+      'light' => ThemeMode.light,
+      'system' => ThemeMode.system,
+      _ => ThemeMode.dark,
+    };
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => initialThemeMode);

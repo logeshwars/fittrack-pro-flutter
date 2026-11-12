@@ -1,5 +1,9 @@
 /// Release gates for external services that must not be simulated locally.
-enum IntegrationFeature { revenueCatSubscriptions, androidHealthConnect, iosHealthKit }
+enum IntegrationFeature {
+  revenueCatSubscriptions,
+  androidHealthConnect,
+  iosHealthKit
+}
 
 class IntegrationGates {
   const IntegrationGates._();

@@ -9,11 +9,14 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../data/cardio_repository.dart';
 import '../domain/cardio_session.dart';
 
-final cardioProvider = FutureProvider.autoDispose<List<CardioSession>>((ref) async {
+final cardioProvider =
+    FutureProvider.autoDispose<List<CardioSession>>((ref) async {
   if (!AppConfig.hasSupabase) return [];
   final client = Supabase.instance.client;
   final user = client.auth.currentUser;
-  return user == null ? [] : CardioRepository(client).recent(authenticatedUserId: user.id);
+  return user == null
+      ? []
+      : CardioRepository(client).recent(authenticatedUserId: user.id);
 });
 
 class CardioScreen extends ConsumerWidget {
@@ -54,12 +57,42 @@ class CardioScreen extends ConsumerWidget {
               mainAxisSpacing: 10,
               childAspectRatio: .88,
               children: const [
-                _ActivityTile(type: 'running', label: 'Running', hint: 'Road · Treadmill', icon: Icons.directions_run, accent: AppColors.cardio),
-                _ActivityTile(type: 'cycling', label: 'Cycling', hint: 'Indoor · Outdoor', icon: Icons.directions_bike, accent: Color(0xFF4CAF50)),
-                _ActivityTile(type: 'walking', label: 'Walking', hint: 'Walk · Hike', icon: Icons.directions_walk, accent: Color(0xFF2196F3)),
-                _ActivityTile(type: 'hiit', label: 'HIIT', hint: 'Intervals', icon: Icons.timer_outlined, accent: Color(0xFF9C27B0)),
-                _ActivityTile(type: 'swimming', label: 'Swimming', hint: 'Pool · Open water', icon: Icons.pool, accent: Color(0xFF00BCD4)),
-                _ActivityTile(type: 'other', label: 'Other', hint: 'Custom cardio', icon: Icons.favorite_outline, accent: Color(0xFF607D8B)),
+                _ActivityTile(
+                    type: 'running',
+                    label: 'Running',
+                    hint: 'Road · Treadmill',
+                    icon: Icons.directions_run,
+                    accent: AppColors.cardio),
+                _ActivityTile(
+                    type: 'cycling',
+                    label: 'Cycling',
+                    hint: 'Indoor · Outdoor',
+                    icon: Icons.directions_bike,
+                    accent: Color(0xFF4CAF50)),
+                _ActivityTile(
+                    type: 'walking',
+                    label: 'Walking',
+                    hint: 'Walk · Hike',
+                    icon: Icons.directions_walk,
+                    accent: Color(0xFF2196F3)),
+                _ActivityTile(
+                    type: 'hiit',
+                    label: 'HIIT',
+                    hint: 'Intervals',
+                    icon: Icons.timer_outlined,
+                    accent: Color(0xFF9C27B0)),
+                _ActivityTile(
+                    type: 'swimming',
+                    label: 'Swimming',
+                    hint: 'Pool · Open water',
+                    icon: Icons.pool,
+                    accent: Color(0xFF00BCD4)),
+                _ActivityTile(
+                    type: 'other',
+                    label: 'Other',
+                    hint: 'Custom cardio',
+                    icon: Icons.favorite_outline,
+                    accent: Color(0xFF607D8B)),
               ],
             ),
           ),
@@ -67,16 +100,20 @@ class CardioScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
             child: FitTrackSectionLabel(
               title: 'Recent Sessions',
-              action: sessions.valueOrNull == null ? null : '${sessions.valueOrNull!.length}',
+              action: sessions.valueOrNull == null
+                  ? null
+                  : '${sessions.valueOrNull!.length}',
               onAction: sessions.valueOrNull == null ? null : () {},
             ),
           ),
           sessions.when(
             loading: () => Padding(
               padding: const EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator(color: colors.accent)),
+              child: Center(
+                  child: CircularProgressIndicator(color: colors.accent)),
             ),
-            error: (_, __) => const _Info(text: 'Unable to load cardio sessions.'),
+            error: (_, __) =>
+                const _Info(text: 'Unable to load cardio sessions.'),
             data: (items) {
               if (items.isEmpty) {
                 return const _Info(
@@ -86,7 +123,8 @@ class CardioScreen extends ConsumerWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
-                  children: items.map((item) => _SessionCard(session: item)).toList(),
+                  children:
+                      items.map((item) => _SessionCard(session: item)).toList(),
                 ),
               );
             },
@@ -204,7 +242,8 @@ class _SessionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    DateFormat('EEE · MMM d · h:mm a').format(session.startedAt.toLocal()),
+                    DateFormat('EEE · MMM d · h:mm a')
+                        .format(session.startedAt.toLocal()),
                     style: TextStyle(fontSize: 10, color: colors.muted),
                   ),
                   const SizedBox(height: 6),

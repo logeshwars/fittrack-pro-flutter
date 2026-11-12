@@ -15,7 +15,8 @@ class LocalDatabase {
   static const _version = 1;
 
   static Future<LocalDatabase> open({String? pathOverride}) async {
-    final path = pathOverride ?? p.join(await getDatabasesPath(), 'fittrack.db');
+    final path =
+        pathOverride ?? p.join(await getDatabasesPath(), 'fittrack.db');
     final db = await openDatabase(
       path,
       version: _version,

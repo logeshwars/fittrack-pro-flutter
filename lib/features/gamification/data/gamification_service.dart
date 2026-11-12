@@ -174,7 +174,11 @@ class GamificationService {
             streakLength: (row['streak_length'] as num?)?.toInt() ?? 0,
             prCount: (row['pr_count'] as num?)?.toInt() ?? 0,
           );
-          return {...row, 'rank_score': score, 'rank_tier': rankTierFromScore(score)};
+          return {
+            ...row,
+            'rank_score': score,
+            'rank_tier': rankTierFromScore(score)
+          };
         }(),
     ];
     scored.sort(

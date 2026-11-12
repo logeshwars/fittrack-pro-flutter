@@ -9,12 +9,14 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../data/nutrition_repository.dart';
 import '../domain/nutrition_models.dart';
 
-final nutritionLogsProvider = FutureProvider.autoDispose<List<NutritionLog>>((ref) async {
+final nutritionLogsProvider =
+    FutureProvider.autoDispose<List<NutritionLog>>((ref) async {
   if (!AppConfig.hasSupabase) return const [];
   final client = Supabase.instance.client;
   final user = client.auth.currentUser;
   if (user == null) return const [];
-  return NutritionRepository(client).getRecentLogs(authenticatedUserId: user.id);
+  return NutritionRepository(client)
+      .getRecentLogs(authenticatedUserId: user.id);
 });
 
 class NutritionScreen extends ConsumerWidget {
@@ -57,7 +59,8 @@ class NutritionScreen extends ConsumerWidget {
             logs.when(
               loading: () => Padding(
                 padding: const EdgeInsets.all(32),
-                child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                child: Center(
+                    child: CircularProgressIndicator(color: colors.accent)),
               ),
               error: (_, __) => const _Info(text: 'Unable to load nutrition.'),
               data: (items) {
@@ -99,7 +102,8 @@ class NutritionScreen extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                       child: FitTrackSectionLabel(
                         title: 'Food Log',
-                        action: '${todayItems.length} ${todayItems.length == 1 ? 'entry' : 'entries'}',
+                        action:
+                            '${todayItems.length} ${todayItems.length == 1 ? 'entry' : 'entries'}',
                         onAction: () {},
                       ),
                     ),
@@ -109,7 +113,9 @@ class NutritionScreen extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(
-                          children: todayItems.map((item) => _MealCard(item: item)).toList(),
+                          children: todayItems
+                              .map((item) => _MealCard(item: item))
+                              .toList(),
                         ),
                       ),
                   ],
@@ -202,12 +208,15 @@ class _BudgetCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             remaining > 0
-                                ? NumberFormat.decimalPattern().format(remaining)
+                                ? NumberFormat.decimalPattern()
+                                    .format(remaining)
                                 : 'Goal reached',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: remaining > 0 ? colors.text : AppColors.recovery,
+                              color: remaining > 0
+                                  ? colors.text
+                                  : AppColors.recovery,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -340,7 +349,8 @@ class _MealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    final calories = item.calories == null ? '' : ' · ${item.calories!.round()} kcal';
+    final calories =
+        item.calories == null ? '' : ' · ${item.calories!.round()} kcal';
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -356,7 +366,8 @@ class _MealCard extends StatelessWidget {
             height: 74,
             color: AppColors.nutrition.withValues(alpha: .05),
             alignment: Alignment.center,
-            child: const Icon(Icons.restaurant, size: 22, color: AppColors.nutrition),
+            child: const Icon(Icons.restaurant,
+                size: 22, color: AppColors.nutrition),
           ),
           Expanded(
             child: Padding(

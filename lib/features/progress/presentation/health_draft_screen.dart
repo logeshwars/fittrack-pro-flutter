@@ -191,7 +191,8 @@ class _HealthDraftScreenState extends State<HealthDraftScreen> {
                   _bedHour = (_bedHour + delta + 24) % 24;
                 }),
                 onBedMinute: (delta) => setState(() {
-                  final total = (_bedHour * 60 + _bedMinute + delta + 1440) % 1440;
+                  final total =
+                      (_bedHour * 60 + _bedMinute + delta + 1440) % 1440;
                   _bedHour = total ~/ 60;
                   _bedMinute = total % 60;
                 }),
@@ -199,7 +200,8 @@ class _HealthDraftScreenState extends State<HealthDraftScreen> {
                   _wakeHour = (_wakeHour + delta + 24) % 24;
                 }),
                 onWakeMinute: (delta) => setState(() {
-                  final total = (_wakeHour * 60 + _wakeMinute + delta + 1440) % 1440;
+                  final total =
+                      (_wakeHour * 60 + _wakeMinute + delta + 1440) % 1440;
                   _wakeHour = total ~/ 60;
                   _wakeMinute = total % 60;
                 }),
@@ -483,7 +485,9 @@ class _WeightRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat('EEE · MMM d').format(item.loggedAt).toUpperCase(),
+                    DateFormat('EEE · MMM d')
+                        .format(item.loggedAt)
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,

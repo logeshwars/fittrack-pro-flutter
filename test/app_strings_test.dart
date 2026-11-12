@@ -3,7 +3,15 @@ import 'package:fittrack_pro/core/l10n/app_strings.dart';
 
 void main() {
   test('all original app languages have navigation labels', () {
-    const keys = ['today', 'workout', 'nutrition', 'cardio', 'progress', 'account', 'achievements'];
+    const keys = [
+      'today',
+      'workout',
+      'nutrition',
+      'cardio',
+      'progress',
+      'account',
+      'achievements'
+    ];
     for (final language in AppStrings.supported) {
       final strings = AppStrings(language);
       for (final key in keys) {

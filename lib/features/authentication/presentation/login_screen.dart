@@ -53,7 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (outcome.requiresVerification) {
           setState(() {
             _tab = _AuthTab.login;
-            _error = 'Account created. Check your inbox to verify your email, then log in.';
+            _error =
+                'Account created. Check your inbox to verify your email, then log in.';
           });
           return;
         }
@@ -122,8 +123,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final bg = dark ? const Color(0xFF080E00) : const Color(0xFFF5F5EE);
     final cardBg = dark ? const Color(0xFF0F1A00) : Colors.white;
     final inputBg = dark ? const Color(0xFF161F00) : const Color(0xFFF8F8F3);
-    final inputBorder = dark ? const Color(0xFF2A3800) : const Color(0xFFE0E0D8);
-    final placeholder = dark ? const Color(0xFF4A5A30) : const Color(0xFFAAAAAA);
+    final inputBorder =
+        dark ? const Color(0xFF2A3800) : const Color(0xFFE0E0D8);
+    final placeholder =
+        dark ? const Color(0xFF4A5A30) : const Color(0xFFAAAAAA);
 
     if (signedIn) {
       return Scaffold(
@@ -135,7 +138,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.canPop() ? context.pop() : context.go('/today'),
+                    onPressed: () =>
+                        context.canPop() ? context.pop() : context.go('/today'),
                     icon: Icon(Icons.arrow_back, color: colors.text),
                   ),
                   const Spacer(),
@@ -150,7 +154,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   color: cardBg,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: dark ? const Color(0xFF1E2C00) : const Color(0xFFE8E8E0),
+                    color: dark
+                        ? const Color(0xFF1E2C00)
+                        : const Color(0xFFE8E8E0),
                   ),
                 ),
                 child: Column(
@@ -219,7 +225,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 color: cardBg,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: dark ? const Color(0xFF1E2C00) : const Color(0xFFE8E8E0),
+                  color:
+                      dark ? const Color(0xFF1E2C00) : const Color(0xFFE8E8E0),
                 ),
               ),
               child: Form(
@@ -229,7 +236,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        color: dark ? const Color(0xFF0C1200) : const Color(0xFFEFEFEA),
+                        color: dark
+                            ? const Color(0xFF0C1200)
+                            : const Color(0xFFEFEFEA),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -275,8 +284,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             filled: false,
                             hintText: 'Your name',
                             hintStyle: TextStyle(color: placeholder),
-                            prefixIcon: Icon(Icons.person_outline, size: 18, color: placeholder),
-                            prefixIconConstraints: const BoxConstraints(minWidth: 34),
+                            prefixIcon: Icon(Icons.person_outline,
+                                size: 18, color: placeholder),
+                            prefixIconConstraints:
+                                const BoxConstraints(minWidth: 34),
                           ),
                         ),
                       ),
@@ -300,8 +311,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           filled: false,
                           hintText: 'you@example.com',
                           hintStyle: TextStyle(color: placeholder),
-                          prefixIcon: Icon(Icons.mail_outline, size: 18, color: placeholder),
-                          prefixIconConstraints: const BoxConstraints(minWidth: 34),
+                          prefixIcon: Icon(Icons.mail_outline,
+                              size: 18, color: placeholder),
+                          prefixIconConstraints:
+                              const BoxConstraints(minWidth: 34),
                         ),
                         validator: (value) =>
                             value == null || !value.contains('@')
@@ -327,21 +340,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           filled: false,
                           hintText: 'Minimum 6 characters',
                           hintStyle: TextStyle(color: placeholder),
-                          prefixIcon: Icon(Icons.lock_outline, size: 18, color: placeholder),
-                          prefixIconConstraints: const BoxConstraints(minWidth: 34),
+                          prefixIcon: Icon(Icons.lock_outline,
+                              size: 18, color: placeholder),
+                          prefixIconConstraints:
+                              const BoxConstraints(minWidth: 34),
                           suffixIcon: IconButton(
-                            onPressed: () => setState(() => _showPassword = !_showPassword),
+                            onPressed: () =>
+                                setState(() => _showPassword = !_showPassword),
                             icon: Icon(
-                              _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _showPassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               size: 18,
                               color: placeholder,
                             ),
                           ),
                         ),
-                        validator: (value) =>
-                            value == null || value.length < 6
-                                ? 'Password must be at least 6 characters'
-                                : null,
+                        validator: (value) => value == null || value.length < 6
+                            ? 'Password must be at least 6 characters'
+                            : null,
                       ),
                     ),
                     if (_tab == _AuthTab.login)
@@ -369,12 +386,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(top: 14),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE24B4A).withValues(alpha: .10),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: const Color(0xFFE24B4A).withValues(alpha: .25),
+                            color:
+                                const Color(0xFFE24B4A).withValues(alpha: .25),
                           ),
                         ),
                         child: Text(
@@ -390,11 +409,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: _busy || !AppConfig.hasSupabase ? null : _submit,
+                        onPressed:
+                            _busy || !AppConfig.hasSupabase ? null : _submit,
                         style: FilledButton.styleFrom(
                           backgroundColor: colors.accent,
                           foregroundColor: colors.accentText,
-                          disabledBackgroundColor: colors.accent.withValues(alpha: .35),
+                          disabledBackgroundColor:
+                              colors.accent.withValues(alpha: .35),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -410,7 +431,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               )
                             : Text(
-                                _tab == _AuthTab.login ? 'Login' : 'Create Account',
+                                _tab == _AuthTab.login
+                                    ? 'Login'
+                                    : 'Create Account',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
@@ -421,19 +444,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: Divider(color: dark ? const Color(0xFF1E2C00) : const Color(0xFFE0E0D8))),
+                        Expanded(
+                            child: Divider(
+                                color: dark
+                                    ? const Color(0xFF1E2C00)
+                                    : const Color(0xFFE0E0D8))),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             'OR',
                             style: TextStyle(
-                              color: dark ? const Color(0xFF3A4A20) : const Color(0xFFAAAAAA),
+                              color: dark
+                                  ? const Color(0xFF3A4A20)
+                                  : const Color(0xFFAAAAAA),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: dark ? const Color(0xFF1E2C00) : const Color(0xFFE0E0D8))),
+                        Expanded(
+                            child: Divider(
+                                color: dark
+                                    ? const Color(0xFF1E2C00)
+                                    : const Color(0xFFE0E0D8))),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -496,7 +529,8 @@ class _Brand extends StatelessWidget {
                 ],
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.fitness_center, size: 28, color: Colors.white),
+              child: const Icon(Icons.fitness_center,
+                  size: 28, color: Colors.white),
             ),
             Positioned(
               right: -4,
@@ -509,7 +543,8 @@ class _Brand extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.bolt, size: 12, color: Color(0xFF0C1200)),
+                child:
+                    const Icon(Icons.bolt, size: 12, color: Color(0xFF0C1200)),
               ),
             ),
           ],

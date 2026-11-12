@@ -214,9 +214,8 @@ class _FoodDraftScreenState extends State<FoodDraftScreen> {
                                 : colors.card,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: active
-                                  ? AppColors.nutrition
-                                  : colors.border2,
+                              color:
+                                  active ? AppColors.nutrition : colors.border2,
                             ),
                           ),
                           child: Text(
@@ -224,9 +223,8 @@ class _FoodDraftScreenState extends State<FoodDraftScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: active
-                                  ? AppColors.nutrition
-                                  : colors.muted,
+                              color:
+                                  active ? AppColors.nutrition : colors.muted,
                             ),
                           ),
                         ),
@@ -466,7 +464,8 @@ class _LargeNumberField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,

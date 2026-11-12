@@ -14,16 +14,16 @@ class WeightDraft {
   bool get isValid => kg.isFinite && kg > 0 && kg <= 500;
 
   Map<String, dynamic> toJson() => {
-    'kg': kg,
-    'logged_at': loggedAt.toUtc().toIso8601String(),
-    'note': note,
-  };
+        'kg': kg,
+        'logged_at': loggedAt.toUtc().toIso8601String(),
+        'note': note,
+      };
 
   factory WeightDraft.fromJson(Map<String, dynamic> json) => WeightDraft(
-    kg: (json['kg'] as num).toDouble(),
-    loggedAt: DateTime.parse(json['logged_at'] as String),
-    note: json['note'] as String?,
-  );
+        kg: (json['kg'] as num).toDouble(),
+        loggedAt: DateTime.parse(json['logged_at'] as String),
+        note: json['note'] as String?,
+      );
 }
 
 class SleepDraft {
@@ -47,18 +47,18 @@ class SleepDraft {
       (quality == null || (quality! >= 1 && quality! <= 5));
 
   Map<String, dynamic> toJson() => {
-    'bedtime': bedtime.toUtc().toIso8601String(),
-    'wake_time': wakeTime.toUtc().toIso8601String(),
-    'quality': quality,
-    'notes': notes,
-  };
+        'bedtime': bedtime.toUtc().toIso8601String(),
+        'wake_time': wakeTime.toUtc().toIso8601String(),
+        'quality': quality,
+        'notes': notes,
+      };
 
   factory SleepDraft.fromJson(Map<String, dynamic> json) => SleepDraft(
-    bedtime: DateTime.parse(json['bedtime'] as String),
-    wakeTime: DateTime.parse(json['wake_time'] as String),
-    quality: (json['quality'] as num?)?.toInt(),
-    notes: json['notes'] as String?,
-  );
+        bedtime: DateTime.parse(json['bedtime'] as String),
+        wakeTime: DateTime.parse(json['wake_time'] as String),
+        quality: (json['quality'] as num?)?.toInt(),
+        notes: json['notes'] as String?,
+      );
 }
 
 class HealthDrafts {
@@ -74,9 +74,9 @@ class HealthDrafts {
       HealthDrafts(weights: weights, sleep: [...sleep, draft]);
 
   String encode() => jsonEncode({
-    'weights': weights.map((item) => item.toJson()).toList(),
-    'sleep': sleep.map((item) => item.toJson()).toList(),
-  });
+        'weights': weights.map((item) => item.toJson()).toList(),
+        'sleep': sleep.map((item) => item.toJson()).toList(),
+      });
 
   factory HealthDrafts.decode(String raw) {
     final json = jsonDecode(raw) as Map<String, dynamic>;

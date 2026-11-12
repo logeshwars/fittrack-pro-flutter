@@ -212,7 +212,8 @@ class WorkoutService {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  Future<bool> _checkIsPr(String exerciseId, double? weightKg, int? reps) async {
+  Future<bool> _checkIsPr(
+      String exerciseId, double? weightKg, int? reps) async {
     if (weightKg == null || reps == null || weightKg <= 0 || reps <= 0) {
       return false;
     }

@@ -115,8 +115,10 @@ class CardioService {
       'id': id ?? _gateway.newId(),
       'type': type,
       'name': name,
-      'started_at':
-          end.subtract(Duration(seconds: durationSeconds)).toUtc().toIso8601String(),
+      'started_at': end
+          .subtract(Duration(seconds: durationSeconds))
+          .toUtc()
+          .toIso8601String(),
       'finished_at': end.toUtc().toIso8601String(),
       'duration_seconds': durationSeconds,
       'distance_km': distanceKm,

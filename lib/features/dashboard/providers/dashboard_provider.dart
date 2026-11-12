@@ -50,7 +50,8 @@ class DashboardData {
   int get workouts => recentWorkouts.length;
 }
 
-final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
+final dashboardProvider =
+    FutureProvider.autoDispose<DashboardData>((ref) async {
   if (!AppConfig.hasSupabase) {
     return const DashboardData(configured: false, signedIn: false);
   }
@@ -80,13 +81,12 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
   final nutritionTotals = NutritionTotals.fromLogs(nutrition);
 
   final metadata = user.userMetadata ?? const <String, dynamic>{};
-  var displayName = (
-    metadata['full_name'] ??
-    metadata['name'] ??
-    metadata['display_name'] ??
-    user.email?.split('@').first ??
-    'there'
-  ).toString();
+  var displayName = (metadata['full_name'] ??
+          metadata['name'] ??
+          metadata['display_name'] ??
+          user.email?.split('@').first ??
+          'there')
+      .toString();
   String? avatarUrl =
       (metadata['avatar_url'] ?? metadata['picture'])?.toString();
   var proteinGoal = 150;
@@ -118,8 +118,7 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
     // Keep the dashboard usable while the gamification RLS audit is ongoing.
   }
 
-  final latestSleep =
-      progress.sleep.isEmpty ? null : progress.sleep.first;
+  final latestSleep = progress.sleep.isEmpty ? null : progress.sleep.first;
 
   return DashboardData(
     configured: true,

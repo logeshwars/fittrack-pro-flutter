@@ -38,8 +38,7 @@ class _WorkoutDraftScreenState extends State<WorkoutDraftScreen> {
       if (!mounted) return;
       setState(() {
         _store = store;
-        _draft =
-            store.load() ??
+        _draft = store.load() ??
             WorkoutDraft(name: 'New workout', startedAt: DateTime.now());
       });
     } catch (_) {
@@ -210,8 +209,8 @@ class _WorkoutDraftScreenState extends State<WorkoutDraftScreen> {
     for (var i = 0; i < draft.sets.length; i++) {
       final set = draft.sets[i];
       groups.putIfAbsent(set.exerciseName, () => []).add(
-        _IndexedSet(index: i, set: set),
-      );
+            _IndexedSet(index: i, set: set),
+          );
     }
     return groups.entries
         .map((entry) => _ExerciseGroup(name: entry.key, sets: entry.value))
@@ -377,9 +376,8 @@ class _Stat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          border: divider
-              ? Border(left: BorderSide(color: colors.border2))
-              : null,
+          border:
+              divider ? Border(left: BorderSide(color: colors.border2)) : null,
         ),
         child: Column(
           children: [
@@ -656,9 +654,7 @@ class _SetRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
       decoration: BoxDecoration(
-        border: first
-            ? null
-            : Border(top: BorderSide(color: colors.border)),
+        border: first ? null : Border(top: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [

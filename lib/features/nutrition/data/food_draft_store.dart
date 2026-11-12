@@ -9,7 +9,9 @@ class FoodDraftStore {
 
   FoodDraftCollection load() {
     final raw = preferences.getString(key);
-    return raw == null ? const FoodDraftCollection([]) : FoodDraftCollection.decode(raw);
+    return raw == null
+        ? const FoodDraftCollection([])
+        : FoodDraftCollection.decode(raw);
   }
 
   Future<void> save(FoodDraftCollection collection) async {

@@ -16,7 +16,9 @@ class OfflineQueue {
       return [];
     }
     final decoded = jsonDecode(raw) as List<dynamic>;
-    return decoded.map((item) => OfflineOperation.fromJson(item as Map<String, dynamic>)).toList();
+    return decoded
+        .map((item) => OfflineOperation.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> enqueue(OfflineOperation operation) async {
@@ -36,13 +38,16 @@ class OfflineQueue {
     if (!items.any((item) => item.id == operationId && item.userId == userId)) {
       return;
     }
-    items.removeWhere((item) => item.id == operationId && item.userId == userId);
+    items
+        .removeWhere((item) => item.id == operationId && item.userId == userId);
     await _save(items);
   }
 
-  Future<void> incrementAttempts(String operationId, {required String userId}) async {
+  Future<void> incrementAttempts(String operationId,
+      {required String userId}) async {
     final items = pending;
-    final index = items.indexWhere((item) => item.id == operationId && item.userId == userId);
+    final index = items
+        .indexWhere((item) => item.id == operationId && item.userId == userId);
     if (index < 0) {
       return;
     }
@@ -54,7 +59,8 @@ class OfflineQueue {
       pending.where((operation) => operation.userId == userId).toList();
 
   Future<void> _save(List<OfflineOperation> operations) async {
-    final success = await _preferences.setString(storageKey, jsonEncode(operations.map((op) => op.toJson()).toList()));
+    final success = await _preferences.setString(
+        storageKey, jsonEncode(operations.map((op) => op.toJson()).toList()));
     if (!success) {
       throw StateError('Failed to persist offline queue');
     }

@@ -203,8 +203,7 @@ class OutboxStore {
       'outbox',
       {
         'attempts': op.attempts + 1,
-        'next_retry_at':
-            DateTime.now().add(retryIn).millisecondsSinceEpoch,
+        'next_retry_at': DateTime.now().add(retryIn).millisecondsSinceEpoch,
         'status': dead ? 'dead' : 'pending',
         'last_error': error.length > 500 ? error.substring(0, 500) : error,
       },

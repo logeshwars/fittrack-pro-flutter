@@ -12,7 +12,8 @@ class SyncStatus {
     required String? authenticatedUserId,
   }) {
     if (authenticatedUserId == null || authenticatedUserId.isEmpty) {
-      return const SyncStatus(pendingCount: 0, blockReason: SyncBlockReason.signedOut);
+      return const SyncStatus(
+          pendingCount: 0, blockReason: SyncBlockReason.signedOut);
     }
     final pending = queue.forUser(authenticatedUserId);
     final plan = const SyncPlanner().plan(

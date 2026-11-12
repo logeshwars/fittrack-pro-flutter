@@ -9,7 +9,8 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../data/progress_repository.dart';
 import '../domain/progress_models.dart';
 
-final progressProvider = FutureProvider.autoDispose<({List<WeightLog> weights, List<SleepLog> sleep})>((ref) async {
+final progressProvider = FutureProvider.autoDispose<
+    ({List<WeightLog> weights, List<SleepLog> sleep})>((ref) async {
   if (!AppConfig.hasSupabase) {
     return (weights: <WeightLog>[], sleep: <SleepLog>[]);
   }
@@ -66,7 +67,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
             progress.when(
               loading: () => Padding(
                 padding: const EdgeInsets.all(32),
-                child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                child: Center(
+                    child: CircularProgressIndicator(color: colors.accent)),
               ),
               error: (_, __) => const _Info(text: 'Unable to load progress.'),
               data: (data) => _Analytics(
@@ -197,7 +199,8 @@ class _Analytics extends StatelessWidget {
           else
             ...sleep.take(6).map(
                   (s) => _HistoryMetric(
-                    title: '${(s.durationMinutes / 60).toStringAsFixed(1)} hours',
+                    title:
+                        '${(s.durationMinutes / 60).toStringAsFixed(1)} hours',
                     subtitle: DateFormat('EEE · MMM d').format(s.wakeTime),
                     color: AppColors.sleep,
                   ),
@@ -279,9 +282,7 @@ class _MiniHeatMap extends StatelessWidget {
     final colors = AppPalette.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final dateSet = dates
-        .map((d) => DateTime(d.year, d.month, d.day))
-        .toSet();
+    final dateSet = dates.map((d) => DateTime(d.year, d.month, d.day)).toSet();
 
     return Row(
       children: List.generate(14, (index) {
@@ -292,13 +293,9 @@ class _MiniHeatMap extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 2),
             height: 18,
             decoration: BoxDecoration(
-              color: hit
-                  ? color.withValues(alpha: .75)
-                  : colors.cardAlt,
+              color: hit ? color.withValues(alpha: .75) : colors.cardAlt,
               borderRadius: BorderRadius.circular(3),
-              border: date == today
-                  ? Border.all(color: colors.accent)
-                  : null,
+              border: date == today ? Border.all(color: colors.accent) : null,
             ),
           ),
         );
@@ -394,7 +391,8 @@ class _AchievementsCard extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
                   color: colors.accent,
                   borderRadius: BorderRadius.circular(10),

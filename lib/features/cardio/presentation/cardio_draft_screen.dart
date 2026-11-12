@@ -24,11 +24,16 @@ class _CardioDraftScreenState extends State<CardioDraftScreen> {
   String? _error;
 
   static const _types = <_CardioType>[
-    _CardioType('running', 'Run', Icons.directions_run, Color(0xFFFF6B35), '+50 XP for 5km'),
-    _CardioType('cycling', 'Cycle', Icons.directions_bike, Color(0xFF4FC3F7), '+30 XP base'),
-    _CardioType('walking', 'Walk', Icons.directions_walk, Color(0xFF81C784), '+20 XP for 30min'),
-    _CardioType('swimming', 'Swim', Icons.pool, Color(0xFF4DD0E1), '+30 XP base'),
-    _CardioType('hiit', 'HIIT', Icons.local_fire_department, Colors.white, '+50 XP for 30min'),
+    _CardioType('running', 'Run', Icons.directions_run, Color(0xFFFF6B35),
+        '+50 XP for 5km'),
+    _CardioType('cycling', 'Cycle', Icons.directions_bike, Color(0xFF4FC3F7),
+        '+30 XP base'),
+    _CardioType('walking', 'Walk', Icons.directions_walk, Color(0xFF81C784),
+        '+20 XP for 30min'),
+    _CardioType(
+        'swimming', 'Swim', Icons.pool, Color(0xFF4DD0E1), '+30 XP base'),
+    _CardioType('hiit', 'HIIT', Icons.local_fire_department, Colors.white,
+        '+50 XP for 30min'),
     _CardioType('other', 'Other', Icons.bolt, Color(0xFF9B9DAC), '+30 XP base'),
   ];
 
@@ -593,7 +598,8 @@ class _SavedSession extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.directions_run, size: 20, color: AppColors.cardio),
+            child: const Icon(Icons.directions_run,
+                size: 20, color: AppColors.cardio),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -18,8 +18,10 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: colors.bg,
       body: SafeArea(
         child: dashboard.when(
-          loading: () => Center(child: CircularProgressIndicator(color: colors.accent)),
-          error: (_, __) => _ProfileError(onRetry: () => ref.invalidate(dashboardProvider)),
+          loading: () =>
+              Center(child: CircularProgressIndicator(color: colors.accent)),
+          error: (_, __) =>
+              _ProfileError(onRetry: () => ref.invalidate(dashboardProvider)),
           data: (data) => ListView(
             padding: const EdgeInsets.only(bottom: 40),
             children: [
@@ -64,7 +66,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 5),
                       decoration: BoxDecoration(
                         color: colors.accent,
                         borderRadius: BorderRadius.circular(20),
@@ -416,7 +419,8 @@ class _SettingsRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
+          border:
+              last ? null : Border(bottom: BorderSide(color: colors.border2)),
         ),
         child: Row(
           children: [

@@ -160,8 +160,8 @@ class SyncEngine {
             _emit(_state.copyWith(lastError: message));
             break;
           }
-          final exhausted =
-              kind == FailureKind.permanent || _policy.isExhausted(op.attempts + 1);
+          final exhausted = kind == FailureKind.permanent ||
+              _policy.isExhausted(op.attempts + 1);
           await _store.recordFailure(
             op,
             error: message,

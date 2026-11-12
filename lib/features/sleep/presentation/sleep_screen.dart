@@ -221,9 +221,8 @@ class _Content extends StatelessWidget {
               Expanded(
                 child: _Stat(
                   icon: Icons.star_outline,
-                  value: avgQuality == null
-                      ? '—'
-                      : avgQuality.toStringAsFixed(1),
+                  value:
+                      avgQuality == null ? '—' : avgQuality.toStringAsFixed(1),
                   label: 'QUALITY',
                   color: AppColors.xp,
                 ),
@@ -249,10 +248,8 @@ class _Content extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
-            children: items
-                .take(12)
-                .map((item) => _SleepRow(item: item))
-                .toList(),
+            children:
+                items.take(12).map((item) => _SleepRow(item: item)).toList(),
           ),
         ),
       ],

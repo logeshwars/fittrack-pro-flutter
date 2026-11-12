@@ -88,7 +88,8 @@ void main() {
 
     test('expired JWT and unknown errors are transient', () {
       expect(kind('PGRST301'), FailureKind.transient);
-      expect(classifyFailure(Exception('socket closed')), FailureKind.transient);
+      expect(
+          classifyFailure(Exception('socket closed')), FailureKind.transient);
     });
   });
 

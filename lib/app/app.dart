@@ -14,7 +14,8 @@ class FitTrackApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'FitTrack Pro',
       debugShowCheckedModeBanner: false,
-      supportedLocales: AppStrings.supported.map((code) => Locale(code)).toList(),
+      supportedLocales:
+          AppStrings.supported.map((code) => Locale(code)).toList(),
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
