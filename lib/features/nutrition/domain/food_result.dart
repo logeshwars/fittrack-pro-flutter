@@ -27,7 +27,8 @@ class FoodResult {
   final Map<String, double> micronutrients;
   final FoodSource source;
 
-  String get displayName => brand == null || brand!.isEmpty ? name : '$name · $brand';
+  /// Name stored on logs and favorites (matches the RN app: `name (brand)`).
+  String get displayName => brand == null || brand!.isEmpty ? name : '$name ($brand)';
 }
 
 /// Macros for a specific serving size.

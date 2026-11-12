@@ -21,7 +21,6 @@ final favoriteFoodsProvider =
     for (final r in rows)
       FoodResult(
         name: r['food_name'] as String,
-        brand: r['brand'] as String?,
         proteinPer100g: (r['protein_per_100g'] as num).toDouble(),
         caloriesPer100g: (r['calories_per_100g'] as num?)?.toDouble(),
         carbsPer100g: (r['carbs_per_100g'] as num?)?.toDouble(),
@@ -132,7 +131,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       builder: (_) => _QuantitySheet(
         food: food,
         meal: _meal,
-        isFavorite: favorites.any((f) => f.name == food.name),
+        isFavorite: favorites.any((f) => f.name == food.displayName),
       ),
     );
     if (result == null || !mounted) {
@@ -153,7 +152,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     }
     final scaled = scaleFood(request.food, request.quantityG);
     await service.logFood(
-      foodName: request.food.name,
+      foodName: request.food.displayName,
       mealType: request.meal,
       quantityG: scaled.quantityG,
       proteinG: scaled.protein,
@@ -166,7 +165,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     );
     if (request.favorite) {
       await service.addFavorite(
-        name: request.food.name,
+        name: request.food.displayName,
         brand: request.food.brand,
         proteinPer100g: request.food.proteinPer100g,
         caloriesPer100g: request.food.caloriesPer100g,
@@ -177,7 +176,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     }
     ref.invalidate(nutritionDayProvider(_day));
     messenger.showSnackBar(
-      SnackBar(content: Text('Logged ${request.food.name}')),
+      SnackBar(content: Text('Logged ${request.food.displayName}')),
     );
     router.pop();
   }

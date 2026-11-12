@@ -20,6 +20,17 @@ dependencies:
   path: ^1.9.0
   uuid: ^4.5.1
   http: ^1.2.2
+  mobile_scanner: ^5.2.3
+  image_picker: ^1.1.2
+  image: ^4.3.0
+  geolocator: ^13.0.2
+  fl_chart: ^0.69.0
+  purchases_flutter: ^8.2.1
+  health: ^11.1.0
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+  flutter_timezone: ^3.0.1
+  flutter_svg: ^2.0.10
 
 dev_dependencies:
   flutter_test:
