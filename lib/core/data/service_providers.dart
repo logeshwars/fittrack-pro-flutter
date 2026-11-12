@@ -9,6 +9,7 @@ import '../../features/sleep/data/sleep_service.dart';
 import '../../features/workouts/data/preset_service.dart';
 import '../../features/workouts/data/workout_service.dart';
 import '../config/app_config.dart';
+import '../../features/nutrition/data/photo_scan_service.dart';
 import '../../features/nutrition/data/food_search_service.dart';
 import 'data_providers.dart';
 
@@ -56,4 +57,9 @@ final gamificationServiceProvider = Provider<GamificationService?>((ref) {
 /// Remote food search / barcode lookup (no auth needed).
 final foodSearchServiceProvider = Provider<FoodSearchService>((ref) {
   return FoodSearchService(usdaApiKey: AppConfig.usdaApiKey);
+});
+
+final photoScanServiceProvider = Provider<PhotoScanService?>((ref) {
+  final gateway = ref.watch(dataGatewayProvider);
+  return gateway == null ? null : PhotoScanService(gateway.client, gateway.userId);
 });
