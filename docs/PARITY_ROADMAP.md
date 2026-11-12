@@ -29,7 +29,7 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 | RN route | RN lines | UI | DATA | Next step |
 | --- | ---: | :-: | :-: | --- |
 | `auth/login`, `auth/forgot-password` | 759 | ✅ | ✅ | Device test Google (needs `GOOGLE_WEB_CLIENT_ID`) |
-| `onboarding` | 158 | 🟡 | ❌ | Call `ProfileService.completeOnboarding` |
+| `onboarding` | 158 | ✅ | ✅ | Writes goal, weight and derived protein goal to the profile |
 | `(tabs)/index` dashboard | 1109 | 🟡 | 🟡 | Rebuild from services; ring/stat widgets |
 | `(tabs)/workout` | 844 | 🟡 | ❌ | Presets, splits, history paging |
 | `workout/[id]` active session | 2851 | 🟡 | ❌ | Largest screen: exercise picker, set logger, rest timer, PR toast, finish + XP |
@@ -42,7 +42,7 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 | `sleep/index`, `sleep/log` | 700 | 🟡 | ❌ | `SleepService` |
 | `(tabs)/progress`, `progress/weight` | 1474 | 🟡 | ❌ | Charts (`fl_chart`), `WeightService` |
 | `profile/index` | 348 | 🟡 | ❌ | `ProfileService`, leaderboard modal |
-| `settings/*` (personal, goals, alerts, theme, app-settings) | 1991 | 🟡 | ❌ | Goals → protein calc; alerts → notifications |
+| `settings/*` (personal, goals, alerts, theme, app-settings) | 1991 | 🟡 | 🟡 | Personal and protein goal sync to the profile; alerts still need notifications |
 | `paywall`, `subscription` | — | 🟡 | ❌ | `purchases_flutter` (RevenueCat) |
 | Gamification / leaderboard | 780 | 🟡 | ❌ | Badges (`constants/badges.ts`), leaderboard |
 | Health Connect / HealthKit | 335 | ❌ | ❌ | `health` package, permissions |
@@ -51,7 +51,7 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 | Custom icons (926 lines) + splash/app icons | — | ❌ | — | SVG paths → `CustomPainter`/`flutter_svg`, native icon + splash generation |
 
 ## Remaining batches (suggested order)
-22. Wire onboarding, dashboard, profile and settings to the services.
+22. Wire onboarding, dashboard, profile and settings to the services (onboarding, personal and goals settings done; dashboard and profile read the profile row directly and already work with the new identity).
 23. Workout vertical slice: exercise picker, session screen, history, presets, splits.
 24. Nutrition: log, search, barcode, favorites, day view.
 25. Cardio (timer/GPS), sleep, weight and progress charts.

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/auth_providers.dart';
+import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -70,6 +71,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     await prefs.setBool('fittrack_onboarding_complete_$userId', true);
     await prefs.setString('fittrack_personal_weight', _weight.text.trim());
     await prefs.setString('fittrack_personal_goal', _goal);
+
+    // Store the choices and the derived protein goal on the profile. The write
+    // is queued, so onboarding never blocks on the network.
+    final service = ref.read(profileServiceProvider);
+    if (service != null) {
+      try {
+        await service.completeOnboarding(goal: _goal, bodyweightKg: weight);
+      } catch (_) {
+        // Keep going: the device copy above already holds the answers.
+      }
+    }
     if (!mounted) return;
     context.go('/today');
   }

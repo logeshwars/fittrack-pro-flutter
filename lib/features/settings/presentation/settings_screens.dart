@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../workouts/domain/workout_metrics.dart';
 
-class PersonalSettingsScreen extends StatefulWidget {
+class PersonalSettingsScreen extends ConsumerStatefulWidget {
   const PersonalSettingsScreen({super.key});
 
   @override
-  State<PersonalSettingsScreen> createState() => _PersonalSettingsScreenState();
+  ConsumerState<PersonalSettingsScreen> createState() =>
+      _PersonalSettingsScreenState();
 }
 
-class _PersonalSettingsScreenState extends State<PersonalSettingsScreen> {
+class _PersonalSettingsScreenState
+    extends ConsumerState<PersonalSettingsScreen> {
   final _name = TextEditingController();
   final _weight = TextEditingController();
   final _height = TextEditingController();
@@ -36,6 +40,26 @@ class _PersonalSettingsScreenState extends State<PersonalSettingsScreen> {
       _goal = prefs.getString('fittrack_personal_goal') ?? 'maintain';
       _loading = false;
     });
+    // The profile row is the source of truth when signed in; the device copy
+    // above keeps the form usable offline.
+    final service = ref.read(profileServiceProvider);
+    if (service == null) return;
+    try {
+      final profile = await service.profile();
+      if (profile == null || !mounted) return;
+      setState(() {
+        final name = profile['display_name'] as String?;
+        final weight = profile['bodyweight_kg'] as num?;
+        final height = profile['height_cm'] as num?;
+        final goal = profile['goal'] as String?;
+        if (name != null && name.isNotEmpty) _name.text = name;
+        if (weight != null) _weight.text = weight.toString();
+        if (height != null) _height.text = height.toString();
+        if (goal != null && goal.isNotEmpty) _goal = goal;
+      });
+    } catch (_) {
+      // Offline with no cached profile: keep the device values.
+    }
   }
 
   Future<void> _save() async {
@@ -57,11 +81,29 @@ class _PersonalSettingsScreenState extends State<PersonalSettingsScreen> {
     await prefs.setString('fittrack_personal_weight', _weight.text.trim());
     await prefs.setString('fittrack_personal_height', _height.text.trim());
     await prefs.setString('fittrack_personal_goal', _goal);
+
+    final service = ref.read(profileServiceProvider);
+    String message = 'Saved on this device. Sign in to sync your profile.';
+    if (service != null) {
+      try {
+        await service.updateProfile({
+          'display_name': _name.text.trim(),
+          'bodyweight_kg': weight,
+          if (height != null) 'height_cm': height,
+          'goal': _goal,
+          'protein_goal_g': calculateProteinGoal(
+            bodyweightKg: weight,
+            goal: _goal,
+            heightCm: height,
+          ),
+        });
+        message = 'Saved. Your profile syncs automatically.';
+      } catch (_) {
+        message = 'Saved on this device. Profile sync will retry.';
+      }
+    }
     if (!mounted) return;
-    setState(() {
-      _message =
-          'Saved locally. Production profile writes stay gated until identity migration is verified.';
-    });
+    setState(() => _message = message);
   }
 
   @override
@@ -158,14 +200,15 @@ class _PersonalSettingsScreenState extends State<PersonalSettingsScreen> {
   }
 }
 
-class GoalsSettingsScreen extends StatefulWidget {
+class GoalsSettingsScreen extends ConsumerStatefulWidget {
   const GoalsSettingsScreen({super.key});
 
   @override
-  State<GoalsSettingsScreen> createState() => _GoalsSettingsScreenState();
+  ConsumerState<GoalsSettingsScreen> createState() =>
+      _GoalsSettingsScreenState();
 }
 
-class _GoalsSettingsScreenState extends State<GoalsSettingsScreen> {
+class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
   final _steps = TextEditingController(text: '10000');
   final _protein = TextEditingController(text: '150');
   final _calories = TextEditingController(text: '2000');
@@ -196,6 +239,17 @@ class _GoalsSettingsScreenState extends State<GoalsSettingsScreen> {
           prefs.getString('fittrack_goal_${entry.key}') ?? entry.value.text;
     }
     if (mounted) setState(() => _loading = false);
+    final service = ref.read(profileServiceProvider);
+    if (service == null) return;
+    try {
+      final profile = await service.profile();
+      final protein = profile?['protein_goal_g'] as num?;
+      if (protein != null && mounted) {
+        setState(() => _protein.text = protein.round().toString());
+      }
+    } catch (_) {
+      // Offline with no cached profile: keep the device value.
+    }
   }
 
   Future<void> _save() async {
@@ -219,9 +273,18 @@ class _GoalsSettingsScreenState extends State<GoalsSettingsScreen> {
         entry.value.text.trim(),
       );
     }
-    if (mounted) {
-      setState(() => _message = 'Daily goals saved on this device.');
+    var message = 'Daily goals saved on this device.';
+    final service = ref.read(profileServiceProvider);
+    final protein = double.tryParse(_protein.text);
+    if (service != null && protein != null) {
+      try {
+        await service.updateProfile({'protein_goal_g': protein.round()});
+        message = 'Daily goals saved. Your protein goal syncs automatically.';
+      } catch (_) {
+        message = 'Daily goals saved on this device. Sync will retry.';
+      }
     }
+    if (mounted) setState(() => _message = message);
   }
 
   @override
