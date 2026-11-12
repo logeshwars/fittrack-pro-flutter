@@ -26,6 +26,7 @@ dependencies:
   geolocator: ^13.0.2
   fl_chart: ^0.69.0
   purchases_flutter: ^8.2.1
+  url_launcher: ^6.3.0
   health: ^11.1.0
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0

@@ -90,3 +90,10 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - `dashboardProvider` now reads only through the service layer (workouts, today's food and cardio, latest sleep and weight, profile, gamification) so it works offline from the on-device cache and shows *today's* protein/calories/cardio instead of a recent-logs sum. Every source is isolated: one failure no longer blanks the dashboard.
 - Protein and calorie goals come from `goalTargetsProvider` (Goals settings) instead of a hard-coded 2000 kcal.
 - Removed the five obsolete direct-Supabase repositories (`workout`, `nutrition`, `cardio`, `progress`, `gamification`); nothing referenced them any more.
+
+## Batch 27 – RevenueCat subscriptions
+- Store billing sits behind `PurchaseGateway`; `RevenueCatGateway` (purchases_flutter 8) is only built when a platform key is supplied (`REVENUECAT_ANDROID_KEY` / `REVENUECAT_IOS_KEY`). The customer id is `auth.uid()`.
+- Entitlement id is `pro` (`proEntitlementId`); it must match the RevenueCat dashboard. Configure a current offering with monthly and annual packages and a 14-day free-trial intro offer.
+- `SubscriptionController` logs in/out with the Supabase user and re-reads the entitlement on every app foreground (`SubscriptionLifecycle` in `app.dart`). `isProProvider` is the single gate; logged data is never gated.
+- Paywall (plan picker, trial CTA, savings badge, restore) and Subscription screen (status, renewal date, manage in store via `url_launcher`).
+- Needs real-store verification with sandbox testers; client state is a cache of the entitlement, and the server-side webhook (`revenuecat-webhook`) remains the authority for server-enforced limits.

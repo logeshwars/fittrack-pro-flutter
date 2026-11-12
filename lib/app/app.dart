@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../core/l10n/app_strings.dart';
 import '../core/theme/theme_controller.dart';
+import '../features/subscription/application/subscription_controller.dart';
 import 'router.dart';
 
 class FitTrackApp extends ConsumerWidget {
@@ -19,6 +20,8 @@ class FitTrackApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: appRouter,
+      builder: (context, child) =>
+          SubscriptionLifecycle(child: child ?? const SizedBox.shrink()),
     );
   }
 }
