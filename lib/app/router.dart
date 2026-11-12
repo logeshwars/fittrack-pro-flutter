@@ -16,6 +16,7 @@ import '../features/nutrition/presentation/nutrition_screen.dart';
 import '../features/nutrition/domain/food_result.dart';
 import '../features/nutrition/presentation/food_draft_screen.dart';
 import '../features/nutrition/presentation/food_log_screen.dart';
+import '../features/nutrition/presentation/photo_scan_screen.dart';
 import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/cardio/presentation/cardio_draft_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
@@ -56,6 +57,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/sleep/log', builder: (context, state) => const HealthDraftScreen(initialTab: 1)),
     GoRoute(path: '/paywall', builder: (context, state) => const PaywallScreen()),
     GoRoute(path: '/subscription', builder: (context, state) => const SubscriptionScreen()),
+    GoRoute(path: '/nutrition/photo', builder: (context, state) => const PhotoScanScreen()),
     GoRoute(path: '/nutrition/scan', builder: (context, state) => const BarcodeScanScreen()),
     GoRoute(path: '/progress/weight', builder: (context, state) => const HealthDraftScreen(initialTab: 0)),
     GoRoute(path: '/settings/personal', builder: (context, state) => const PersonalSettingsScreen()),
