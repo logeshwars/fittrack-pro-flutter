@@ -118,16 +118,27 @@ jobs:
       - name: Show APK signing certificate (register this SHA-1 in Google Cloud)
         run: |
           APK=build/app/outputs/flutter-apk/app-debug.apk
-          CERT="$(keytool -printcert -jarfile "$APK")"
-          echo "$CERT" | grep -E "Owner|SHA1|SHA256"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          APKSIGNER="$(ls -d "$SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)"
           {
             echo "### APK signing certificate"
             echo "Package: \`com.logesh.fittrackpro.flutterdev\`"
+            echo
+            echo "**From the signed APK (this is what Google checks):**"
             echo '```'
-            echo "$CERT" | grep -E "Owner|SHA1|SHA256"
+            if [[ -n "$APKSIGNER" ]]; then
+              "$APKSIGNER" verify --print-certs "$APK" 2>&1 | grep -E "certificate (DN|SHA-1|SHA-256)" || echo "apksigner printed no certificate"
+            else
+              echo "apksigner not found"
+            fi
             echo '```'
-            echo "Add the **SHA1** value to the Android OAuth client in Google Cloud."
-          } >> "$GITHUB_STEP_SUMMARY"
+            echo "**From the keystore file used for signing:**"
+            echo '```'
+            keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+              -storepass android -keypass android 2>&1 | grep -E "SHA1|SHA256" || echo "keystore not readable"
+            echo '```'
+            echo "Add the **SHA-1** value to the Android OAuth client in Google Cloud."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4
         with:
