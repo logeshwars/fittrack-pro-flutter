@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/auth_providers.dart';
+import '../../../core/auth/auth_repository.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -35,13 +36,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     setState(() => _error = null);
-    if (_tab == _AuthTab.signup) {
-      setState(() {
-        _error =
-            'Account creation is temporarily gated while the React Native identity mapping is migrated.';
-      });
-      return;
-    }
     if (!_formKey.currentState!.validate()) return;
 
     final repository = ref.read(authRepositoryProvider);
@@ -49,6 +43,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _busy = true);
     try {
+      if (_tab == _AuthTab.signup) {
+        final outcome = await repository.signUpWithEmail(
+          email: _email.text,
+          password: _password.text,
+          name: _name.text,
+        );
+        if (!mounted) return;
+        if (outcome.requiresVerification) {
+          setState(() {
+            _tab = _AuthTab.login;
+            _error = 'Account created. Check your inbox to verify your email, then log in.';
+          });
+          return;
+        }
+        context.go('/onboarding');
+        return;
+      }
       await repository.signInWithEmail(_email.text, _password.text);
       if (!mounted) return;
       var needsOnboarding = false;
@@ -67,12 +78,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
       if (!mounted) return;
       context.go(needsOnboarding ? '/onboarding' : '/today');
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _error = e.message);
     } catch (_) {
       if (mounted) {
         setState(() {
           _error = 'Sign-in failed. Check your credentials and try again.';
         });
       }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _google() async {
+    final repository = ref.read(authRepositoryProvider);
+    if (repository == null) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final outcome = await repository.signInWithGoogle();
+      if (!mounted) return;
+      if (outcome.status == GoogleSignInStatus.cancelled) return;
+      context.go(outcome.isNewUser ? '/onboarding' : '/today');
+    } on AuthFailure catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Google sign-in failed. Try again.');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -404,7 +438,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
-                      onPressed: null,
+                      onPressed: _busy ? null : _google,
                       icon: const Icon(Icons.g_mobiledata, size: 28),
                       label: const Text('Continue with Google'),
                       style: OutlinedButton.styleFrom(
@@ -414,12 +448,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Google sign-in will be enabled after identity compatibility checks.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 10, color: colors.faint),
                     ),
                   ],
                 ),

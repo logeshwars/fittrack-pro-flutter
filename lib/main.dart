@@ -4,6 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 import 'core/config/app_config.dart';
+import 'core/data/data_providers.dart';
+import 'core/data/local_database.dart';
+import 'core/data/sync_lifecycle.dart';
 import 'core/theme/theme_controller.dart';
 
 Future<void> main() async {
@@ -18,5 +21,11 @@ Future<void> main() async {
       publishableKey: AppConfig.supabaseAnonKey,
     );
   }
-  runApp(const ProviderScope(child: FitTrackApp()));
+  final localDatabase = await LocalDatabase.open();
+  runApp(
+    ProviderScope(
+      overrides: [localDatabaseProvider.overrideWithValue(localDatabase)],
+      child: const SyncLifecycle(child: FitTrackApp()),
+    ),
+  );
 }

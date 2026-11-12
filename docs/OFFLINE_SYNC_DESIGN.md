@@ -29,3 +29,12 @@
 The current planner does not execute writes or provide a production-ready
 SQLite database. The existing local workout, nutrition, cardio, sleep and
 weight draft editors are not yet connected to the outbox.
+
+## Update (Batch 21)
+Implemented in `lib/core/data/`: SQLite outbox (`outbox.dart`), idempotent replay
+(`sync_engine.dart`: client UUID keys, `upsert(onConflict)`, ack-before-delete,
+exponential backoff with jitter, dead-letter for permanent errors, FIFO order,
+owner check per operation), and a gateway that merges pending writes into reads
+(`data_gateway.dart`). Still open: encryption at rest (SQLCipher), UI to review and
+retry dead-lettered operations, conflict resolution beyond last-write-wins, and
+queue purge on account switch.

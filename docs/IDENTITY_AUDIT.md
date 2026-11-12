@@ -27,3 +27,17 @@
    transactional foreign-key updates and rollback.
 5. Check RevenueCat identity mapping and pending offline operations.
 6. Do not enable write APIs until the migration is tested and approved.
+
+## Resolution (Batch 21)
+Decision: redesign auth so every user has a real Supabase Auth identity.
+- Google sign-in uses `signInWithIdToken`; rows are keyed by `auth.uid()::text`.
+- Returning React Native Google users are re-keyed by the server-side
+  `claim_legacy_google_profile` function (migration 026). Ownership is proven by
+  `auth.identities` (Supabase verified the Google token), never by email.
+- The claim runs in one transaction, is idempotent, and is audited in
+  `identity_migration_audit`. If a profile for the new identity already exists the
+  function returns `conflict` and changes nothing.
+- RLS for presets, weights, cardio, sleep and photo scans is repaired to
+  `google_user_id = auth.uid()::text`.
+- Still required: apply the migration, enable the Google provider, and test with
+  a disposable legacy account before releasing.

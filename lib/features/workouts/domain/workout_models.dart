@@ -1,8 +1,11 @@
 class WorkoutSet {
-  const WorkoutSet({required this.id, required this.exerciseId, required this.setNumber, this.weightKg, this.reps, this.rpe, this.isPersonalRecord = false});
+  const WorkoutSet({required this.id, required this.exerciseId, required this.setNumber, this.weightKg, this.reps, this.rpe, this.isPersonalRecord = false, this.durationSeconds, this.exerciseName, this.muscleGroup});
   final String id;
   final String exerciseId;
   final int setNumber;
+  final int? durationSeconds;
+  final String? exerciseName;
+  final String? muscleGroup;
   final double? weightKg;
   final int? reps;
   final double? rpe;
@@ -15,6 +18,9 @@ class WorkoutSet {
     reps: (json['reps'] as num?)?.toInt(),
     rpe: (json['rpe'] as num?)?.toDouble(),
     isPersonalRecord: json['is_pr'] == true,
+    durationSeconds: (json['duration_seconds'] as num?)?.toInt(),
+    exerciseName: (json['exercises'] as Map?)?['name'] as String?,
+    muscleGroup: (json['exercises'] as Map?)?['muscle_group'] as String?,
   );
 }
 
