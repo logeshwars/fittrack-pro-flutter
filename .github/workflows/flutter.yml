@@ -1,0 +1,39 @@
+name: Flutter checks
+
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate platform scaffolding
+        run: |
+          flutter create --platforms=android,ios --org com.logesh .
+          rm -f test/widget_test.dart
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - name: Build Android debug APK
+        run: flutter build apk --debug --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY=
+
+  ios-project-validation:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate native scaffolding
+        run: |
+          flutter create --platforms=android,ios --org com.logesh .
+          rm -f test/widget_test.dart
+      - run: flutter pub get
+      - name: Build iOS simulator
+        run: flutter build ios --simulator --debug --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY=

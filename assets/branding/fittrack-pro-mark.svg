@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 630" role="img" aria-label="FitTrack Pro abstract F mark">
+  <title>FitTrack Pro mark</title>
+  <desc>Three forward-slanting gradient ribbons forming a stylized F.</desc>
+  <defs>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E01AF5"/><stop offset="0.55" stop-color="#8C22F6"/><stop offset="1" stop-color="#445DFF"/>
+    </linearGradient>
+    <linearGradient id="middle" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9A12F5"/><stop offset="0.55" stop-color="#603BFA"/><stop offset="1" stop-color="#04C8F2"/>
+    </linearGradient>
+    <linearGradient id="bottom" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2449FF"/><stop offset="0.7" stop-color="#0879FA"/><stop offset="1" stop-color="#05D9EC"/>
+    </linearGradient>
+  </defs>
+  <path d="M 129 243 L 194 208 L 266 191 L 644 189 L 686 183 L 716 167 L 736 147 L 813 22 L 318 24 L 284 31 L 244 51 L 213 82 L 183 131 Z" fill="url(#top)"/>
+  <path d="M 82 434 L 147 396 L 211 379 L 459 377 L 503 371 L 527 357 L 543 340 L 608 240 L 304 239 L 246 241 L 210 249 L 177 268 L 153 294 L 133 327 Z" fill="url(#middle)"/>
+  <path d="M 350 423 L 187 424 L 157 429 L 127 441 L 101 459 L 78 485 L 22 592 L 179 590 L 210 584 L 240 572 L 268 551 L 286 529 Z" fill="url(#bottom)"/>
+</svg>

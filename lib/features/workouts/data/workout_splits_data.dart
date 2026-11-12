@@ -1,0 +1,1025 @@
+// GENERATED from fittrack-pro/src/constants/workoutSplits.ts — do not edit by hand.
+import '../domain/split_models.dart';
+
+const List<WorkoutSplit> globalSplits = [
+  WorkoutSplit(
+    id: 'ppl',
+    name: 'Push Pull Legs',
+    shortName: 'PPL',
+    description: 'Science-backed 6-day hypertrophy split',
+    frequency: '6× / week',
+    accentBg: '#0D1F17',
+    accentBorder: '#FFFFFF',
+    accentText: '#FFFFFF',
+    days: [
+      SplitDay(
+        label: 'Push',
+        focus: 'Chest · Shoulders · Triceps',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Bench Press',
+              muscleGroup: 'chest',
+              sets: 4,
+              repsRange: '4-6',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Bench Press',
+                'Chest Press Machine',
+                'Smith Machine Bench Press'
+              ]),
+          PredefinedExercise(
+              name: 'Overhead Press',
+              muscleGroup: 'shoulders',
+              sets: 4,
+              repsRange: '6-8',
+              restSecs: 150,
+              alternatives: [
+                'Dumbbell Shoulder Press',
+                'Arnold Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Incline Dumbbell Press',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '8-12',
+              restSecs: 90,
+              alternatives: [
+                'Incline Barbell Bench Press',
+                'Cable Chest Fly',
+                'Pec Deck Machine'
+              ]),
+          PredefinedExercise(
+              name: 'Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Cable Lateral Raise',
+                'Machine Lateral Raise',
+                'Cable Front Raise'
+              ]),
+          PredefinedExercise(
+              name: 'Tricep Pushdown',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Rope Tricep Pushdown',
+                'Skull Crusher',
+                'Overhead Cable Tricep Ext'
+              ]),
+          PredefinedExercise(
+              name: 'Overhead DB Tricep Extension',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Dumbbell Tricep Extension',
+                'EZ-Bar Skull Crusher',
+                'Dip'
+              ]),
+        ],
+      ),
+      SplitDay(
+        label: 'Pull',
+        focus: 'Back · Biceps · Rear Delts',
+        exercises: [
+          PredefinedExercise(
+              name: 'Deadlift',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '4-6',
+              restSecs: 180,
+              alternatives: ['Barbell Row', 'T-Bar Row', 'Romanian Deadlift']),
+          PredefinedExercise(
+              name: 'Barbell Row',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '6-8',
+              restSecs: 120,
+              alternatives: [
+                'Single-Arm Dumbbell Row',
+                'T-Bar Row',
+                'Pendlay Row'
+              ]),
+          PredefinedExercise(
+              name: 'Wide-Grip Lat Pulldown',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Close-Grip Lat Pulldown',
+                'Pull-Up',
+                'Machine Lat Pulldown'
+              ]),
+          PredefinedExercise(
+              name: 'Seated Cable Row',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Machine Row',
+                'Single-Arm Cable Row',
+                'Dumbbell Row'
+              ]),
+          PredefinedExercise(
+              name: 'Face Pull',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Cable Rear Delt Fly',
+                'Rear Delt Machine',
+                'Rear Delt Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Curl',
+              muscleGroup: 'arms',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 60,
+              alternatives: ['EZ-Bar Curl', 'Dumbbell Curl', 'Cable Curl']),
+          PredefinedExercise(
+              name: 'Hammer Curl',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Incline Dumbbell Curl',
+                'Cable Hammer Curl',
+                'Concentration Curl'
+              ]),
+        ],
+      ),
+      SplitDay(
+        label: 'Legs',
+        focus: 'Quads · Hamstrings · Calves',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Squat',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '4-6',
+              restSecs: 180,
+              alternatives: [
+                'Front Squat',
+                'Hack Squat',
+                'Bulgarian Split Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Romanian Deadlift',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '8-10',
+              restSecs: 120,
+              alternatives: [
+                'Single-Leg RDL',
+                'Good Morning',
+                'Sumo Deadlift'
+              ]),
+          PredefinedExercise(
+              name: 'Leg Press',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Hack Squat',
+                'Smith Machine Squat',
+                'Dumbbell Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Lying Leg Curl',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Seated Leg Curl',
+                'Cable Leg Curl',
+                'Nordic Hamstring Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Leg Extension',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Barbell Lunge',
+                'Dumbbell Lunge',
+                'Bulgarian Split Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Standing Calf Raise',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Seated Calf Raise']),
+        ],
+      ),
+    ],
+  ),
+  WorkoutSplit(
+    id: 'upper_lower',
+    name: 'Upper / Lower',
+    shortName: 'U/L',
+    description: 'Strength & size 4-day split',
+    frequency: '4× / week',
+    accentBg: '#130F1E',
+    accentBorder: '#A855F7',
+    accentText: '#A855F7',
+    days: [
+      SplitDay(
+        label: 'Upper A',
+        focus: 'Chest · Back · Shoulders (Strength)',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Bench Press',
+              muscleGroup: 'chest',
+              sets: 4,
+              repsRange: '3-5',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Bench Press',
+                'Chest Press Machine',
+                'Close-Grip Bench Press'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Row',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '3-5',
+              restSecs: 180,
+              alternatives: [
+                'Pendlay Row',
+                'T-Bar Row',
+                'Chest-Supported Dumbbell Row'
+              ]),
+          PredefinedExercise(
+              name: 'Overhead Press',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '6-8',
+              restSecs: 120,
+              alternatives: [
+                'Seated Dumbbell Press',
+                'Arnold Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Wide-Grip Lat Pulldown',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '8-10',
+              restSecs: 90,
+              alternatives: ['Chin-Up', 'Pull-Up', 'Machine Lat Pulldown']),
+          PredefinedExercise(
+              name: 'Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Cable Lateral Raise', 'Machine Lateral Raise']),
+          PredefinedExercise(
+              name: 'Barbell Curl',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 60,
+              alternatives: ['EZ-Bar Curl', 'Dumbbell Curl', 'Cable Curl']),
+          PredefinedExercise(
+              name: 'Tricep Pushdown',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 60,
+              alternatives: ['Rope Tricep Pushdown', 'Skull Crusher', 'Dip']),
+        ],
+      ),
+      SplitDay(
+        label: 'Lower A',
+        focus: 'Quads · Hamstrings · Glutes (Strength)',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Squat',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '3-5',
+              restSecs: 180,
+              alternatives: ['Front Squat', 'Pause Squat', 'Hack Squat']),
+          PredefinedExercise(
+              name: 'Romanian Deadlift',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '8-10',
+              restSecs: 120,
+              alternatives: [
+                'Lying Leg Curl',
+                'Single-Leg RDL',
+                'Good Morning'
+              ]),
+          PredefinedExercise(
+              name: 'Leg Press',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: ['Hack Squat', 'Smith Machine Squat']),
+          PredefinedExercise(
+              name: 'Lying Leg Curl',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: ['Seated Leg Curl', 'Cable Leg Curl']),
+          PredefinedExercise(
+              name: 'Standing Calf Raise',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Seated Calf Raise']),
+        ],
+      ),
+      SplitDay(
+        label: 'Upper B',
+        focus: 'Chest · Back · Shoulders (Hypertrophy)',
+        exercises: [
+          PredefinedExercise(
+              name: 'Incline Dumbbell Press',
+              muscleGroup: 'chest',
+              sets: 4,
+              repsRange: '8-12',
+              restSecs: 90,
+              alternatives: [
+                'Incline Barbell Bench Press',
+                'Cable Chest Fly',
+                'Pec Deck Machine'
+              ]),
+          PredefinedExercise(
+              name: 'Single-Arm Dumbbell Row',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Dumbbell Row',
+                'Machine Row',
+                'Chest-Supported Machine Row'
+              ]),
+          PredefinedExercise(
+              name: 'Dumbbell Shoulder Press',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Arnold Press',
+                'Machine Shoulder Press',
+                'Seated Dumbbell Press'
+              ]),
+          PredefinedExercise(
+              name: 'Seated Cable Row',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 90,
+              alternatives: [
+                'Machine Row',
+                'Machine Rear Delt Row',
+                'Inverted Row'
+              ]),
+          PredefinedExercise(
+              name: 'Cable Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Lateral Raise', 'Machine Lateral Raise']),
+          PredefinedExercise(
+              name: 'Hammer Curl',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'EZ-Bar Curl',
+                'Incline Dumbbell Curl',
+                'Cable Hammer Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Skull Crusher',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'EZ-Bar Skull Crusher',
+                'Overhead DB Tricep Extension',
+                'Bench Dip'
+              ]),
+        ],
+      ),
+      SplitDay(
+        label: 'Lower B',
+        focus: 'Glutes · Hamstrings · Quads (Hypertrophy)',
+        exercises: [
+          PredefinedExercise(
+              name: 'Deadlift',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '3-5',
+              restSecs: 180,
+              alternatives: [
+                'Romanian Deadlift',
+                'Sumo Deadlift',
+                'Barbell Hip Thrust'
+              ]),
+          PredefinedExercise(
+              name: 'Bulgarian Split Squat',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Barbell Lunge',
+                'Dumbbell Lunge',
+                'Goblet Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Leg Extension',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Hack Squat',
+                'Smith Machine Squat',
+                'Barbell Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Seated Leg Curl',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Lying Leg Curl',
+                'Nordic Hamstring Curl',
+                'Cable Leg Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Hip Thrust',
+              muscleGroup: 'glutes',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 90,
+              alternatives: [
+                'Dumbbell Hip Thrust',
+                'Hip Thrust Machine',
+                'Glute Bridge'
+              ]),
+          PredefinedExercise(
+              name: 'Seated Calf Raise',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Standing Calf Raise']),
+        ],
+      ),
+    ],
+  ),
+  WorkoutSplit(
+    id: 'full_body',
+    name: 'Full Body',
+    shortName: 'FB',
+    description: 'Maximum frequency 3-day training',
+    frequency: '3× / week',
+    accentBg: '#1A1200',
+    accentBorder: '#F59E0B',
+    accentText: '#F59E0B',
+    days: [
+      SplitDay(
+        label: 'Day A',
+        focus: 'Squat · Press · Row',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Squat',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '5',
+              restSecs: 180,
+              alternatives: ['Front Squat', 'Goblet Squat', 'Hack Squat']),
+          PredefinedExercise(
+              name: 'Barbell Bench Press',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '5',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Bench Press',
+                'Chest Press Machine',
+                'Push-Up'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Row',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '5',
+              restSecs: 180,
+              alternatives: [
+                'Single-Arm Dumbbell Row',
+                'Machine Row',
+                'Seated Cable Row'
+              ]),
+          PredefinedExercise(
+              name: 'Overhead Press',
+              muscleGroup: 'shoulders',
+              sets: 2,
+              repsRange: '8-10',
+              restSecs: 90,
+              alternatives: [
+                'Dumbbell Shoulder Press',
+                'Arnold Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Curl',
+              muscleGroup: 'arms',
+              sets: 2,
+              repsRange: '10-12',
+              restSecs: 60,
+              alternatives: ['EZ-Bar Curl', 'Dumbbell Curl', 'Hammer Curl']),
+        ],
+      ),
+      SplitDay(
+        label: 'Day B',
+        focus: 'Deadlift · Incline · Pull',
+        exercises: [
+          PredefinedExercise(
+              name: 'Deadlift',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '5',
+              restSecs: 180,
+              alternatives: [
+                'Romanian Deadlift',
+                'Sumo Deadlift',
+                'Barbell Hip Thrust'
+              ]),
+          PredefinedExercise(
+              name: 'Incline Dumbbell Press',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '8-10',
+              restSecs: 120,
+              alternatives: [
+                'Incline Barbell Bench Press',
+                'Cable Chest Fly',
+                'Dumbbell Chest Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Wide-Grip Lat Pulldown',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: ['Chin-Up', 'Pull-Up', 'Close-Grip Lat Pulldown']),
+          PredefinedExercise(
+              name: 'Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Cable Lateral Raise', 'Machine Lateral Raise']),
+          PredefinedExercise(
+              name: 'Tricep Pushdown',
+              muscleGroup: 'arms',
+              sets: 2,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: ['Rope Tricep Pushdown', 'Skull Crusher', 'Dip']),
+          PredefinedExercise(
+              name: 'Standing Calf Raise',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Seated Calf Raise']),
+        ],
+      ),
+      SplitDay(
+        label: 'Day C',
+        focus: 'Squat · Overhead · Deadlift',
+        exercises: [
+          PredefinedExercise(
+              name: 'Front Squat',
+              muscleGroup: 'legs',
+              sets: 3,
+              repsRange: '5-8',
+              restSecs: 180,
+              alternatives: ['Barbell Squat', 'Pause Squat', 'Goblet Squat']),
+          PredefinedExercise(
+              name: 'Overhead Press',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '5',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Shoulder Press',
+                'Arnold Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Chin-Up',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '6-8',
+              restSecs: 120,
+              alternatives: [
+                'Pull-Up',
+                'Wide-Grip Lat Pulldown',
+                'Machine Lat Pulldown'
+              ]),
+          PredefinedExercise(
+              name: 'Romanian Deadlift',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '8-10',
+              restSecs: 120,
+              alternatives: [
+                'Lying Leg Curl',
+                'Seated Leg Curl',
+                'Single-Leg RDL'
+              ]),
+          PredefinedExercise(
+              name: 'Dumbbell Bench Press',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Barbell Bench Press',
+                'Cable Chest Fly',
+                'Pec Deck Machine'
+              ]),
+        ],
+      ),
+    ],
+  ),
+  WorkoutSplit(
+    id: 'bro_split',
+    name: 'Bro Split',
+    shortName: 'Bro',
+    description: 'Classic bodybuilding 5-day split',
+    frequency: '5× / week',
+    accentBg: '#0A0F20',
+    accentBorder: '#3B82F6',
+    accentText: '#3B82F6',
+    days: [
+      SplitDay(
+        label: 'Chest',
+        focus: 'Chest · Triceps',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Bench Press',
+              muscleGroup: 'chest',
+              sets: 5,
+              repsRange: '5-8',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Bench Press',
+                'Chest Press Machine',
+                'Smith Machine Bench Press'
+              ]),
+          PredefinedExercise(
+              name: 'Incline Dumbbell Press',
+              muscleGroup: 'chest',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Incline Barbell Bench Press',
+                'Cable Chest Fly',
+                'Low Cable Chest Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Decline Dumbbell Press',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Decline Barbell Bench Press',
+                'Pec Deck Machine',
+                'Dumbbell Chest Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Cable Chest Fly',
+              muscleGroup: 'chest',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Pec Deck Machine',
+                'Dumbbell Chest Fly',
+                'High Cable Chest Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Tricep Pushdown',
+              muscleGroup: 'arms',
+              sets: 4,
+              repsRange: '10-15',
+              restSecs: 60,
+              alternatives: [
+                'Rope Tricep Pushdown',
+                'Skull Crusher',
+                'EZ-Bar Skull Crusher'
+              ]),
+          PredefinedExercise(
+              name: 'Skull Crusher',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'EZ-Bar Skull Crusher',
+                'Overhead DB Tricep Extension',
+                'Dip'
+              ]),
+        ],
+      ),
+      SplitDay(
+        label: 'Back',
+        focus: 'Back · Biceps',
+        exercises: [
+          PredefinedExercise(
+              name: 'Deadlift',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '4-6',
+              restSecs: 180,
+              alternatives: [
+                'Romanian Deadlift',
+                'Sumo Deadlift',
+                'T-Bar Row'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Row',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '6-8',
+              restSecs: 120,
+              alternatives: ['T-Bar Row', 'Pendlay Row', 'Machine Row']),
+          PredefinedExercise(
+              name: 'Wide-Grip Lat Pulldown',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: ['Pull-Up', 'Chin-Up', 'Machine Lat Pulldown']),
+          PredefinedExercise(
+              name: 'Seated Cable Row',
+              muscleGroup: 'back',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 90,
+              alternatives: [
+                'Single-Arm Cable Row',
+                'Machine Row',
+                'Dumbbell Row'
+              ]),
+          PredefinedExercise(
+              name: 'Face Pull',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Cable Rear Delt Fly',
+                'Rear Delt Machine',
+                'Rear Delt Fly'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Curl',
+              muscleGroup: 'arms',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 60,
+              alternatives: ['EZ-Bar Curl', 'Dumbbell Curl', 'Cable Curl']),
+        ],
+      ),
+      SplitDay(
+        label: 'Shoulders',
+        focus: 'Shoulders · Traps',
+        exercises: [
+          PredefinedExercise(
+              name: 'Overhead Press',
+              muscleGroup: 'shoulders',
+              sets: 5,
+              repsRange: '5-8',
+              restSecs: 180,
+              alternatives: [
+                'Dumbbell Shoulder Press',
+                'Arnold Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 5,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Cable Lateral Raise',
+                'Machine Lateral Raise',
+                'Dumbbell Upright Row'
+              ]),
+          PredefinedExercise(
+              name: 'Rear Delt Fly',
+              muscleGroup: 'shoulders',
+              sets: 4,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: [
+                'Cable Rear Delt Fly',
+                'Rear Delt Machine',
+                'Face Pull'
+              ]),
+          PredefinedExercise(
+              name: 'Arnold Press',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Seated Dumbbell Press',
+                'Dumbbell Shoulder Press',
+                'Machine Shoulder Press'
+              ]),
+          PredefinedExercise(
+              name: 'Cable Lateral Raise',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Lateral Raise', 'Machine Lateral Raise']),
+          PredefinedExercise(
+              name: 'Front Raise',
+              muscleGroup: 'shoulders',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: ['Cable Front Raise', 'Incline Front Raise']),
+        ],
+      ),
+      SplitDay(
+        label: 'Arms',
+        focus: 'Biceps · Triceps',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Curl',
+              muscleGroup: 'arms',
+              sets: 4,
+              repsRange: '8-12',
+              restSecs: 90,
+              alternatives: ['EZ-Bar Curl', 'Dumbbell Curl', 'Cable Curl']),
+          PredefinedExercise(
+              name: 'Skull Crusher',
+              muscleGroup: 'arms',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'EZ-Bar Skull Crusher',
+                'Overhead DB Tricep Extension',
+                'Rope Tricep Pushdown'
+              ]),
+          PredefinedExercise(
+              name: 'Incline Dumbbell Curl',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Hammer Curl',
+                'Concentration Curl',
+                'Cable Hammer Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Rope Tricep Pushdown',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Tricep Pushdown',
+                'Overhead Cable Tricep Ext',
+                'Dumbbell Kickback'
+              ]),
+          PredefinedExercise(
+              name: 'Hammer Curl',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Zottman Curl',
+                'Cable Hammer Curl',
+                'EZ-Bar Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Overhead DB Tricep Extension',
+              muscleGroup: 'arms',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Dumbbell Tricep Extension',
+                'EZ-Bar Skull Crusher',
+                'Bench Dip'
+              ]),
+        ],
+      ),
+      SplitDay(
+        label: 'Legs',
+        focus: 'Quads · Hamstrings · Glutes · Calves',
+        exercises: [
+          PredefinedExercise(
+              name: 'Barbell Squat',
+              muscleGroup: 'legs',
+              sets: 5,
+              repsRange: '5-8',
+              restSecs: 180,
+              alternatives: [
+                'Front Squat',
+                'Hack Squat',
+                'Bulgarian Split Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Romanian Deadlift',
+              muscleGroup: 'back',
+              sets: 4,
+              repsRange: '8-10',
+              restSecs: 120,
+              alternatives: [
+                'Single-Leg RDL',
+                'Lying Leg Curl',
+                'Good Morning'
+              ]),
+          PredefinedExercise(
+              name: 'Leg Press',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '10-12',
+              restSecs: 90,
+              alternatives: [
+                'Hack Squat',
+                'Smith Machine Squat',
+                'Dumbbell Squat'
+              ]),
+          PredefinedExercise(
+              name: 'Lying Leg Curl',
+              muscleGroup: 'legs',
+              sets: 4,
+              repsRange: '12-15',
+              restSecs: 60,
+              alternatives: [
+                'Seated Leg Curl',
+                'Cable Leg Curl',
+                'Nordic Hamstring Curl'
+              ]),
+          PredefinedExercise(
+              name: 'Barbell Hip Thrust',
+              muscleGroup: 'glutes',
+              sets: 3,
+              repsRange: '12-15',
+              restSecs: 90,
+              alternatives: [
+                'Dumbbell Hip Thrust',
+                'Hip Thrust Machine',
+                'Glute Bridge'
+              ]),
+          PredefinedExercise(
+              name: 'Standing Calf Raise',
+              muscleGroup: 'legs',
+              sets: 5,
+              repsRange: '15-20',
+              restSecs: 60,
+              alternatives: ['Seated Calf Raise']),
+        ],
+      ),
+    ],
+  ),
+];
