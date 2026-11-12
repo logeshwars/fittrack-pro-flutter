@@ -9,6 +9,8 @@ import '../../reminders/application/reminders_controller.dart';
 import '../../reminders/domain/reminder_catalog.dart';
 import '../../reminders/domain/reminder_schedule.dart';
 import '../../workouts/domain/workout_metrics.dart';
+import '../../../core/l10n/language_controller.dart';
+import '../../../core/l10n/translations.dart';
 
 class PersonalSettingsScreen extends ConsumerStatefulWidget {
   const PersonalSettingsScreen({super.key});
@@ -404,15 +406,12 @@ class AlertsSettingsScreen extends ConsumerWidget {
     bool enabled,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final deniedMessage = context.t('settings:enableNotificationsNote');
     final result = await ref
         .read(remindersProvider.notifier)
         .setEnabled(def.id, enabled: enabled);
     if (result == ToggleResult.permissionDenied) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Enable notifications for FitTrack in system settings to get reminders.'),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(deniedMessage)));
     }
   }
 
@@ -441,13 +440,13 @@ class AlertsSettingsScreen extends ConsumerWidget {
     final settings = ref.watch(remindersProvider);
 
     return settings.when(
-      loading: () => _LoadingScreen(title: 'Notifications', colors: colors),
+      loading: () => _LoadingScreen(title: context.t('settings:notifications'), colors: colors),
       error: (_, __) => Scaffold(
         backgroundColor: colors.bg,
         body: SafeArea(
           child: Column(
             children: [
-              const _Header(title: 'Notifications'),
+              _Header(title: context.t('settings:notifications')),
               Expanded(
                 child: Center(
                   child: TextButton(
@@ -467,8 +466,15 @@ class AlertsSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 44),
             children: [
               _Header(
-                title: 'Notifications',
-                subtitle: '${value.enabledCount} reminders on',
+                title: context.t('settings:notifications'),
+                subtitle: value.enabledCount == 0
+                    ? context.t('settings:allRemindersOff')
+                    : context.t(
+                        value.enabledCount == 1
+                            ? 'settings:activeReminder'
+                            : 'settings:activeReminders',
+                        args: {'count': value.enabledCount},
+                      ),
               ),
               for (final category in ReminderCategory.values) ...[
                 _SectionTitle(category.label.toUpperCase()),
@@ -755,7 +761,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    if (_loading) return _LoadingScreen(title: 'App Settings', colors: colors);
+    if (_loading) {
+      return _LoadingScreen(title: context.t('settings:appSettings'), colors: colors);
+    }
 
     return Scaffold(
       backgroundColor: colors.bg,
@@ -763,24 +771,24 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.only(bottom: 44),
           children: [
-            const _Header(
-              title: 'App Settings',
-              subtitle: 'Units, rest timer & language',
+            _Header(
+              title: context.t('settings:appSettings'),
+              subtitle: context.t('settings:personalSettingsSubtitle'),
             ),
-            const _SectionTitle('UNIT METRICS'),
+            _SectionTitle(context.t('settings:unitMetrics')),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _ChoiceCard(
                 children: [
                   _ChoiceRow(
-                    title: 'Metric',
-                    subtitle: 'Kilograms, centimeters, kilometers',
+                    title: context.t('settings:metric'),
+                    subtitle: context.t('settings:metricDesc'),
                     active: _units == 'metric',
                     onTap: () => _setUnits('metric'),
                   ),
                   _ChoiceRow(
-                    title: 'Imperial',
-                    subtitle: 'Pounds, feet/inches, miles',
+                    title: context.t('settings:imperial'),
+                    subtitle: context.t('settings:imperialDesc'),
                     active: _units == 'imperial',
                     last: true,
                     onTap: () => _setUnits('imperial'),
@@ -788,7 +796,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 ],
               ),
             ),
-            const _SectionTitle('DEFAULT REST TIMER'),
+            _SectionTitle(context.t('settings:defaultRestTimer')),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _ChoiceCard(
@@ -796,7 +804,6 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   for (var i = 0; i < _rests.length; i++)
                     _ChoiceRow(
                       title: _rests[i].$2,
-                      subtitle: i == 2 ? 'React Native default' : null,
                       active: _rest == _rests[i].$1,
                       last: i == _rests.length - 1,
                       onTap: () => _setRest(_rests[i].$1),
@@ -804,46 +811,27 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 ],
               ),
             ),
-            const _SectionTitle('LANGUAGE'),
+            _SectionTitle(context.t('settings:language')),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'English',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: colors.text,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'English',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: colors.faint,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.keyboard_arrow_down, color: colors.muted),
-                  ],
-                ),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final current = ref.watch(languageProvider);
+                  return _ChoiceCard(
+                    children: [
+                      for (var i = 0; i < supportedLanguages.length; i++)
+                        _ChoiceRow(
+                          title: supportedLanguages[i].nativeLabel,
+                          subtitle: supportedLanguages[i].label,
+                          active: current == supportedLanguages[i].code,
+                          last: i == supportedLanguages.length - 1,
+                          onTap: () => ref
+                              .read(languageProvider.notifier)
+                              .select(supportedLanguages[i].code),
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ],

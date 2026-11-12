@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^2.6.1
   go_router: ^14.8.1
   supabase_flutter: ^2.8.4
@@ -40,3 +42,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/translations/en/
+    - assets/translations/hi/
+    - assets/translations/ta/
+    - assets/translations/ar/
+    - assets/translations/es/
+    - assets/translations/de/
+    - assets/translations/ja/
+    - assets/translations/pt/
+    - assets/translations/fr/

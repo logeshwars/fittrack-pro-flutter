@@ -11,6 +11,7 @@ import '../../health/application/steps_controller.dart';
 import '../../health/domain/health_steps.dart';
 import '../../workouts/domain/workout_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../../../core/l10n/language_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -75,7 +76,7 @@ class _DashboardBody extends StatelessWidget {
     final colors = AppPalette.of(context);
     final now = DateTime.now();
     final firstName = data.displayName.trim().split(' ').first;
-    final greeting = _greeting(now.hour);
+    final greeting = _greeting(context, now.hour);
     final proteinPct = data.proteinGoalG > 0
         ? (data.proteinG / data.proteinGoalG).clamp(0, 1).toDouble()
         : 0.0;
@@ -485,8 +486,8 @@ class _DashboardBody extends StatelessWidget {
               child: Column(
                 children: [
                   FitTrackSectionLabel(
-                    title: 'Recent Workouts',
-                    action: 'See all',
+                    title: context.t('home:recentWorkouts'),
+                    action: context.t('home:seeAll'),
                     onAction: () => context.go('/workout'),
                   ),
                   ...data.recentWorkouts.take(3).map(
@@ -502,11 +503,11 @@ class _DashboardBody extends StatelessWidget {
     );
   }
 
-  static String _greeting(int hour) {
-    if (hour < 5) return 'Up late?';
-    if (hour < 12) return 'Good morning,';
-    if (hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
+  static String _greeting(BuildContext context, int hour) {
+    if (hour < 5) return context.t('home:greetingLate');
+    if (hour < 12) return context.t('home:greetingMorning');
+    if (hour < 17) return context.t('home:greetingAfternoon');
+    return context.t('home:greetingEvening');
   }
 
   static int _weekWorkoutCount(List<Workout> workouts) {

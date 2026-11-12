@@ -5,6 +5,7 @@ import '../../../core/auth/auth_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
+import '../../../core/l10n/language_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -24,7 +25,7 @@ class ProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 40),
             children: [
               FitTrackScreenHeader(
-                title: 'Profile',
+                title: context.t('profile:title'),
                 subtitle: 'Your stats & settings',
                 trailing: IconButton(
                   onPressed: () => context.pop(),
@@ -91,7 +92,7 @@ class ProfileScreen extends ConsumerWidget {
                         icon: Icons.local_fire_department,
                         iconColor: AppColors.cardio,
                         value: '${data.currentStreak}',
-                        label: 'DAY STREAK',
+                        label: context.t('profile:dayStreak').toUpperCase(),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -100,7 +101,7 @@ class ProfileScreen extends ConsumerWidget {
                         icon: Icons.bolt,
                         iconColor: colors.accent,
                         value: _compact(data.totalXp),
-                        label: 'TOTAL XP',
+                        label: context.t('profile:totalXP').toUpperCase(),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -111,7 +112,7 @@ class ProfileScreen extends ConsumerWidget {
                         value: data.latestWeightKg == null
                             ? '—'
                             : data.latestWeightKg!.toStringAsFixed(1),
-                        label: 'BODY KG',
+                        label: context.t('profile:bodyKg').toUpperCase(),
                       ),
                     ),
                   ],
@@ -187,7 +188,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'SETTINGS',
+                    context.t('profile:settings'),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,

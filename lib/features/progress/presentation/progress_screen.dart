@@ -11,6 +11,7 @@ import '../../workouts/domain/workout_models.dart';
 import '../domain/progress_aggregates.dart';
 import '../domain/progress_models.dart';
 import 'weight_screen.dart' show weightHistoryProvider;
+import '../../../core/l10n/language_controller.dart';
 
 /// Everything the analytics tab needs, fetched once.
 class ProgressData {
@@ -84,15 +85,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 44),
         children: [
-          const FitTrackScreenHeader(
-            title: 'Progress',
-            subtitle: 'Analytics, body metrics and consistency',
+          FitTrackScreenHeader(
+            title: context.t('progress:title'),
+            subtitle: context.t('progress:analytics'),
             icon: Icons.insights,
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: FitTrackSegmentedTabs(
-              labels: const ['Analytics', 'Leaderboard'],
+              labels: [context.t('progress:analytics'), context.t('progress:leaderboard')],
               selectedIndex: tab,
               onSelected: (value) {
                 if (value == 1) {
@@ -190,7 +191,7 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const FitTrackSectionLabel(title: 'Weekly Volume (kg)'),
+                FitTrackSectionLabel(title: '${context.t('progress:weeklyVolume')} (kg)'),
                 const SizedBox(height: 8),
                 _WeekBars(
                   week: week,
@@ -254,7 +255,7 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
               children: [
                 Row(
                   children: [
-                    const Expanded(child: FitTrackSectionLabel(title: 'Goals This Week')),
+                    Expanded(child: FitTrackSectionLabel(title: context.t('progress:goalCompletion'))),
                     Text(
                       '$rate%',
                       style: TextStyle(fontWeight: FontWeight.w900, color: colors.accent),

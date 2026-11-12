@@ -7,6 +7,7 @@ import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../domain/badge_progress.dart';
+import '../../../core/l10n/language_controller.dart';
 
 class LeaderboardData {
   const LeaderboardData({required this.entries, required this.myId});
@@ -64,7 +65,7 @@ class LeaderboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 40),
             children: [
               FitTrackScreenHeader(
-                title: 'Leaderboard',
+                title: context.t('progress:leaderboard'),
                 subtitle: 'This month, ranked by score',
                 trailing: IconButton(
                   onPressed: () => context.pop(),
@@ -92,7 +93,7 @@ class LeaderboardScreen extends ConsumerWidget {
                     ? Padding(
                         padding: const EdgeInsets.all(32),
                         child: Text(
-                          'No one is on the board yet this month. Log a workout to appear here.',
+                          context.t('progress:noLeaderboard'),
                           textAlign: TextAlign.center,
                           style: TextStyle(color: colors.muted),
                         ),

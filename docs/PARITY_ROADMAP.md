@@ -111,3 +111,10 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - Everything OS-facing is behind `NotificationGateway` (flutter_local_notifications + timezone); the scheduling rules (`buildSchedule`, `firstFireDate`) are pure and unit tested. Enabling a reminder requests permission first and stays off when denied.
 - `tool/patch_native.py` adds the plugin receivers to the manifest (boot re-arm) and enables core-library desugaring. Scheduling is inexact (no `SCHEDULE_EXACT_ALARM`), so delivery can drift a few minutes on Android.
 - The old four-switch alerts screen and its `fittrack_alert_*` keys were dropped; they never scheduled anything.
+
+## Batch 30 – Translations (9 languages)
+- The RN translation JSON (`en hi ta ar es de ja pt fr` × `common home workout nutrition profile settings progress`) is bundled unchanged under `assets/translations/`, so future string edits can be copied across verbatim.
+- `core/l10n/translations.dart` provides `Translations.t('ns:key', args:, count:)` with i18next-style `{{name}}` interpolation, `_one/_other/...` plurals (CLDR rules for the shipped languages incl. Arabic) and English fallback; 61 keys per non-English language are not translated in the RN source and fall back to English. `context.t(...)` reads it from `TranslationsScope`.
+- `languageProvider` persists the choice (`fittrack_language`, defaults to the device language) and drives `MaterialApp.locale` with `flutter_localizations`, so Material widgets, date/time pickers and RTL layout (Arabic) switch with it. The Language section of App Settings is now a working picker.
+- Converted screens so far: App Settings, Notifications header, Progress, Leaderboard, Profile headers/stat labels and Dashboard greeting/recent-workouts. **Remaining screens still contain inline English** (workout session, nutrition, cardio, sleep, weight, goals, paywall, auth); migrate them by swapping literals for `context.t('ns:key')` using the existing keys.
+- Tests check every language parses, placeholders match the English source, fallback, interpolation and plural rules.
