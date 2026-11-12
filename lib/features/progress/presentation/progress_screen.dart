@@ -96,7 +96,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
               selectedIndex: tab,
               onSelected: (value) {
                 if (value == 1) {
-                  context.push('/achievements');
+                  context.push('/leaderboard');
                 } else {
                   setState(() => tab = value);
                 }

@@ -21,6 +21,7 @@ import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/cardio/presentation/cardio_draft_screen.dart';
 import '../features/cardio/presentation/cardio_session_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
+import '../features/gamification/presentation/leaderboard_screen.dart';
 import '../features/progress/presentation/health_draft_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screens.dart';
@@ -55,6 +56,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/auth/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
+    GoRoute(path: '/leaderboard', builder: (context, state) => const LeaderboardScreen()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     GoRoute(path: '/sleep', builder: (context, state) => const SleepScreen()),
     GoRoute(path: '/sleep/log', builder: (context, state) => const SleepLogScreen()),

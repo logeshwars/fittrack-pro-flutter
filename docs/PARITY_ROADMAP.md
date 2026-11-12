@@ -79,3 +79,9 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 ## Batch 24 – Progress analytics
 - `progress_screen.dart` rebuilt on `WorkoutService`, `NutritionService.heatmapData`, `SleepService` and `GamificationService.stats`: stats row, weekly volume/protein bar charts (fl_chart), 26-week consistency heat map (workout/protein/calories/sleep), weekly goal completion, body-metrics shortcuts.
 - Pure logic in `progress_aggregates.dart` with tests. The Leaderboard tab currently routes to `/achievements`; the dedicated leaderboard arrives with the gamification batch.
+
+## Batch 25 – Gamification and leaderboard
+- Achievements screen rebuilt on `GamificationService` (level/XP bar, rank tier, stats, all 40 badges with progress, earned from `user_badges` or provably met by stats).
+- New `/leaderboard` screen: publishes this month's stats (best effort), then lists the ranked board with the current user highlighted. Progress tab's Leaderboard segment opens it.
+- Badges tied to server-side events (early morning, comeback, food logs, ...) are only shown as earned when present in `user_badges`; automatic badge awarding is not ported because the RN app never awarded them either.
+- Known gap: `analyze-food-photo` edge function trusts a client-supplied user id; it should derive the user from the JWT.
