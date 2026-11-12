@@ -82,10 +82,18 @@ jobs:
         env:
           SUPABASE_URL: ${{ github.event_name == 'pull_request' && '' || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ github.event_name == 'pull_request' && '' || secrets.SUPABASE_ANON_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ github.event_name == 'pull_request' && '' || secrets.GOOGLE_WEB_CLIENT_ID }}
+          REVENUECAT_ANDROID_KEY: ${{ github.event_name == 'pull_request' && '' || secrets.REVENUECAT_ANDROID_KEY }}
+          USDA_FDC_API_KEY: ${{ github.event_name == 'pull_request' && '' || secrets.USDA_FDC_API_KEY }}
+          SENTRY_DSN: ${{ github.event_name == 'pull_request' && '' || secrets.SENTRY_DSN }}
         run: |
           flutter build apk --debug \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+            --dart-define=USDA_FDC_API_KEY="$USDA_FDC_API_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4
         with:
