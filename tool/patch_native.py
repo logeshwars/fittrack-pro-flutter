@@ -91,6 +91,16 @@ def patch_android_notifications() -> None:
     gradle.write_text(s)
 
 
+def patch_android_notification_icon() -> None:
+    """Status-bar icon for reminders (white glyph on transparent)."""
+    source = Path("assets/icon/notification-icon.png")
+    res = Path("android/app/src/main/res")
+    if source.exists() and res.exists():
+        target = res / "drawable"
+        target.mkdir(exist_ok=True)
+        (target / "ic_notification.png").write_bytes(source.read_bytes())
+
+
 def patch_android_build() -> None:
     """Health Connect needs FlutterFragmentActivity and minSdk 26."""
     for activity in Path("android/app/src/main").glob("**/MainActivity.*"):
@@ -132,5 +142,6 @@ if __name__ == "__main__":
     patch_android()
     patch_android_build()
     patch_android_notifications()
+    patch_android_notification_icon()
     patch_ios()
     print("Native permissions patched.")

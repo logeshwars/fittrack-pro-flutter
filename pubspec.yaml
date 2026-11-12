@@ -39,6 +39,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.2
 
 flutter:
   uses-material-design: true
@@ -52,3 +54,22 @@ flutter:
     - assets/translations/ja/
     - assets/translations/pt/
     - assets/translations/fr/
+
+# App icon and splash match the React Native app (barbell + bolt mark on #0D0D0D).
+# Generated into the native projects by tool/bootstrap_native.sh.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  remove_alpha_ios: true
+  adaptive_icon_background: assets/icon/android-icon-background.png
+  adaptive_icon_foreground: assets/icon/android-icon-foreground.png
+  adaptive_icon_monochrome: assets/icon/android-icon-monochrome.png
+
+flutter_native_splash:
+  color: "#0D0D0D"
+  image: assets/icon/splash-logo.png
+  android_12:
+    color: "#0D0D0D"
+    image: assets/icon/android-icon-foreground.png
+    icon_background_color: "#0D0D0D"

@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
 import '../../../core/l10n/language_controller.dart';
+import '../../../core/widgets/custom_icons.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -89,8 +90,7 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.local_fire_department,
-                        iconColor: AppColors.cardio,
+                        icon: const FlameStreakIcon(size: 28),
                         value: '${data.currentStreak}',
                         label: context.t('profile:dayStreak').toUpperCase(),
                       ),
@@ -98,8 +98,7 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.bolt,
-                        iconColor: colors.accent,
+                        icon: XPIcon(size: 28, color: colors.accent),
                         value: _compact(data.totalXp),
                         label: context.t('profile:totalXP').toUpperCase(),
                       ),
@@ -107,8 +106,7 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.monitor_weight_outlined,
-                        iconColor: AppColors.weight,
+                        icon: TrophyIcon(size: 28, color: colors.accent),
                         value: data.latestWeightKg == null
                             ? '—'
                             : data.latestWeightKg!.toStringAsFixed(1),
@@ -293,13 +291,11 @@ class ProfileScreen extends ConsumerWidget {
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
-    required this.iconColor,
     required this.value,
     required this.label,
   });
 
-  final IconData icon;
-  final Color iconColor;
+  final Widget icon;
   final String value;
   final String label;
 
@@ -314,7 +310,7 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 28, color: iconColor),
+          icon,
           const SizedBox(height: 6),
           Text(
             value,
