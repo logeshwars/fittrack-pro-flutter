@@ -25,6 +25,8 @@ import '../features/progress/presentation/health_draft_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screens.dart';
 import '../features/sleep/presentation/sleep_screen.dart';
+import '../features/sleep/presentation/sleep_log_screen.dart';
+import '../features/progress/presentation/weight_screen.dart';
 import '../features/subscription/presentation/commerce_screens.dart';
 import '../features/nutrition/presentation/barcode_scan_screen.dart';
 
@@ -55,12 +57,12 @@ final appRouter = GoRouter(
     GoRoute(path: '/achievements', builder: (context, state) => const GamificationScreen()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     GoRoute(path: '/sleep', builder: (context, state) => const SleepScreen()),
-    GoRoute(path: '/sleep/log', builder: (context, state) => const HealthDraftScreen(initialTab: 1)),
+    GoRoute(path: '/sleep/log', builder: (context, state) => const SleepLogScreen()),
     GoRoute(path: '/paywall', builder: (context, state) => const PaywallScreen()),
     GoRoute(path: '/subscription', builder: (context, state) => const SubscriptionScreen()),
     GoRoute(path: '/nutrition/photo', builder: (context, state) => const PhotoScanScreen()),
     GoRoute(path: '/nutrition/scan', builder: (context, state) => const BarcodeScanScreen()),
-    GoRoute(path: '/progress/weight', builder: (context, state) => const HealthDraftScreen(initialTab: 0)),
+    GoRoute(path: '/progress/weight', builder: (context, state) => const WeightScreen()),
     GoRoute(path: '/settings/personal', builder: (context, state) => const PersonalSettingsScreen()),
     GoRoute(path: '/settings/goals', builder: (context, state) => const GoalsSettingsScreen()),
     GoRoute(path: '/settings/alerts', builder: (context, state) => const AlertsSettingsScreen()),

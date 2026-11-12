@@ -2,22 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/config/app_config.dart';
+import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../progress/data/progress_repository.dart';
 import '../../progress/domain/progress_models.dart';
 
 final sleepHistoryProvider =
     FutureProvider.autoDispose<List<SleepLog>>((ref) async {
-  if (!AppConfig.hasSupabase) return const [];
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
-  if (user == null) return const [];
-  final result = await ProgressRepository(client).recent(
-    authenticatedUserId: user.id,
-  );
-  return result.sleep;
+  final service = ref.watch(sleepServiceProvider);
+  if (service == null) {
+    return const [];
+  }
+  final rows = await service.history(limit: 60);
+  return [for (final r in rows) SleepLog.fromJson(r)];
 });
 
 class SleepScreen extends ConsumerWidget {
@@ -60,7 +56,13 @@ class SleepScreen extends ConsumerWidget {
                   title: 'Sleep history unavailable',
                   subtitle: 'Pull to retry.',
                 ),
-                data: (items) => _Content(items: items),
+                data: (items) => _Content(
+                  items: items,
+                  onDelete: (item) async {
+                    await ref.read(sleepServiceProvider)?.deleteLog(item.id);
+                    ref.invalidate(sleepHistoryProvider);
+                  },
+                ),
               ),
             ],
           ),
@@ -122,8 +124,9 @@ class _Header extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.items});
+  const _Content({required this.items, required this.onDelete});
   final List<SleepLog> items;
+  final ValueChanged<SleepLog> onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +254,24 @@ class _Content extends StatelessWidget {
           child: Column(
             children: items
                 .take(12)
-                .map((item) => _SleepRow(item: item))
+                .map(
+                  (item) => Dismissible(
+                    key: ValueKey(item.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(right: 20),
+                      alignment: Alignment.centerRight,
+                      decoration: BoxDecoration(
+                        color: colors.danger,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.delete_outline, color: Colors.white),
+                    ),
+                    onDismissed: (_) => onDelete(item),
+                    child: _SleepRow(item: item),
+                  ),
+                )
                 .toList(),
           ),
         ),
