@@ -75,3 +75,7 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - Splits ported from `workoutSplits.ts` (4 splits) into `workout_splits_data.dart` (generated).
 - History detail on `WorkoutService.byId` with rename/delete; presets list/detail/editor on `PresetService`; split screen resolves exercises by name, swap sheet, start session, save as preset; exercise library tab.
 - Also generated (used by later tasks): `indian_foods_data.dart` (69 foods), `badges_data.dart` (40 badges).
+
+## Batch 24 – Progress analytics
+- `progress_screen.dart` rebuilt on `WorkoutService`, `NutritionService.heatmapData`, `SleepService` and `GamificationService.stats`: stats row, weekly volume/protein bar charts (fl_chart), 26-week consistency heat map (workout/protein/calories/sleep), weekly goal completion, body-metrics shortcuts.
+- Pure logic in `progress_aggregates.dart` with tests. The Leaderboard tab currently routes to `/achievements`; the dedicated leaderboard arrives with the gamification batch.
