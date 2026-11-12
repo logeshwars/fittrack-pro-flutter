@@ -373,28 +373,30 @@ class _DashboardBody extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.water.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: AppColors.water.withValues(alpha: 0.25),
+                if (steps.availability == StepsAvailability.unsupported) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.water.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: AppColors.water.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Step tracking is not available on this device.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.water,
+                      ),
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Health step sync will be enabled after the native integration gate.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.water,
-                    ),
-                  ),
-                ),
+                ],
               ],
             ),
           ),
