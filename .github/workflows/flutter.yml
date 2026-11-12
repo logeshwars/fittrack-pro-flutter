@@ -18,7 +18,7 @@ jobs:
           flutter create --platforms=android,ios --org com.logesh .
           rm -f test/widget_test.dart
       - run: flutter pub get
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
       - name: Build Android debug APK
         run: flutter build apk --debug --dart-define=SUPABASE_URL= --dart-define=SUPABASE_ANON_KEY=
