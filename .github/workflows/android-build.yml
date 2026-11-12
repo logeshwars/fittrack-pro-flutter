@@ -46,7 +46,14 @@ jobs:
           channel: stable
           cache: true
       - name: Generate development Android project
-        run: bash tool/bootstrap_native.sh
+        run: |
+          # The committed Gradle/AGP/Kotlin files come from an older Flutter
+          # template. Drop them so `flutter create` regenerates versions that
+          # match the Flutter installed above; bootstrap re-applies our patches.
+          rm -f android/settings.gradle.kts android/build.gradle.kts \
+            android/gradle.properties android/app/build.gradle.kts \
+            android/gradle/wrapper/gradle-wrapper.properties
+          bash tool/bootstrap_native.sh
       - name: Install Android NDK with retries
         shell: bash
         run: |
