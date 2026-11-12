@@ -85,3 +85,8 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - New `/leaderboard` screen: publishes this month's stats (best effort), then lists the ranked board with the current user highlighted. Progress tab's Leaderboard segment opens it.
 - Badges tied to server-side events (early morning, comeback, food logs, ...) are only shown as earned when present in `user_badges`; automatic badge awarding is not ported because the RN app never awarded them either.
 - Known gap: `analyze-food-photo` edge function trusts a client-supplied user id; it should derive the user from the JWT.
+
+## Batch 26 – Dashboard on services
+- `dashboardProvider` now reads only through the service layer (workouts, today's food and cardio, latest sleep and weight, profile, gamification) so it works offline from the on-device cache and shows *today's* protein/calories/cardio instead of a recent-logs sum. Every source is isolated: one failure no longer blanks the dashboard.
+- Protein and calorie goals come from `goalTargetsProvider` (Goals settings) instead of a hard-coded 2000 kcal.
+- Removed the five obsolete direct-Supabase repositories (`workout`, `nutrition`, `cardio`, `progress`, `gamification`); nothing referenced them any more.

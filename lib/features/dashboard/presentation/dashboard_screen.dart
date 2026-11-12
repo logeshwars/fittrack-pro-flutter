@@ -56,7 +56,6 @@ class _DashboardBody extends StatelessWidget {
   final bool loading;
   final String? message;
 
-  static const _calorieGoal = 2000;
   static const _stepGoal = 10000;
 
   @override
@@ -69,7 +68,7 @@ class _DashboardBody extends StatelessWidget {
         ? (data.proteinG / data.proteinGoalG).clamp(0, 1).toDouble()
         : 0.0;
     final caloriesPct =
-        (data.calories / _calorieGoal).clamp(0, 1).toDouble();
+        (data.calories / data.calorieGoal).clamp(0, 1).toDouble();
     const steps = 0;
     const stepsPct = 0.0;
     final xpBase = (data.level - 1) * 500;
@@ -332,8 +331,8 @@ class _DashboardBody extends StatelessWidget {
                       icon: Icons.local_fire_department,
                       value: data.calories.toStringAsFixed(0),
                       label: 'Calories',
-                      sublabel: '/ $_calorieGoal kcal',
-                      done: data.calories >= _calorieGoal,
+                      sublabel: '/ ${data.calorieGoal} kcal',
+                      done: data.calories >= data.calorieGoal,
                     ),
                     _VerticalDivider(color: colors.border2),
                     FitTrackMiniRing(
