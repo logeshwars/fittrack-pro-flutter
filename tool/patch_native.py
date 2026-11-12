@@ -123,6 +123,33 @@ def patch_android_build() -> None:
         gradle.write_text(text)
 
 
+DEBUG_SIGNING_MARKER = "// fittrack: fixed debug keystore"
+DEBUG_SIGNING_BLOCK = """    %s
+    signingConfigs {
+        getByName("debug") {
+            val keystorePath = System.getenv("DEBUG_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+""" % DEBUG_SIGNING_MARKER
+
+
+def patch_debug_signing() -> None:
+    """Sign debug builds with $DEBUG_KEYSTORE_PATH when set (stable SHA-1)."""
+    gradle = Path("android/app/build.gradle.kts")
+    if not gradle.exists():
+        return
+    text = gradle.read_text()
+    if DEBUG_SIGNING_MARKER in text or "android {\n" not in text:
+        return
+    gradle.write_text(text.replace("android {\n", "android {\n" + DEBUG_SIGNING_BLOCK, 1))
+
+
 def patch_gradle_properties() -> None:
     """Some plugins (flutter_timezone) compile Java for 11 but Kotlin for 1.8.
 
@@ -159,5 +186,6 @@ if __name__ == "__main__":
     patch_android_notifications()
     patch_android_notification_icon()
     patch_gradle_properties()
+    patch_debug_signing()
     patch_ios()
     print("Native permissions patched.")

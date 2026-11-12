@@ -93,8 +93,8 @@ jobs:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
         run: |
           if [[ -n "$DEBUG_KEYSTORE_BASE64" ]]; then
-            mkdir -p ~/.android
-            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > ~/.android/debug.keystore
+            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/debug.keystore"
+            echo "DEBUG_KEYSTORE_PATH=$RUNNER_TEMP/debug.keystore" >> "$GITHUB_ENV"
             echo "Restored fixed debug keystore"
           else
             echo "::warning::DEBUG_KEYSTORE_BASE64 not set; Google Sign-In will not match a registered SHA-1"
@@ -134,11 +134,20 @@ jobs:
             echo '```'
             echo "**From the keystore file used for signing:**"
             echo '```'
-            keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey \
+            keytool -list -v -keystore "${DEBUG_KEYSTORE_PATH:-$HOME/.android/debug.keystore}" -alias androiddebugkey \
               -storepass android -keypass android 2>&1 | grep -E "SHA1|SHA256" || echo "keystore not readable"
             echo '```'
             echo "Add the **SHA-1** value to the Android OAuth client in Google Cloud."
           } | tee -a "$GITHUB_STEP_SUMMARY"
+          if [[ -n "${DEBUG_KEYSTORE_PATH:-}" && -n "$APKSIGNER" ]]; then
+            APK_SHA="$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/.*certificate SHA-1 digest: //p' | head -1 | tr -d ':' | tr 'A-F' 'a-f')"
+            KS_SHA="$(keytool -list -v -keystore "$DEBUG_KEYSTORE_PATH" -alias androiddebugkey -storepass android -keypass android | sed -n 's/.*SHA1: //p' | head -1 | tr -d ':' | tr 'A-F' 'a-f')"
+            if [[ "$APK_SHA" != "$KS_SHA" ]]; then
+              echo "::error::APK is not signed with the restored keystore (APK $APK_SHA vs keystore $KS_SHA)"
+              exit 1
+            fi
+            echo "APK signature matches the restored keystore."
+          fi
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4
         with:
