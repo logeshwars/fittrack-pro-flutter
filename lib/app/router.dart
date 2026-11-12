@@ -19,6 +19,7 @@ import '../features/nutrition/presentation/food_log_screen.dart';
 import '../features/nutrition/presentation/photo_scan_screen.dart';
 import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/cardio/presentation/cardio_draft_screen.dart';
+import '../features/cardio/presentation/cardio_session_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
 import '../features/progress/presentation/health_draft_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
@@ -81,7 +82,7 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(path: '/cardio/draft', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
-    GoRoute(path: '/cardio/session', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
+    GoRoute(path: '/cardio/session', builder: (context, state) => CardioSessionScreen(type: state.uri.queryParameters['type'] ?? 'other')),
     GoRoute(path: '/progress/draft', builder: (context, state) => const HealthDraftScreen()),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
