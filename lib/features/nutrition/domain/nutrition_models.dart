@@ -1,5 +1,5 @@
 class NutritionLog {
-  const NutritionLog({required this.id, required this.foodName, required this.quantityG, required this.proteinG, required this.loggedAt, this.mealType, this.calories, this.carbsG, this.fatG, this.fiberG});
+  const NutritionLog({required this.id, required this.foodName, required this.quantityG, required this.proteinG, required this.loggedAt, this.mealType, this.calories, this.carbsG, this.fatG, this.fiberG, this.micronutrients = const {}, this.foodId});
   final String id;
   final String foodName;
   final String? mealType;
@@ -10,6 +10,8 @@ class NutritionLog {
   final double? fatG;
   final double? fiberG;
   final DateTime loggedAt;
+  final Map<String, double> micronutrients;
+  final String? foodId;
 
   factory NutritionLog.fromJson(Map<String, dynamic> json) => NutritionLog(
     id: json['id'] as String,
@@ -22,6 +24,11 @@ class NutritionLog {
     fatG: (json['fat_g'] as num?)?.toDouble(),
     fiberG: (json['fiber_g'] as num?)?.toDouble(),
     loggedAt: DateTime.parse(json['logged_at'] as String),
+    foodId: json['food_id'] as String?,
+    micronutrients: {
+      for (final e in ((json['micronutrients'] as Map?) ?? const {}).entries)
+        if (e.value is num) e.key.toString(): (e.value as num).toDouble(),
+    },
   );
 }
 
