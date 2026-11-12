@@ -115,6 +115,19 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=USDA_FDC_API_KEY="$USDA_FDC_API_KEY" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN"
+      - name: Show APK signing certificate (register this SHA-1 in Google Cloud)
+        run: |
+          APK=build/app/outputs/flutter-apk/app-debug.apk
+          CERT="$(keytool -printcert -jarfile "$APK")"
+          echo "$CERT" | grep -E "Owner|SHA1|SHA256"
+          {
+            echo "### APK signing certificate"
+            echo "Package: \`com.logesh.fittrackpro.flutterdev\`"
+            echo '```'
+            echo "$CERT" | grep -E "Owner|SHA1|SHA256"
+            echo '```'
+            echo "Add the **SHA1** value to the Android OAuth client in Google Cloud."
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload installable debug APK
         uses: actions/upload-artifact@v4
         with:
