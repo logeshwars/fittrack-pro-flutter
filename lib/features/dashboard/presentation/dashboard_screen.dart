@@ -384,7 +384,7 @@ class _DashboardBody extends StatelessWidget {
                         label: 'Start Workout',
                         sublabel: '+50 XP',
                         accent: colors.accent,
-                        onTap: () => context.go('/workout/draft'),
+                        onTap: () => context.go('/workout/new'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -473,7 +473,7 @@ class _DashboardBody extends StatelessWidget {
               ),
             ),
           if (data.recentWorkouts.isEmpty && !loading)
-            _EmptyWorkout(onTap: () => context.go('/workout/draft')),
+            _EmptyWorkout(onTap: () => context.go('/workout/new')),
         ],
       ),
     );

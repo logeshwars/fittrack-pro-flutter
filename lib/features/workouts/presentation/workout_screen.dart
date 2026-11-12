@@ -86,10 +86,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: _QuickStart(onTap: () => context.push('/workout/draft')),
+            child: _QuickStart(onTap: () => context.push('/workout/new')),
           ),
-          if (tab == 0) _Routines(onCreate: () => context.push('/workout/draft')),
-          if (tab == 1) _Exercises(onOpen: () => context.push('/workout/draft')),
+          if (tab == 0) _Routines(onCreate: () => context.push('/workout/new')),
+          if (tab == 1) _Exercises(onOpen: () => context.push('/workout/new')),
           if (tab == 2)
             history.when(
               loading: () => Padding(

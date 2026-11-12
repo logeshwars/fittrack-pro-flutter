@@ -177,7 +177,7 @@ class _TemplateScreen extends StatelessWidget {
             ),
             for (final day in days)
               InkWell(
-                onTap: () => context.push('/workout/draft'),
+                onTap: () => context.push('/workout/new'),
                 child: Container(
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   padding: const EdgeInsets.all(16),
@@ -237,7 +237,7 @@ class _TemplateScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: FilledButton.icon(
-                onPressed: () => context.push('/workout/draft'),
+                onPressed: () => context.push('/workout/new'),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('START WORKOUT'),
                 style: FilledButton.styleFrom(
