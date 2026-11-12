@@ -123,6 +123,21 @@ def patch_android_build() -> None:
         gradle.write_text(text)
 
 
+def patch_gradle_properties() -> None:
+    """Some plugins (flutter_timezone) compile Java for 11 but Kotlin for 1.8.
+
+    Newer Kotlin Gradle plugins fail the build on that mismatch; downgrade
+    the check to a warning. The generated debug build is unaffected.
+    """
+    props = Path("android/gradle.properties")
+    if not props.exists():
+        return
+    line = "kotlin.jvm.target.validation.mode=warning"
+    text = props.read_text()
+    if line not in text:
+        props.write_text(text.rstrip("\n") + "\n" + line + "\n")
+
+
 def patch_ios() -> None:
     plist = Path("ios/Runner/Info.plist")
     if not plist.exists():
@@ -143,5 +158,6 @@ if __name__ == "__main__":
     patch_android_build()
     patch_android_notifications()
     patch_android_notification_icon()
+    patch_gradle_properties()
     patch_ios()
     print("Native permissions patched.")
