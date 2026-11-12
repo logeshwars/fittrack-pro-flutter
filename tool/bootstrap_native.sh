@@ -19,6 +19,9 @@ p.write_text(s)
 PY
 fi
 
+# Camera, location, notifications, activity recognition, Health Connect.
+python3 tool/patch_native.py
+
 # iOS bundle ID is not modified automatically: inspect and set the
 # development bundle ID and signing team in Xcode before installing.
 echo "Native projects generated. Review signing and iOS bundle identifiers."
