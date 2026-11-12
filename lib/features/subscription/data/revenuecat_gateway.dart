@@ -106,7 +106,9 @@ class RevenueCatGateway implements PurchaseGateway {
   @override
   Future<SubscriptionState> purchase(PlanOffer plan) async {
     try {
-      return _map(await Purchases.purchasePackage(plan.handle as Package));
+      // purchases_flutter 9 returns a PurchaseResult, not CustomerInfo.
+      final result = await Purchases.purchasePackage(plan.handle as Package);
+      return _map(result.customerInfo);
     } on PlatformException catch (e) {
       throw _translate(e);
     }
