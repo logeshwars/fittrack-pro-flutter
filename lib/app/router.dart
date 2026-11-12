@@ -13,7 +13,9 @@ import '../features/workouts/presentation/workout_secondary_screens.dart';
 import '../features/workouts/presentation/workout_template_screens.dart';
 import '../features/workouts/presentation/workout_session_screen.dart';
 import '../features/nutrition/presentation/nutrition_screen.dart';
+import '../features/nutrition/domain/food_result.dart';
 import '../features/nutrition/presentation/food_draft_screen.dart';
+import '../features/nutrition/presentation/food_log_screen.dart';
 import '../features/cardio/presentation/cardio_screen.dart';
 import '../features/cardio/presentation/cardio_draft_screen.dart';
 import '../features/progress/presentation/progress_screen.dart';
@@ -68,7 +70,14 @@ final appRouter = GoRouter(
     GoRoute(path: '/workout/preset/:id', builder: (context, state) => WorkoutPresetScreen(presetId: state.pathParameters['id']!)),
     GoRoute(path: '/workout/:id', builder: (context, state) => WorkoutSessionScreen(workoutId: state.pathParameters['id']!)),
     GoRoute(path: '/nutrition/draft', builder: (context, state) => const FoodDraftScreen()),
-    GoRoute(path: '/nutrition/log', builder: (context, state) => const FoodDraftScreen()),
+    GoRoute(
+      path: '/nutrition/log',
+      builder: (context, state) => FoodLogScreen(
+        meal: state.uri.queryParameters['meal'],
+        date: DateTime.tryParse(state.uri.queryParameters['date'] ?? ''),
+        initialFood: state.extra is FoodResult ? state.extra as FoodResult : null,
+      ),
+    ),
     GoRoute(path: '/cardio/draft', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
     GoRoute(path: '/cardio/session', builder: (context, state) => CardioDraftScreen(activityType: state.uri.queryParameters['type'])),
     GoRoute(path: '/progress/draft', builder: (context, state) => const HealthDraftScreen()),
