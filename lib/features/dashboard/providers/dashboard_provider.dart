@@ -99,7 +99,9 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
         .maybeSingle();
     if (profile != null) {
       final profileName = (profile['display_name'] as String?)?.trim();
-      if (profileName != null && profileName.isNotEmpty) displayName = profileName;
+      if (profileName != null && profileName.isNotEmpty) {
+        displayName = profileName;
+      }
       avatarUrl = (profile['avatar_url'] as String?) ?? avatarUrl;
       proteinGoal = (profile['protein_goal_g'] as num?)?.toInt() ?? proteinGoal;
     }

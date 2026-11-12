@@ -25,13 +25,19 @@ import '../features/nutrition/presentation/barcode_scan_screen.dart';
 final appRouter = GoRouter(
   initialLocation: '/today',
   redirect: (context, state) {
-    if (!AppConfig.hasSupabase) return null;
+    if (!AppConfig.hasSupabase) {
+      return null;
+    }
     final signedIn = Supabase.instance.client.auth.currentUser != null;
     final path = state.uri.path;
     final isPublicAuth = path == '/account' || path == '/auth/login' || path == '/forgot-password' || path == '/auth/forgot-password';
 
-    if (!signedIn && !isPublicAuth) return '/auth/login';
-    if (signedIn && (path == '/account' || path == '/auth/login')) return '/today';
+    if (!signedIn && !isPublicAuth) {
+      return '/auth/login';
+    }
+    if (signedIn && (path == '/account' || path == '/auth/login')) {
+      return '/today';
+    }
     return null;
   },
   routes: [

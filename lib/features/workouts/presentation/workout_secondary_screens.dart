@@ -57,13 +57,12 @@ class _WorkoutDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
     final duration = workout.finishedAt == null
         ? 0
         : workout.finishedAt!.difference(workout.startedAt).inMinutes;
     final exercises = <String, List<WorkoutSet>>{};
     for (final set in workout.sets) {
-      exercises.putIfAbsent(set.exerciseName, () => []).add(set);
+      exercises.putIfAbsent(set.exerciseName ?? 'Exercise', () => []).add(set);
     }
 
     return ListView(
