@@ -240,7 +240,8 @@ class _WorkoutSessionScreenState extends ConsumerState<WorkoutSessionScreen> {
     }
     setState(() => _busy = true);
     try {
-      final summary = await ref.read(sessionControllerProvider.notifier).finish();
+      final summary =
+          await ref.read(sessionControllerProvider.notifier).finish();
       if (!mounted) {
         return;
       }
@@ -447,7 +448,11 @@ class _StatsRow extends StatelessWidget {
     Widget cell(String label, String value) => Expanded(
           child: Column(
             children: [
-              Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: c.text)),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: c.text)),
               Text(label, style: TextStyle(fontSize: 11, color: c.muted)),
             ],
           ),
@@ -524,9 +529,11 @@ class _EmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('Add your first exercise', style: TextStyle(color: c.text, fontWeight: FontWeight.w600)),
+          Text('Add your first exercise',
+              style: TextStyle(color: c.text, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
-          Text('Pick from the exercise library to start logging sets.', style: TextStyle(color: c.muted), textAlign: TextAlign.center),
+          Text('Pick from the exercise library to start logging sets.',
+              style: TextStyle(color: c.muted), textAlign: TextAlign.center),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: onAdd,
@@ -580,9 +587,14 @@ class _ExerciseCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(exercise.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text)),
-          Text(exercise.muscleGroup.toUpperCase(), style: const TextStyle(fontSize: 11, color: AppColors.workout)),
-          if (hint != null && hint.lastWeightKg != null && hint.lastReps != null) ...[
+          Text(exercise.name,
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w700, color: c.text)),
+          Text(exercise.muscleGroup.toUpperCase(),
+              style: const TextStyle(fontSize: 11, color: AppColors.workout)),
+          if (hint != null &&
+              hint.lastWeightKg != null &&
+              hint.lastReps != null) ...[
             const SizedBox(height: 8),
             Text(
               'Last: ${_kg(hint.lastWeightKg!)} kg × ${hint.lastReps}'
@@ -594,15 +606,23 @@ class _ExerciseCard extends ConsumerWidget {
           Row(
             children: [
               if (exercise.logType == 'weight_reps') ...[
-                Expanded(child: _NumberField(controller: weight, label: 'Weight (kg)', decimal: true)),
+                Expanded(
+                    child: _NumberField(
+                        controller: weight,
+                        label: 'Weight (kg)',
+                        decimal: true)),
                 const SizedBox(width: 8),
               ],
               if (exercise.logType != 'duration')
                 Expanded(child: _NumberField(controller: reps, label: 'Reps'))
               else
-                Expanded(child: _NumberField(controller: duration, label: 'Seconds')),
+                Expanded(
+                    child:
+                        _NumberField(controller: duration, label: 'Seconds')),
               const SizedBox(width: 8),
-              Expanded(child: _NumberField(controller: rpe, label: 'RPE', decimal: true)),
+              Expanded(
+                  child: _NumberField(
+                      controller: rpe, label: 'RPE', decimal: true)),
             ],
           ),
           if (error != null) ...[
@@ -620,7 +640,10 @@ class _ExerciseCard extends ConsumerWidget {
           if (exercise.sets.isNotEmpty) ...[
             const SizedBox(height: 16),
             for (final set in exercise.sets)
-              _SetRow(set: set, logType: exercise.logType, onRemove: () => onRemove(set.id)),
+              _SetRow(
+                  set: set,
+                  logType: exercise.logType,
+                  onRemove: () => onRemove(set.id)),
           ],
         ],
       ),
@@ -629,7 +652,8 @@ class _ExerciseCard extends ConsumerWidget {
 }
 
 class _SetRow extends StatelessWidget {
-  const _SetRow({required this.set, required this.logType, required this.onRemove});
+  const _SetRow(
+      {required this.set, required this.logType, required this.onRemove});
 
   final SessionSet set;
   final String logType;
@@ -649,13 +673,15 @@ class _SetRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 28,
-            child: Text('${set.setNumber}', style: TextStyle(color: c.muted, fontWeight: FontWeight.w600)),
+            child: Text('${set.setNumber}',
+                style: TextStyle(color: c.muted, fontWeight: FontWeight.w600)),
           ),
           Expanded(child: Text(detail, style: TextStyle(color: c.text))),
           if (set.rpe != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Text('RPE ${_kg(set.rpe!)}', style: TextStyle(color: c.muted, fontSize: 12)),
+              child: Text('RPE ${_kg(set.rpe!)}',
+                  style: TextStyle(color: c.muted, fontSize: 12)),
             ),
           if (set.isPersonalRecord)
             const Padding(
@@ -675,7 +701,8 @@ class _SetRow extends StatelessWidget {
 }
 
 class _NumberField extends StatelessWidget {
-  const _NumberField({required this.controller, required this.label, this.decimal = false});
+  const _NumberField(
+      {required this.controller, required this.label, this.decimal = false});
 
   final TextEditingController controller;
   final String label;
@@ -722,7 +749,9 @@ class _RestBanner extends StatelessWidget {
         children: [
           const Icon(Icons.timer_outlined, color: AppColors.workout),
           const SizedBox(width: 10),
-          Text('Rest  ${_clock(Duration(seconds: seconds))}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text)),
+          Text('Rest  ${_clock(Duration(seconds: seconds))}',
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w700, color: c.text)),
           const Spacer(),
           TextButton(onPressed: onSkip, child: const Text('SKIP')),
         ],
@@ -741,7 +770,14 @@ class _ExercisePicker extends ConsumerStatefulWidget {
 
 class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
   static const _groups = [
-    'chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'glutes', 'cardio',
+    'chest',
+    'back',
+    'legs',
+    'shoulders',
+    'arms',
+    'core',
+    'glutes',
+    'cardio',
   ];
 
   late final Future<List<Exercise>> _future;
@@ -761,14 +797,16 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.85,
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: TextField(
                 autofocus: false,
-                onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
+                onChanged: (v) =>
+                    setState(() => _query = v.trim().toLowerCase()),
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
                   hintText: 'Search exercises',
@@ -789,7 +827,8 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
                       child: FilterChip(
                         label: Text(g),
                         selected: _group == g,
-                        onSelected: (on) => setState(() => _group = on ? g : null),
+                        onSelected: (on) =>
+                            setState(() => _group = on ? g : null),
                       ),
                     ),
                 ],
@@ -804,17 +843,22 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
                   }
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text('Could not load exercises.', style: TextStyle(color: c.muted)),
+                      child: Text('Could not load exercises.',
+                          style: TextStyle(color: c.muted)),
                     );
                   }
-                  final items = (snapshot.data ?? const <Exercise>[]).where((e) {
+                  final items =
+                      (snapshot.data ?? const <Exercise>[]).where((e) {
                     if (_group != null && e.muscleGroup != _group) {
                       return false;
                     }
-                    return _query.isEmpty || e.name.toLowerCase().contains(_query);
+                    return _query.isEmpty ||
+                        e.name.toLowerCase().contains(_query);
                   }).toList();
                   if (items.isEmpty) {
-                    return Center(child: Text('No exercises found.', style: TextStyle(color: c.muted)));
+                    return Center(
+                        child: Text('No exercises found.',
+                            style: TextStyle(color: c.muted)));
                   }
                   return ListView.builder(
                     itemCount: items.length,

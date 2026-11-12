@@ -20,7 +20,8 @@ final cardioProvider =
   return [for (final r in rows) CardioSession.fromJson(r)];
 });
 
-final cardioStatsProvider = FutureProvider.autoDispose<CardioStats?>((ref) async {
+final cardioStatsProvider =
+    FutureProvider.autoDispose<CardioStats?>((ref) async {
   final service = ref.watch(cardioServiceProvider);
   return service?.stats();
 });
@@ -66,12 +67,42 @@ class CardioScreen extends ConsumerWidget {
               mainAxisSpacing: 10,
               childAspectRatio: .88,
               children: const [
-                _ActivityTile(type: 'running', label: 'Running', hint: 'Road · Treadmill', icon: Icons.directions_run, accent: AppColors.cardio),
-                _ActivityTile(type: 'cycling', label: 'Cycling', hint: 'Indoor · Outdoor', icon: Icons.directions_bike, accent: Color(0xFF4CAF50)),
-                _ActivityTile(type: 'walking', label: 'Walking', hint: 'Walk · Hike', icon: Icons.directions_walk, accent: Color(0xFF2196F3)),
-                _ActivityTile(type: 'hiit', label: 'HIIT', hint: 'Intervals', icon: Icons.timer_outlined, accent: Color(0xFF9C27B0)),
-                _ActivityTile(type: 'swimming', label: 'Swimming', hint: 'Pool · Open water', icon: Icons.pool, accent: Color(0xFF00BCD4)),
-                _ActivityTile(type: 'other', label: 'Other', hint: 'Custom cardio', icon: Icons.favorite_outline, accent: Color(0xFF607D8B)),
+                _ActivityTile(
+                    type: 'running',
+                    label: 'Running',
+                    hint: 'Road · Treadmill',
+                    icon: Icons.directions_run,
+                    accent: AppColors.cardio),
+                _ActivityTile(
+                    type: 'cycling',
+                    label: 'Cycling',
+                    hint: 'Indoor · Outdoor',
+                    icon: Icons.directions_bike,
+                    accent: Color(0xFF4CAF50)),
+                _ActivityTile(
+                    type: 'walking',
+                    label: 'Walking',
+                    hint: 'Walk · Hike',
+                    icon: Icons.directions_walk,
+                    accent: Color(0xFF2196F3)),
+                _ActivityTile(
+                    type: 'hiit',
+                    label: 'HIIT',
+                    hint: 'Intervals',
+                    icon: Icons.timer_outlined,
+                    accent: Color(0xFF9C27B0)),
+                _ActivityTile(
+                    type: 'swimming',
+                    label: 'Swimming',
+                    hint: 'Pool · Open water',
+                    icon: Icons.pool,
+                    accent: Color(0xFF00BCD4)),
+                _ActivityTile(
+                    type: 'other',
+                    label: 'Other',
+                    hint: 'Custom cardio',
+                    icon: Icons.favorite_outline,
+                    accent: Color(0xFF607D8B)),
               ],
             ),
           ),
@@ -79,16 +110,20 @@ class CardioScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
             child: FitTrackSectionLabel(
               title: 'Recent Sessions',
-              action: sessions.valueOrNull == null ? null : '${sessions.valueOrNull!.length}',
+              action: sessions.valueOrNull == null
+                  ? null
+                  : '${sessions.valueOrNull!.length}',
               onAction: sessions.valueOrNull == null ? null : () {},
             ),
           ),
           sessions.when(
             loading: () => Padding(
               padding: const EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator(color: colors.accent)),
+              child: Center(
+                  child: CircularProgressIndicator(color: colors.accent)),
             ),
-            error: (_, __) => const _Info(text: 'Unable to load cardio sessions.'),
+            error: (_, __) =>
+                const _Info(text: 'Unable to load cardio sessions.'),
             data: (items) {
               if (items.isEmpty) {
                 return const _Info(
@@ -111,10 +146,13 @@ class CardioScreen extends ConsumerWidget {
                             color: colors.danger,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.delete_outline, color: Colors.white),
+                          child: const Icon(Icons.delete_outline,
+                              color: Colors.white),
                         ),
                         onDismissed: (_) async {
-                          await ref.read(cardioServiceProvider)?.deleteSession(item.id);
+                          await ref
+                              .read(cardioServiceProvider)
+                              ?.deleteSession(item.id);
                           ref.invalidate(cardioProvider);
                           ref.invalidate(cardioStatsProvider);
                         },
@@ -238,7 +276,8 @@ class _SessionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    DateFormat('EEE · MMM d · h:mm a').format(session.startedAt.toLocal()),
+                    DateFormat('EEE · MMM d · h:mm a')
+                        .format(session.startedAt.toLocal()),
                     style: TextStyle(fontSize: 10, color: colors.muted),
                   ),
                   const SizedBox(height: 6),
@@ -354,7 +393,8 @@ class _ResumeBannerState extends ConsumerState<_ResumeBanner> {
               Expanded(
                 child: Text(
                   '${cardioLabels[active.type] ?? 'Cardio'} in progress — tap to resume',
-                  style: TextStyle(fontWeight: FontWeight.w800, color: colors.text),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800, color: colors.text),
                 ),
               ),
               Icon(Icons.arrow_forward, size: 16, color: colors.muted),
@@ -388,7 +428,9 @@ class _StatsStrip extends StatelessWidget {
                   color: colors.text,
                 ),
               ),
-              Text(label, style: TextStyle(fontSize: 9, color: colors.muted, letterSpacing: 1.2)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 9, color: colors.muted, letterSpacing: 1.2)),
             ],
           ),
         );

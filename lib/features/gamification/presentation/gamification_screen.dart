@@ -62,7 +62,8 @@ class GamificationScreen extends ConsumerWidget {
               data.when(
                 loading: () => Padding(
                   padding: const EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                  child: Center(
+                      child: CircularProgressIndicator(color: colors.accent)),
                 ),
                 error: (_, __) => _Message(
                   text: 'Unable to load achievements.',
@@ -107,9 +108,15 @@ class _Body extends StatelessWidget {
     Widget stat(String label, String value) => Expanded(
           child: Column(
             children: [
-              Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: colors.text)),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: colors.text)),
               const SizedBox(height: 2),
-              Text(label, style: TextStyle(fontSize: 9, letterSpacing: 1, color: colors.faint)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 9, letterSpacing: 1, color: colors.faint)),
             ],
           ),
         );
@@ -121,7 +128,8 @@ class _Body extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+                color: colors.card, borderRadius: BorderRadius.circular(12)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -130,18 +138,26 @@ class _Body extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Level $level',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: colors.text),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: colors.text),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: tierColor(tier).withValues(alpha: .6)),
+                        border: Border.all(
+                            color: tierColor(tier).withValues(alpha: .6)),
                       ),
                       child: Text(
                         tierLabel(tier),
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tierColor(tier)),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: tierColor(tier)),
                       ),
                     ),
                   ],
@@ -164,10 +180,14 @@ class _Body extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    stat('WORKOUTS', '${(stats['total_workouts'] as num?)?.toInt() ?? 0}'),
-                    stat('PRS', '${(stats['total_prs'] as num?)?.toInt() ?? 0}'),
-                    stat('STREAK', '${(stats['current_streak'] as num?)?.toInt() ?? 0}d'),
-                    stat('BEST', '${(stats['longest_streak'] as num?)?.toInt() ?? 0}d'),
+                    stat('WORKOUTS',
+                        '${(stats['total_workouts'] as num?)?.toInt() ?? 0}'),
+                    stat(
+                        'PRS', '${(stats['total_prs'] as num?)?.toInt() ?? 0}'),
+                    stat('STREAK',
+                        '${(stats['current_streak'] as num?)?.toInt() ?? 0}d'),
+                    stat('BEST',
+                        '${(stats['longest_streak'] as num?)?.toInt() ?? 0}d'),
                   ],
                 ),
               ],
@@ -180,16 +200,22 @@ class _Body extends StatelessWidget {
             label: const Text('Monthly leaderboard'),
           ),
           const SizedBox(height: 8),
-          FitTrackSectionLabel(title: 'Badges  ${earned.length}/${badgeDefinitions.length}'),
+          FitTrackSectionLabel(
+              title: 'Badges  ${earned.length}/${badgeDefinitions.length}'),
           for (final category in categories) ...[
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Text(
                 category.toUpperCase(),
-                style: TextStyle(fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w700, color: colors.muted),
+                style: TextStyle(
+                    fontSize: 10,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w700,
+                    color: colors.muted),
               ),
             ),
-            for (final b in badgeDefinitions.where((b) => b.category == category))
+            for (final b
+                in badgeDefinitions.where((b) => b.category == category))
               _BadgeTile(badge: b, stats: stats, earned: earned.contains(b.id)),
           ],
         ],
@@ -199,7 +225,8 @@ class _Body extends StatelessWidget {
 }
 
 class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({required this.badge, required this.stats, required this.earned});
+  const _BadgeTile(
+      {required this.badge, required this.stats, required this.earned});
   final BadgeDefinition badge;
   final Map<String, dynamic> stats;
   final bool earned;
@@ -216,19 +243,25 @@ class _BadgeTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.card,
           borderRadius: BorderRadius.circular(12),
-          border: earned ? Border.all(color: AppColors.xp.withValues(alpha: .5)) : null,
+          border: earned
+              ? Border.all(color: AppColors.xp.withValues(alpha: .5))
+              : null,
         ),
         child: Row(
           children: [
-            Text(earned ? badge.emoji : '🔒', style: const TextStyle(fontSize: 26)),
+            Text(earned ? badge.emoji : '🔒',
+                style: const TextStyle(fontSize: 26)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(badge.name, style: TextStyle(fontWeight: FontWeight.w800, color: colors.text)),
+                  Text(badge.name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, color: colors.text)),
                   const SizedBox(height: 2),
-                  Text(badge.description, style: TextStyle(fontSize: 11, color: colors.muted)),
+                  Text(badge.description,
+                      style: TextStyle(fontSize: 11, color: colors.muted)),
                   if (!earned && progress > 0) ...[
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -245,7 +278,11 @@ class _BadgeTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text('+${badge.xpReward}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.xp)),
+            Text('+${badge.xpReward}',
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.xp)),
           ],
         ),
       ),
@@ -265,11 +302,15 @@ class _Message extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+          color: colors.card, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
-          Text(text, textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
-          if (action != null) TextButton(onPressed: onAction, child: Text(action!)),
+          Text(text,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.muted)),
+          if (action != null)
+            TextButton(onPressed: onAction, child: Text(action!)),
         ],
       ),
     );

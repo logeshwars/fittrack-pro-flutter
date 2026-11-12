@@ -45,7 +45,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
     super.dispose();
   }
 
-  int get _minutes => (_wake.difference(_bedtime).inMilliseconds / 60000).round();
+  int get _minutes =>
+      (_wake.difference(_bedtime).inMilliseconds / 60000).round();
 
   Future<DateTime?> _pick(DateTime initial) async {
     final date = await showDatePicker(
@@ -78,7 +79,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
       return;
     }
     if (service == null) {
-      messenger.showSnackBar(const SnackBar(content: Text('Sign in to log sleep.')));
+      messenger
+          .showSnackBar(const SnackBar(content: Text('Sign in to log sleep.')));
       return;
     }
     setState(() => _saving = true);
@@ -137,7 +139,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
           const SizedBox(height: 20),
           ListTile(
             tileColor: colors.card,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             leading: const Icon(Icons.bedtime_outlined, color: AppColors.sleep),
             title: const Text('Bedtime'),
             subtitle: Text(fmt.format(_bedtime)),
@@ -151,8 +154,10 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
           const SizedBox(height: 10),
           ListTile(
             tileColor: colors.card,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            leading: const Icon(Icons.wb_sunny_outlined, color: AppColors.workout),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            leading:
+                const Icon(Icons.wb_sunny_outlined, color: AppColors.workout),
             title: const Text('Wake time'),
             subtitle: Text(fmt.format(_wake)),
             onTap: () async {

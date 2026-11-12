@@ -40,7 +40,8 @@ class FitTrackApp extends ConsumerWidget {
           }
           return TranslationsScope(
             translations: translations,
-            child: SubscriptionLifecycle(child: child ?? const SizedBox.shrink()),
+            child:
+                SubscriptionLifecycle(child: child ?? const SizedBox.shrink()),
           );
         },
       ),

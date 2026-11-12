@@ -15,7 +15,8 @@ class CardioSessionScreen extends ConsumerStatefulWidget {
   final String type;
 
   @override
-  ConsumerState<CardioSessionScreen> createState() => _CardioSessionScreenState();
+  ConsumerState<CardioSessionScreen> createState() =>
+      _CardioSessionScreenState();
 }
 
 class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
@@ -249,7 +250,9 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                   value: '${s.distanceKm.toStringAsFixed(2)} km',
                 ),
               ),
-              Expanded(child: _Stat(label: 'PACE', value: pace == null ? '—' : '$pace /km')),
+              Expanded(
+                  child: _Stat(
+                      label: 'PACE', value: pace == null ? '—' : '$pace /km')),
               Expanded(child: _Stat(label: 'XP', value: '+$xp')),
             ],
           ),
@@ -290,7 +293,8 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                   controller: _heart,
                   keyboardType: TextInputType.number,
                   onChanged: controller.setHeartRate,
-                  decoration: const InputDecoration(labelText: 'Avg heart rate'),
+                  decoration:
+                      const InputDecoration(labelText: 'Avg heart rate'),
                 ),
               ),
             ],
@@ -357,7 +361,8 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(fontSize: 9, letterSpacing: 1.4, color: colors.muted),
+          style:
+              TextStyle(fontSize: 9, letterSpacing: 1.4, color: colors.muted),
         ),
       ],
     );

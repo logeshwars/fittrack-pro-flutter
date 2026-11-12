@@ -33,10 +33,9 @@ class WorkoutHistoryDetailScreen extends ConsumerWidget {
             child: CircularProgressIndicator(color: colors.accent),
           ),
           error: (_, __) => _Missing(onBack: () => context.pop()),
-          data: (workout) =>
-              workout == null
-                  ? _Missing(onBack: () => context.pop())
-                  : _WorkoutDetail(workout: workout),
+          data: (workout) => workout == null
+              ? _Missing(onBack: () => context.pop())
+              : _WorkoutDetail(workout: workout),
         ),
       ),
     );

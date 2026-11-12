@@ -17,7 +17,8 @@ class RevenueCatGateway implements PurchaseGateway {
     }
     if (_configuredFor == null) {
       await Purchases.setLogLevel(LogLevel.warn);
-      await Purchases.configure(PurchasesConfiguration(apiKey)..appUserID = userId);
+      await Purchases.configure(
+          PurchasesConfiguration(apiKey)..appUserID = userId);
     } else {
       await Purchases.logIn(userId);
     }

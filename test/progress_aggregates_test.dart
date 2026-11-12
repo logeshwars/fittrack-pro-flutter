@@ -34,7 +34,12 @@ void main() {
     final hits = goalHits(days, {'2026-11-09': 150, '2026-11-10': 100}, 150);
     expect(hits.where((h) => h).length, 1);
     expect(goalHits(days, {}, 0).any((h) => h), isFalse);
-    expect(completionRate([[true, false], [true, true]]), 75);
+    expect(
+        completionRate([
+          [true, false],
+          [true, true]
+        ]),
+        75);
     expect(completionRate(const []), 0);
   });
 

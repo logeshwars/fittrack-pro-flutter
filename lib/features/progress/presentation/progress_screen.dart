@@ -36,7 +36,8 @@ final progressDataProvider =
   final gamification = ref.watch(gamificationServiceProvider);
   final results = await Future.wait([
     workouts?.history(limit: 365) ?? Future.value(const <Workout>[]),
-    nutrition?.heatmapData(days: 365) ?? Future.value(const <Map<String, dynamic>>[]),
+    nutrition?.heatmapData(days: 365) ??
+        Future.value(const <Map<String, dynamic>>[]),
     sleep?.history(limit: 365) ?? Future.value(const <Map<String, dynamic>>[]),
     gamification?.stats() ?? Future.value(null),
   ]);
@@ -71,7 +72,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final data = ref.watch(progressDataProvider);
-    final goals = ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
+    final goals =
+        ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
 
     return RefreshIndicator(
       color: colors.accent,
@@ -93,7 +95,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: FitTrackSegmentedTabs(
-              labels: [context.t('progress:analytics'), context.t('progress:leaderboard')],
+              labels: [
+                context.t('progress:analytics'),
+                context.t('progress:leaderboard')
+              ],
               selectedIndex: tab,
               onSelected: (value) {
                 if (value == 1) {
@@ -107,7 +112,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           data.when(
             loading: () => Padding(
               padding: const EdgeInsets.all(32),
-              child: Center(child: CircularProgressIndicator(color: colors.accent)),
+              child: Center(
+                  child: CircularProgressIndicator(color: colors.accent)),
             ),
             error: (_, __) => const _Info(text: 'Unable to load progress.'),
             data: (d) => _Analytics(data: d, goals: goals),
@@ -140,35 +146,63 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
     final now = DateTime.now();
     final week = weekDays(now);
 
-    final volumeByDay = sumByDay([for (final w in d.workouts) (w.startedAt, w.totalVolumeKg)]);
-    final workoutsByDay = sumByDay([for (final w in d.workouts) (w.startedAt, 1.0)]);
-    final proteinByDay = sumByDay([for (final n in d.nutrition) (n.at, n.protein)]);
-    final caloriesByDay = sumByDay([for (final n in d.nutrition) (n.at, n.calories)]);
-    final sleepByDay = maxByDay([for (final s in d.sleep) (s.wakeTime, s.durationMinutes.toDouble())]);
+    final volumeByDay =
+        sumByDay([for (final w in d.workouts) (w.startedAt, w.totalVolumeKg)]);
+    final workoutsByDay =
+        sumByDay([for (final w in d.workouts) (w.startedAt, 1.0)]);
+    final proteinByDay =
+        sumByDay([for (final n in d.nutrition) (n.at, n.protein)]);
+    final caloriesByDay =
+        sumByDay([for (final n in d.nutrition) (n.at, n.calories)]);
+    final sleepByDay = maxByDay(
+        [for (final s in d.sleep) (s.wakeTime, s.durationMinutes.toDouble())]);
 
     final proteinHits = goalHits(week, proteinByDay, g.protein);
     final calorieHits = goalHits(week, caloriesByDay, g.calories);
     final sleepHits = goalHits(week, sleepByDay, 7 * 60);
     final rate = completionRate([proteinHits, calorieHits, sleepHits]);
 
-    final totalVolume = d.workouts.fold<double>(0, (s, w) => s + w.totalVolumeKg);
+    final totalVolume =
+        d.workouts.fold<double>(0, (s, w) => s + w.totalVolumeKg);
     final stats = d.stats;
-    final totalWorkouts = (stats?['total_workouts'] as num?)?.toInt() ?? d.workouts.length;
+    final totalWorkouts =
+        (stats?['total_workouts'] as num?)?.toInt() ?? d.workouts.length;
     final streak = (stats?['current_streak'] as num?)?.toInt() ?? 0;
     final prs = (stats?['total_prs'] as num?)?.toInt() ?? 0;
 
     final heatData = switch (_heat) {
-      _HeatType.workout => (map: workoutsByDay, max: 2.0, color: AppColors.workout, unit: 'sessions'),
-      _HeatType.protein => (map: proteinByDay, max: g.protein, color: AppColors.nutrition, unit: 'g'),
-      _HeatType.calories => (map: caloriesByDay, max: g.calories, color: AppColors.cardio, unit: 'kcal'),
-      _HeatType.sleep => (map: sleepByDay, max: 8 * 60.0, color: AppColors.sleep, unit: 'min'),
+      _HeatType.workout => (
+          map: workoutsByDay,
+          max: 2.0,
+          color: AppColors.workout,
+          unit: 'sessions'
+        ),
+      _HeatType.protein => (
+          map: proteinByDay,
+          max: g.protein,
+          color: AppColors.nutrition,
+          unit: 'g'
+        ),
+      _HeatType.calories => (
+          map: caloriesByDay,
+          max: g.calories,
+          color: AppColors.cardio,
+          unit: 'kcal'
+        ),
+      _HeatType.sleep => (
+          map: sleepByDay,
+          max: 8 * 60.0,
+          color: AppColors.sleep,
+          unit: 'min'
+        ),
     };
 
     Widget card({required Widget child}) => Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(
+              color: colors.card, borderRadius: BorderRadius.circular(14)),
           child: child,
         );
 
@@ -181,8 +215,10 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
             child: Row(
               children: [
                 _StatCell(label: 'WORKOUTS', value: '$totalWorkouts'),
-                _StatCell(label: 'VOLUME', value: '${(totalVolume / 1000).round()}t'),
-                _StatCell(label: 'STREAK', value: streak > 0 ? '${streak}d' : '—'),
+                _StatCell(
+                    label: 'VOLUME', value: '${(totalVolume / 1000).round()}t'),
+                _StatCell(
+                    label: 'STREAK', value: streak > 0 ? '${streak}d' : '—'),
                 _StatCell(label: 'PRS', value: '$prs'),
               ],
             ),
@@ -191,11 +227,14 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FitTrackSectionLabel(title: '${context.t('progress:weeklyVolume')} (kg)'),
+                FitTrackSectionLabel(
+                    title: '${context.t('progress:weeklyVolume')} (kg)'),
                 const SizedBox(height: 8),
                 _WeekBars(
                   week: week,
-                  values: [for (final day in week) volumeByDay[dateKey(day)] ?? 0],
+                  values: [
+                    for (final day in week) volumeByDay[dateKey(day)] ?? 0
+                  ],
                   color: AppColors.workout,
                 ),
               ],
@@ -209,7 +248,9 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
                 const SizedBox(height: 8),
                 _WeekBars(
                   week: week,
-                  values: [for (final day in week) proteinByDay[dateKey(day)] ?? 0],
+                  values: [
+                    for (final day in week) proteinByDay[dateKey(day)] ?? 0
+                  ],
                   color: AppColors.nutrition,
                   goal: g.protein,
                 ),
@@ -231,7 +272,8 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(t.name[0].toUpperCase() + t.name.substring(1)),
+                            label: Text(
+                                t.name[0].toUpperCase() + t.name.substring(1)),
                             selected: _heat == t,
                             onSelected: (_) => setState(() => _heat = t),
                           ),
@@ -255,10 +297,13 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
               children: [
                 Row(
                   children: [
-                    Expanded(child: FitTrackSectionLabel(title: context.t('progress:goalCompletion'))),
+                    Expanded(
+                        child: FitTrackSectionLabel(
+                            title: context.t('progress:goalCompletion'))),
                     Text(
                       '$rate%',
-                      style: TextStyle(fontWeight: FontWeight.w900, color: colors.accent),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900, color: colors.accent),
                     ),
                   ],
                 ),
@@ -279,12 +324,14 @@ class _BodyMetrics extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppPalette.of(context);
-    final weights = ref.watch(weightHistoryProvider).valueOrNull ?? const <WeightLog>[];
+    final weights =
+        ref.watch(weightHistoryProvider).valueOrNull ?? const <WeightLog>[];
     final summary = ProgressSummary.fromLogs(weights: weights, sleep: const []);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+          color: colors.card, borderRadius: BorderRadius.circular(14)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -344,10 +391,13 @@ class _StatCell extends StatelessWidget {
         children: [
           Text(
             value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: colors.text),
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.w900, color: colors.text),
           ),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 9, letterSpacing: 1, color: colors.faint)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 9, letterSpacing: 1, color: colors.faint)),
         ],
       ),
     );
@@ -397,7 +447,9 @@ class _WeekBars extends StatelessWidget {
                       DateFormat('E').format(week[i]).substring(0, 1),
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight: week[i] == today ? FontWeight.w900 : FontWeight.w500,
+                        fontWeight: week[i] == today
+                            ? FontWeight.w900
+                            : FontWeight.w500,
                         color: week[i] == today ? colors.text : colors.muted,
                       ),
                     ),
@@ -452,7 +504,11 @@ class _GoalRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 70,
-            child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.text)),
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.text)),
           ),
           for (var i = 0; i < hits.length; i++)
             Expanded(
@@ -461,7 +517,9 @@ class _GoalRow extends StatelessWidget {
                   Icon(
                     hits[i]
                         ? Icons.check_circle
-                        : (week[i].isAfter(today) ? Icons.circle_outlined : Icons.cancel_outlined),
+                        : (week[i].isAfter(today)
+                            ? Icons.circle_outlined
+                            : Icons.cancel_outlined),
                     size: 18,
                     color: hits[i] ? AppColors.recovery : colors.faint,
                   ),
@@ -515,7 +573,8 @@ class _HeatMap extends StatelessWidget {
                         color: day == null
                             ? Colors.transparent
                             : () {
-                                final level = heatLevel(byDay[dateKey(day)] ?? 0, max);
+                                final level =
+                                    heatLevel(byDay[dateKey(day)] ?? 0, max);
                                 return level == 0
                                     ? colors.border2.withValues(alpha: .5)
                                     : color.withValues(alpha: alphas[level]);
@@ -541,8 +600,10 @@ class _Info extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
-      child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
+      decoration: BoxDecoration(
+          color: colors.card, borderRadius: BorderRadius.circular(12)),
+      child: Text(text,
+          textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
     );
   }
 }

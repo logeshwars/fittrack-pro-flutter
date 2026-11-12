@@ -152,7 +152,8 @@ class CardioController extends Notifier<CardioSessionState?> {
       return;
     }
     final now = DateTime.now().millisecondsSinceEpoch;
-    final pausedFor = current.pausedAtMs == null ? 0 : now - current.pausedAtMs!;
+    final pausedFor =
+        current.pausedAtMs == null ? 0 : now - current.pausedAtMs!;
     state = current.copyWith(
       isPaused: false,
       clearPausedAt: true,
@@ -175,7 +176,8 @@ class CardioController extends Notifier<CardioSessionState?> {
     await _persist();
   }
 
-  Future<void> setHeartRate(String v) => _update((s) => s.copyWith(heartRate: v));
+  Future<void> setHeartRate(String v) =>
+      _update((s) => s.copyWith(heartRate: v));
 
   Future<void> setCalories(String v) =>
       _update((s) => s.copyWith(calories: v, caloriesManual: true));
@@ -186,7 +188,8 @@ class CardioController extends Notifier<CardioSessionState?> {
 
   Future<void> setNotes(String v) => _update((s) => s.copyWith(notes: v));
 
-  Future<void> _update(CardioSessionState Function(CardioSessionState) f) async {
+  Future<void> _update(
+      CardioSessionState Function(CardioSessionState) f) async {
     final current = state;
     if (current == null) {
       return;
@@ -202,7 +205,8 @@ class CardioController extends Notifier<CardioSessionState?> {
     if (current == null || service == null) {
       return null;
     }
-    final seconds = current.elapsedSeconds(DateTime.now().millisecondsSinceEpoch);
+    final seconds =
+        current.elapsedSeconds(DateTime.now().millisecondsSinceEpoch);
     if (seconds <= 0) {
       return null;
     }
@@ -243,4 +247,5 @@ class CardioController extends Notifier<CardioSessionState?> {
 }
 
 final cardioControllerProvider =
-    NotifierProvider<CardioController, CardioSessionState?>(CardioController.new);
+    NotifierProvider<CardioController, CardioSessionState?>(
+        CardioController.new);

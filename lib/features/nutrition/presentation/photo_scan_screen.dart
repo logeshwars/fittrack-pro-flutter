@@ -21,7 +21,8 @@ class PhotoScanScreen extends ConsumerStatefulWidget {
 
 class _ScanRow {
   _ScanRow(this.item)
-      : grams = TextEditingController(text: item.estimatedGrams.round().toString());
+      : grams =
+            TextEditingController(text: item.estimatedGrams.round().toString());
   final FoodScanItem item;
   final TextEditingController grams;
   bool selected = true;
@@ -112,7 +113,10 @@ class _PhotoScanScreenState extends ConsumerState<PhotoScanScreen> {
     final service = ref.read(nutritionServiceProvider);
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final chosen = [for (final r in _rows) if (r.selected && r.quantity > 0) r];
+    final chosen = [
+      for (final r in _rows)
+        if (r.selected && r.quantity > 0) r
+    ];
     if (service == null || chosen.isEmpty) {
       return;
     }
@@ -126,7 +130,9 @@ class _PhotoScanScreenState extends ConsumerState<PhotoScanScreen> {
         carbsG: s.carbs,
         fatG: s.fat,
         fiberG: r.item.estimatedGrams > 0
-            ? (r.item.fiberG * r.quantity / r.item.estimatedGrams * 10).round() / 10
+            ? (r.item.fiberG * r.quantity / r.item.estimatedGrams * 10)
+                    .round() /
+                10
             : null,
         calories: s.calories,
         micronutrients: s.micronutrients.isEmpty ? null : s.micronutrients,
@@ -332,7 +338,8 @@ class _ScanRowCard extends StatelessWidget {
             child: TextField(
               controller: row.grams,
               onChanged: (_) => onChanged(),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(suffixText: 'g', isDense: true),
             ),
           ),

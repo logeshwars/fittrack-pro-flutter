@@ -83,7 +83,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     _xpBusy = true;
     () async {
       final prefs = await SharedPreferences.getInstance();
-      final key = 'fittrack_protein_xp_${DateFormat('yyyy-MM-dd').format(_day)}';
+      final key =
+          'fittrack_protein_xp_${DateFormat('yyyy-MM-dd').format(_day)}';
       if (prefs.getBool(key) == true) {
         return;
       }
@@ -102,7 +103,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
   }
 
   Future<void> _edit(NutritionLog log) async {
-    final controller = TextEditingController(text: log.quantityG.round().toString());
+    final controller =
+        TextEditingController(text: log.quantityG.round().toString());
     final grams = await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -111,7 +113,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           controller: controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(suffixText: 'g', labelText: 'Quantity'),
+          decoration:
+              const InputDecoration(suffixText: 'g', labelText: 'Quantity'),
         ),
         actions: [
           TextButton(
@@ -150,14 +153,16 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       'date': DateFormat('yyyy-MM-dd').format(_day),
       if (meal != null) 'meal': meal,
     };
-    context.push(Uri(path: '/nutrition/log', queryParameters: query).toString());
+    context
+        .push(Uri(path: '/nutrition/log', queryParameters: query).toString());
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final logs = ref.watch(nutritionDayProvider(_day));
-    final goals = ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
+    final goals =
+        ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -193,14 +198,17 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             logs.when(
               loading: () => Padding(
                 padding: const EdgeInsets.all(32),
-                child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                child: Center(
+                    child: CircularProgressIndicator(color: colors.accent)),
               ),
               error: (_, __) => const _Info(text: 'Unable to load nutrition.'),
               data: (items) {
                 final totals = NutritionTotals.fromLogs(items);
-                final fiber = items.fold<double>(0, (s, l) => s + (l.fiberG ?? 0));
+                final fiber =
+                    items.fold<double>(0, (s, l) => s + (l.fiberG ?? 0));
                 _awardProteinXp(totals.proteinG, goals.protein);
-                final micro = sumMicronutrients([for (final l in items) l.micronutrients]);
+                final micro = sumMicronutrients(
+                    [for (final l in items) l.micronutrients]);
                 final groups = groupByMeal(items);
                 return Column(
                   children: [
@@ -233,7 +241,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () => context.push('/nutrition/photo'),
-                              icon: const Icon(Icons.photo_camera_outlined, size: 16),
+                              icon: const Icon(Icons.photo_camera_outlined,
+                                  size: 16),
                               label: const Text('Photo'),
                             ),
                           ),
@@ -247,7 +256,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                         _MealGroup(
                           meal: entry.key,
                           items: entry.value,
-                          onAdd: () => _add(entry.key == 'other' ? null : entry.key),
+                          onAdd: () =>
+                              _add(entry.key == 'other' ? null : entry.key),
                           onDelete: _delete,
                           onEdit: _edit,
                         ),
@@ -291,7 +301,9 @@ class _DayBar extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                isToday ? 'TODAY' : DateFormat('EEE · MMM d').format(day).toUpperCase(),
+                isToday
+                    ? 'TODAY'
+                    : DateFormat('EEE · MMM d').format(day).toUpperCase(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
@@ -331,7 +343,8 @@ class _BudgetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final remaining = (goals.calories - totals.calories).round();
-    final progress = goals.calories > 0 ? totals.calories / goals.calories : 0.0;
+    final progress =
+        goals.calories > 0 ? totals.calories / goals.calories : 0.0;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       decoration: BoxDecoration(
@@ -397,12 +410,15 @@ class _BudgetCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             remaining > 0
-                                ? NumberFormat.decimalPattern().format(remaining)
+                                ? NumberFormat.decimalPattern()
+                                    .format(remaining)
                                 : 'Goal reached',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: remaining > 0 ? colors.text : AppColors.recovery,
+                              color: remaining > 0
+                                  ? colors.text
+                                  : AppColors.recovery,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -428,13 +444,33 @@ class _BudgetCard extends StatelessWidget {
             ),
           ),
           Divider(height: 1, color: colors.border2, indent: 16, endIndent: 16),
-          _MacroRow(label: 'Protein', value: totals.proteinG, goal: goals.protein, color: AppColors.nutrition, icon: Icons.egg_alt_outlined),
+          _MacroRow(
+              label: 'Protein',
+              value: totals.proteinG,
+              goal: goals.protein,
+              color: AppColors.nutrition,
+              icon: Icons.egg_alt_outlined),
           Divider(height: 1, color: colors.border2, indent: 16, endIndent: 16),
-          _MacroRow(label: 'Fat', value: totals.fatG, goal: goals.fat, color: AppColors.xp, icon: Icons.opacity),
+          _MacroRow(
+              label: 'Fat',
+              value: totals.fatG,
+              goal: goals.fat,
+              color: AppColors.xp,
+              icon: Icons.opacity),
           Divider(height: 1, color: colors.border2, indent: 16, endIndent: 16),
-          _MacroRow(label: 'Carbs', value: totals.carbsG, goal: goals.carbs, color: AppColors.water, icon: Icons.grain),
+          _MacroRow(
+              label: 'Carbs',
+              value: totals.carbsG,
+              goal: goals.carbs,
+              color: AppColors.water,
+              icon: Icons.grain),
           Divider(height: 1, color: colors.border2, indent: 16, endIndent: 16),
-          _MacroRow(label: 'Fiber', value: fiber, goal: goals.fiber, color: AppColors.recovery, icon: Icons.eco_outlined),
+          _MacroRow(
+              label: 'Fiber',
+              value: fiber,
+              goal: goals.fiber,
+              color: AppColors.recovery,
+              icon: Icons.eco_outlined),
         ],
       ),
     );
@@ -523,7 +559,10 @@ class _MicroCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final colors = AppPalette.of(context);
-    final tracked = [for (final e in allRda) if (totals.containsKey(e.key)) e];
+    final tracked = [
+      for (final e in allRda)
+        if (totals.containsKey(e.key)) e
+    ];
     final avg = tracked.fold<double>(
           0,
           (s, e) => s + (totals[e.key]! / e.rda).clamp(0, 1).toDouble(),
@@ -587,17 +626,21 @@ class _MicroCard extends StatelessWidget {
                             width: 96,
                             child: Text(
                               e.label,
-                              style: TextStyle(fontSize: 12, color: colors.text),
+                              style:
+                                  TextStyle(fontSize: 12, color: colors.text),
                             ),
                           ),
                           Expanded(
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(99),
                               child: LinearProgressIndicator(
-                                value: (totals[e.key]! / e.rda).clamp(0, 1).toDouble(),
+                                value: (totals[e.key]! / e.rda)
+                                    .clamp(0, 1)
+                                    .toDouble(),
                                 minHeight: 5,
                                 backgroundColor: colors.border2,
-                                valueColor: const AlwaysStoppedAnimation(AppColors.recovery),
+                                valueColor: const AlwaysStoppedAnimation(
+                                    AppColors.recovery),
                               ),
                             ),
                           ),
@@ -607,7 +650,8 @@ class _MicroCard extends StatelessWidget {
                             child: Text(
                               '${totals[e.key]!.toStringAsFixed(1)} / ${e.rda % 1 == 0 ? e.rda.round() : e.rda} ${e.unit}',
                               textAlign: TextAlign.right,
-                              style: TextStyle(fontSize: 10, color: colors.subtext),
+                              style: TextStyle(
+                                  fontSize: 10, color: colors.subtext),
                             ),
                           ),
                         ],
@@ -667,7 +711,8 @@ class _MealGroup extends StatelessWidget {
                 tooltip: 'Add to ${mealLabel(meal)}',
                 visualDensity: VisualDensity.compact,
                 onPressed: onAdd,
-                icon: Icon(Icons.add_circle_outline, size: 20, color: colors.accent),
+                icon: Icon(Icons.add_circle_outline,
+                    size: 20, color: colors.accent),
               ),
             ],
           ),
@@ -702,7 +747,8 @@ class _LogTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    final calories = item.calories == null ? '' : ' · ${item.calories!.round()} kcal';
+    final calories =
+        item.calories == null ? '' : ' · ${item.calories!.round()} kcal';
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -718,7 +764,8 @@ class _LogTile extends StatelessWidget {
             Container(width: 3, height: 64, color: AppColors.nutrition),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -773,7 +820,8 @@ class _Empty extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 'Nothing logged yet',
-                style: TextStyle(fontWeight: FontWeight.w800, color: colors.text),
+                style:
+                    TextStyle(fontWeight: FontWeight.w800, color: colors.text),
               ),
               const SizedBox(height: 4),
               Text(

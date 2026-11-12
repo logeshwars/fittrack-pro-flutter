@@ -28,7 +28,8 @@ class FoodResult {
   final FoodSource source;
 
   /// Name stored on logs and favorites (matches the RN app: `name (brand)`).
-  String get displayName => brand == null || brand!.isEmpty ? name : '$name ($brand)';
+  String get displayName =>
+      brand == null || brand!.isEmpty ? name : '$name ($brand)';
 }
 
 /// Macros for a specific serving size.

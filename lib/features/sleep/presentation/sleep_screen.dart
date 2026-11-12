@@ -224,9 +224,8 @@ class _Content extends StatelessWidget {
               Expanded(
                 child: _Stat(
                   icon: Icons.star_outline,
-                  value: avgQuality == null
-                      ? '—'
-                      : avgQuality.toStringAsFixed(1),
+                  value:
+                      avgQuality == null ? '—' : avgQuality.toStringAsFixed(1),
                   label: 'QUALITY',
                   color: AppColors.xp,
                 ),
@@ -266,7 +265,8 @@ class _Content extends StatelessWidget {
                         color: colors.danger,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.delete_outline, color: Colors.white),
+                      child:
+                          const Icon(Icons.delete_outline, color: Colors.white),
                     ),
                     onDismissed: (_) => onDelete(item),
                     child: _SleepRow(item: item),

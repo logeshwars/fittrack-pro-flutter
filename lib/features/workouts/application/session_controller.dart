@@ -163,7 +163,10 @@ class SessionController extends Notifier<SessionState?> {
     state = current.copyWith(
       exercises: [
         for (final e in current.exercises)
-          e.copyWith(sets: [for (final s in e.sets) if (s.id != setId) s]),
+          e.copyWith(sets: [
+            for (final s in e.sets)
+              if (s.id != setId) s
+          ]),
       ],
     );
     await _persist();
@@ -183,14 +186,13 @@ class SessionController extends Notifier<SessionState?> {
     }
     final finishedAt = DateTime.now();
     await service.finishWorkout(current.workoutId, finishedAt: finishedAt);
-    final xp = await ref
-            .read(gamificationServiceProvider)
-            ?.recordWorkoutCompletion(
-              prCount: current.prCount,
-              volumeKg: current.volumeKg,
-              allSetsHaveRpe: current.allSetsHaveRpe,
-            ) ??
-        0;
+    final xp =
+        await ref.read(gamificationServiceProvider)?.recordWorkoutCompletion(
+                  prCount: current.prCount,
+                  volumeKg: current.volumeKg,
+                  allSetsHaveRpe: current.allSetsHaveRpe,
+                ) ??
+            0;
     final summary = SessionSummary(
       duration: finishedAt.difference(current.startedAt),
       totalSets: current.totalSets,
@@ -232,8 +234,8 @@ final sessionControllerProvider =
     NotifierProvider<SessionController, SessionState?>(SessionController.new);
 
 /// Earlier sets of an exercise for the overload hint (newest first).
-final previousSetsProvider =
-    FutureProvider.autoDispose.family<List<WorkoutSet>, String>((ref, id) async {
+final previousSetsProvider = FutureProvider.autoDispose
+    .family<List<WorkoutSet>, String>((ref, id) async {
   final service = ref.watch(workoutServiceProvider);
   if (service == null) {
     return const [];

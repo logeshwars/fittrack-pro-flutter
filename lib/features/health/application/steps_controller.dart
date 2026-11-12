@@ -43,7 +43,8 @@ class StepsController extends Notifier<StepsState> {
     final steps = await gateway.stepsToday(DateTime.now());
     state = StepsState(
       steps: steps ?? state.steps,
-      availability: steps == null ? StepsAvailability.needsPermission : availability,
+      availability:
+          steps == null ? StepsAvailability.needsPermission : availability,
     );
     await _awardGoalXp();
   }
@@ -66,7 +67,8 @@ class StepsController extends Notifier<StepsState> {
         return;
       }
       final prefs = await SharedPreferences.getInstance();
-      final key = 'fittrack_steps_xp_${DateFormat('yyyy-MM-dd').format(DateTime.now())}';
+      final key =
+          'fittrack_steps_xp_${DateFormat('yyyy-MM-dd').format(DateTime.now())}';
       if (prefs.getBool(key) == true) {
         return;
       }

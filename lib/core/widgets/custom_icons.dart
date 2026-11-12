@@ -13,12 +13,14 @@ String _svgProteinShakeIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `ProteinShakeIcon`).
 class ProteinShakeIcon extends StatelessWidget {
-  const ProteinShakeIcon({this.size = 24, this.color = const Color(0xFFA8D44A), super.key});
+  const ProteinShakeIcon(
+      {this.size = 24, this.color = const Color(0xFFA8D44A), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgProteinShakeIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgProteinShakeIcon(_hex(color), false), size);
 }
 
 String _svgBarbellIcon(String c, bool focused) =>
@@ -26,12 +28,14 @@ String _svgBarbellIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `BarbellIcon`).
 class BarbellIcon extends StatelessWidget {
-  const BarbellIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const BarbellIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgBarbellIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgBarbellIcon(_hex(color), false), size);
 }
 
 String _svgFlameStreakIcon(String c, bool focused) =>
@@ -39,12 +43,14 @@ String _svgFlameStreakIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `FlameStreakIcon`).
 class FlameStreakIcon extends StatelessWidget {
-  const FlameStreakIcon({this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
+  const FlameStreakIcon(
+      {this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgFlameStreakIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgFlameStreakIcon(_hex(color), false), size);
 }
 
 String _svgXPIcon(String c, bool focused) =>
@@ -52,12 +58,14 @@ String _svgXPIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `XPIcon`).
 class XPIcon extends StatelessWidget {
-  const XPIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const XPIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgXPIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgXPIcon(_hex(color), false), size);
 }
 
 String _svgSleepIcon(String c, bool focused) =>
@@ -65,12 +73,14 @@ String _svgSleepIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `SleepIcon`).
 class SleepIcon extends StatelessWidget {
-  const SleepIcon({this.size = 24, this.color = const Color(0xFF7C8BFF), super.key});
+  const SleepIcon(
+      {this.size = 24, this.color = const Color(0xFF7C8BFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgSleepIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgSleepIcon(_hex(color), false), size);
 }
 
 String _svgCardioIcon(String c, bool focused) =>
@@ -78,12 +88,14 @@ String _svgCardioIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioIcon`).
 class CardioIcon extends StatelessWidget {
-  const CardioIcon({this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
+  const CardioIcon(
+      {this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioIcon(_hex(color), false), size);
 }
 
 String _svgCalorieIcon(String c, bool focused) =>
@@ -91,12 +103,14 @@ String _svgCalorieIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CalorieIcon`).
 class CalorieIcon extends StatelessWidget {
-  const CalorieIcon({this.size = 24, this.color = const Color(0xFFFFA500), super.key});
+  const CalorieIcon(
+      {this.size = 24, this.color = const Color(0xFFFFA500), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCalorieIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCalorieIcon(_hex(color), false), size);
 }
 
 String _svgStepsIcon(String c, bool focused) =>
@@ -104,12 +118,14 @@ String _svgStepsIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `StepsIcon`).
 class StepsIcon extends StatelessWidget {
-  const StepsIcon({this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
+  const StepsIcon(
+      {this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgStepsIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgStepsIcon(_hex(color), false), size);
 }
 
 String _svgHydrationIcon(String c, bool focused) =>
@@ -117,12 +133,14 @@ String _svgHydrationIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `HydrationIcon`).
 class HydrationIcon extends StatelessWidget {
-  const HydrationIcon({this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
+  const HydrationIcon(
+      {this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgHydrationIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgHydrationIcon(_hex(color), false), size);
 }
 
 String _svgMacroRingIcon(String c, bool focused) =>
@@ -130,12 +148,14 @@ String _svgMacroRingIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `MacroRingIcon`).
 class MacroRingIcon extends StatelessWidget {
-  const MacroRingIcon({this.size = 24, this.color = const Color(0xFFA8D44A), super.key});
+  const MacroRingIcon(
+      {this.size = 24, this.color = const Color(0xFFA8D44A), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgMacroRingIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgMacroRingIcon(_hex(color), false), size);
 }
 
 String _svgTrophyIcon(String c, bool focused) =>
@@ -143,12 +163,14 @@ String _svgTrophyIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TrophyIcon`).
 class TrophyIcon extends StatelessWidget {
-  const TrophyIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const TrophyIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTrophyIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTrophyIcon(_hex(color), false), size);
 }
 
 String _svgRankIcon(String c, bool focused) =>
@@ -156,12 +178,14 @@ String _svgRankIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `RankIcon`).
 class RankIcon extends StatelessWidget {
-  const RankIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const RankIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgRankIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgRankIcon(_hex(color), false), size);
 }
 
 String _svgTabTodayIcon(String c, bool focused) =>
@@ -169,13 +193,18 @@ String _svgTabTodayIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabTodayIcon`).
 class TabTodayIcon extends StatelessWidget {
-  const TabTodayIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabTodayIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabTodayIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabTodayIcon(_hex(color), focused), size);
 }
 
 String _svgTabWorkoutIcon(String c, bool focused) =>
@@ -183,13 +212,18 @@ String _svgTabWorkoutIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabWorkoutIcon`).
 class TabWorkoutIcon extends StatelessWidget {
-  const TabWorkoutIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabWorkoutIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabWorkoutIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabWorkoutIcon(_hex(color), focused), size);
 }
 
 String _svgTabCardioIcon(String c, bool focused) =>
@@ -197,13 +231,18 @@ String _svgTabCardioIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabCardioIcon`).
 class TabCardioIcon extends StatelessWidget {
-  const TabCardioIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabCardioIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabCardioIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabCardioIcon(_hex(color), focused), size);
 }
 
 String _svgTabNutritionIcon(String c, bool focused) =>
@@ -211,13 +250,18 @@ String _svgTabNutritionIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabNutritionIcon`).
 class TabNutritionIcon extends StatelessWidget {
-  const TabNutritionIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabNutritionIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabNutritionIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabNutritionIcon(_hex(color), focused), size);
 }
 
 String _svgNutritionBowlIcon(String c, bool focused) =>
@@ -225,12 +269,14 @@ String _svgNutritionBowlIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `NutritionBowlIcon`).
 class NutritionBowlIcon extends StatelessWidget {
-  const NutritionBowlIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const NutritionBowlIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgNutritionBowlIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgNutritionBowlIcon(_hex(color), false), size);
 }
 
 String _svgTabProgressIcon(String c, bool focused) =>
@@ -238,13 +284,18 @@ String _svgTabProgressIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabProgressIcon`).
 class TabProgressIcon extends StatelessWidget {
-  const TabProgressIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabProgressIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabProgressIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabProgressIcon(_hex(color), focused), size);
 }
 
 String _svgCardioRunIcon(String c, bool focused) =>
@@ -252,12 +303,14 @@ String _svgCardioRunIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioRunIcon`).
 class CardioRunIcon extends StatelessWidget {
-  const CardioRunIcon({this.size = 28, this.color = const Color(0xFFFF6B35), super.key});
+  const CardioRunIcon(
+      {this.size = 28, this.color = const Color(0xFFFF6B35), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioRunIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioRunIcon(_hex(color), false), size);
 }
 
 String _svgCardioCycleIcon(String c, bool focused) =>
@@ -265,12 +318,14 @@ String _svgCardioCycleIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioCycleIcon`).
 class CardioCycleIcon extends StatelessWidget {
-  const CardioCycleIcon({this.size = 28, this.color = const Color(0xFF4FC3F7), super.key});
+  const CardioCycleIcon(
+      {this.size = 28, this.color = const Color(0xFF4FC3F7), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioCycleIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioCycleIcon(_hex(color), false), size);
 }
 
 String _svgCardioWalkIcon(String c, bool focused) =>
@@ -278,12 +333,14 @@ String _svgCardioWalkIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioWalkIcon`).
 class CardioWalkIcon extends StatelessWidget {
-  const CardioWalkIcon({this.size = 28, this.color = const Color(0xFF81C784), super.key});
+  const CardioWalkIcon(
+      {this.size = 28, this.color = const Color(0xFF81C784), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioWalkIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioWalkIcon(_hex(color), false), size);
 }
 
 String _svgCardioSwimIcon(String c, bool focused) =>
@@ -291,12 +348,14 @@ String _svgCardioSwimIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioSwimIcon`).
 class CardioSwimIcon extends StatelessWidget {
-  const CardioSwimIcon({this.size = 28, this.color = const Color(0xFF4DD0E1), super.key});
+  const CardioSwimIcon(
+      {this.size = 28, this.color = const Color(0xFF4DD0E1), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioSwimIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioSwimIcon(_hex(color), false), size);
 }
 
 String _svgCardioHIITIcon(String c, bool focused) =>
@@ -304,12 +363,14 @@ String _svgCardioHIITIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioHIITIcon`).
 class CardioHIITIcon extends StatelessWidget {
-  const CardioHIITIcon({this.size = 28, this.color = const Color(0xFFFF3B30), super.key});
+  const CardioHIITIcon(
+      {this.size = 28, this.color = const Color(0xFFFF3B30), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioHIITIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioHIITIcon(_hex(color), false), size);
 }
 
 String _svgCardioOtherIcon(String c, bool focused) =>
@@ -317,12 +378,14 @@ String _svgCardioOtherIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioOtherIcon`).
 class CardioOtherIcon extends StatelessWidget {
-  const CardioOtherIcon({this.size = 28, this.color = const Color(0xFFA8A8A8), super.key});
+  const CardioOtherIcon(
+      {this.size = 28, this.color = const Color(0xFFA8A8A8), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioOtherIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioOtherIcon(_hex(color), false), size);
 }
 
 String _svgCardioHeaderIcon(String c, bool focused) =>
@@ -330,12 +393,14 @@ String _svgCardioHeaderIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CardioHeaderIcon`).
 class CardioHeaderIcon extends StatelessWidget {
-  const CardioHeaderIcon({this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
+  const CardioHeaderIcon(
+      {this.size = 24, this.color = const Color(0xFFFF6B35), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCardioHeaderIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCardioHeaderIcon(_hex(color), false), size);
 }
 
 String _svgWeightScaleIcon(String c, bool focused) =>
@@ -343,12 +408,14 @@ String _svgWeightScaleIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `WeightScaleIcon`).
 class WeightScaleIcon extends StatelessWidget {
-  const WeightScaleIcon({this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
+  const WeightScaleIcon(
+      {this.size = 24, this.color = const Color(0xFF38BDF8), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgWeightScaleIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgWeightScaleIcon(_hex(color), false), size);
 }
 
 String _svgGoalBulkIcon(String c, bool focused) =>
@@ -356,12 +423,14 @@ String _svgGoalBulkIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `GoalBulkIcon`).
 class GoalBulkIcon extends StatelessWidget {
-  const GoalBulkIcon({this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
+  const GoalBulkIcon(
+      {this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgGoalBulkIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgGoalBulkIcon(_hex(color), false), size);
 }
 
 String _svgGoalMaintainIcon(String c, bool focused) =>
@@ -369,12 +438,14 @@ String _svgGoalMaintainIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `GoalMaintainIcon`).
 class GoalMaintainIcon extends StatelessWidget {
-  const GoalMaintainIcon({this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
+  const GoalMaintainIcon(
+      {this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgGoalMaintainIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgGoalMaintainIcon(_hex(color), false), size);
 }
 
 String _svgGoalCutIcon(String c, bool focused) =>
@@ -382,12 +453,14 @@ String _svgGoalCutIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `GoalCutIcon`).
 class GoalCutIcon extends StatelessWidget {
-  const GoalCutIcon({this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
+  const GoalCutIcon(
+      {this.size = 36, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgGoalCutIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgGoalCutIcon(_hex(color), false), size);
 }
 
 String _svgProteinIcon(String c, bool focused) =>
@@ -395,12 +468,14 @@ String _svgProteinIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `ProteinIcon`).
 class ProteinIcon extends StatelessWidget {
-  const ProteinIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const ProteinIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgProteinIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgProteinIcon(_hex(color), false), size);
 }
 
 String _svgFatIcon(String c, bool focused) =>
@@ -408,12 +483,14 @@ String _svgFatIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `FatIcon`).
 class FatIcon extends StatelessWidget {
-  const FatIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const FatIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgFatIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgFatIcon(_hex(color), false), size);
 }
 
 String _svgCarbsIcon(String c, bool focused) =>
@@ -421,12 +498,14 @@ String _svgCarbsIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `CarbsIcon`).
 class CarbsIcon extends StatelessWidget {
-  const CarbsIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const CarbsIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgCarbsIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgCarbsIcon(_hex(color), false), size);
 }
 
 String _svgFiberIcon(String c, bool focused) =>
@@ -434,12 +513,14 @@ String _svgFiberIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `FiberIcon`).
 class FiberIcon extends StatelessWidget {
-  const FiberIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const FiberIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgFiberIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgFiberIcon(_hex(color), false), size);
 }
 
 String _svgVitaminsPillIcon(String c, bool focused) =>
@@ -447,12 +528,14 @@ String _svgVitaminsPillIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `VitaminsPillIcon`).
 class VitaminsPillIcon extends StatelessWidget {
-  const VitaminsPillIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
+  const VitaminsPillIcon(
+      {this.size = 24, this.color = const Color(0xFFFFFFFF), super.key});
   final double size;
   final Color color;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgVitaminsPillIcon(_hex(color), false), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgVitaminsPillIcon(_hex(color), false), size);
 }
 
 String _svgTabProfileIcon(String c, bool focused) =>
@@ -460,13 +543,18 @@ String _svgTabProfileIcon(String c, bool focused) =>
 
 /// Custom FitTrack Pro icon (port of `TabProfileIcon`).
 class TabProfileIcon extends StatelessWidget {
-  const TabProfileIcon({this.size = 24, this.color = const Color(0xFFFFFFFF), this.focused = false, super.key});
+  const TabProfileIcon(
+      {this.size = 24,
+      this.color = const Color(0xFFFFFFFF),
+      this.focused = false,
+      super.key});
   final double size;
   final Color color;
   final bool focused;
 
   @override
-  Widget build(BuildContext context) => _svg(_svgTabProfileIcon(_hex(color), focused), size);
+  Widget build(BuildContext context) =>
+      _svg(_svgTabProfileIcon(_hex(color), focused), size);
 }
 
 /// One instance of every icon, for galleries and render tests.

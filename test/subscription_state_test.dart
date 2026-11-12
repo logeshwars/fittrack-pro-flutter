@@ -5,7 +5,8 @@ void main() {
   test('null or inactive entitlement is the free tier', () {
     expect(SubscriptionState.fromSnapshot(null).isPro, isFalse);
     final inactive = SubscriptionState.fromSnapshot(
-      const EntitlementSnapshot(isActive: false, isTrial: false, willRenew: false),
+      const EntitlementSnapshot(
+          isActive: false, isTrial: false, willRenew: false),
     );
     expect(inactive.isPro, isFalse);
   });

@@ -61,5 +61,7 @@ final foodSearchServiceProvider = Provider<FoodSearchService>((ref) {
 
 final photoScanServiceProvider = Provider<PhotoScanService?>((ref) {
   final gateway = ref.watch(dataGatewayProvider);
-  return gateway == null ? null : PhotoScanService(gateway.client, gateway.userId);
+  return gateway == null
+      ? null
+      : PhotoScanService(gateway.client, gateway.userId);
 });

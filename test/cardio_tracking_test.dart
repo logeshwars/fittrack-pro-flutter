@@ -31,8 +31,13 @@ void main() {
   });
 
   test('state round-trips through JSON; bad JSON is null', () {
-    final s = const CardioSessionState(type: 'cycling', name: 'Ride', startMs: 5)
-        .copyWith(distanceKm: 3.2, gpsEnabled: true, calories: '120', caloriesManual: true);
+    final s =
+        const CardioSessionState(type: 'cycling', name: 'Ride', startMs: 5)
+            .copyWith(
+                distanceKm: 3.2,
+                gpsEnabled: true,
+                calories: '120',
+                caloriesManual: true);
     final back = CardioSessionState.decode(s.encode())!;
     expect(back.type, 'cycling');
     expect(back.distanceKm, 3.2);
@@ -46,7 +51,8 @@ void main() {
     final run = estimateCalories(type: 'running', seconds: 3600);
     final walk = estimateCalories(type: 'walking', seconds: 3600);
     expect(run, greaterThan(walk));
-    expect(estimateCalories(type: 'running', seconds: 1800), closeTo(run / 2, 1));
+    expect(
+        estimateCalories(type: 'running', seconds: 1800), closeTo(run / 2, 1));
   });
 
   test('formatClock and formatPace', () {

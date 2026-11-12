@@ -18,7 +18,8 @@ enum StepsAvailability {
 
 /// Today's steps plus how trustworthy the number is.
 class StepsState {
-  const StepsState({this.steps = 0, this.availability = StepsAvailability.unknown});
+  const StepsState(
+      {this.steps = 0, this.availability = StepsAvailability.unknown});
 
   final int steps;
   final StepsAvailability availability;

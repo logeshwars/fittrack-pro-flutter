@@ -11,7 +11,8 @@ import 'notification_gateway.dart';
 class FlnNotificationGateway implements NotificationGateway {
   FlnNotificationGateway();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   Future<void>? _init;
 
   Future<void> _ensureInitialized() => _init ??= _initialize();
@@ -19,7 +20,8 @@ class FlnNotificationGateway implements NotificationGateway {
   Future<void> _initialize() async {
     tzdata.initializeTimeZones();
     try {
-      tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
+      tz.setLocalLocation(
+          tz.getLocation(await FlutterTimezone.getLocalTimezone()));
     } on Object {
       // Fall back to UTC; reminders still fire, only offset by the zone.
     }
@@ -55,7 +57,8 @@ class FlnNotificationGateway implements NotificationGateway {
       }
       final ios = _plugin.resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin>();
-      return await ios?.requestPermissions(alert: true, badge: true, sound: true) ??
+      return await ios?.requestPermissions(
+              alert: true, badge: true, sound: true) ??
           false;
     } on Object {
       return false;
@@ -83,7 +86,8 @@ class FlnNotificationGateway implements NotificationGateway {
             importance: Importance.high,
             priority: Priority.high,
           ),
-          iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: true),
+          iOS: const DarwinNotificationDetails(
+              presentAlert: true, presentSound: true),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:

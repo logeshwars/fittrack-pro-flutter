@@ -3,12 +3,16 @@ import 'package:fittrack_pro/features/nutrition/data/food_search_service.dart';
 import 'package:fittrack_pro/features/nutrition/domain/food_result.dart';
 
 void main() {
-  test('searchLocalFoods: empty query returns defaults, filter by name/category', () {
+  test(
+      'searchLocalFoods: empty query returns defaults, filter by name/category',
+      () {
     expect(searchLocalFoods('').length, 12);
     final dal = searchLocalFoods('moong');
     expect(dal, isNotEmpty);
     expect(dal.every((f) => f.name.toLowerCase().contains('moong')), isTrue);
-    expect(searchLocalFoods('legumes').every((f) => f.source == FoodSource.local), isTrue);
+    expect(
+        searchLocalFoods('legumes').every((f) => f.source == FoodSource.local),
+        isTrue);
   });
 
   test('parseOffProduct handles kJ fallback, sodium grams and vitamin A', () {
@@ -37,7 +41,8 @@ void main() {
   });
 
   test('parseUsdaFood requires protein', () {
-    expect(parseUsdaFood({'description': 'Thing', 'foodNutrients': []}), isNull);
+    expect(
+        parseUsdaFood({'description': 'Thing', 'foodNutrients': []}), isNull);
     final food = parseUsdaFood({
       'description': 'Chicken',
       'foodNutrients': [

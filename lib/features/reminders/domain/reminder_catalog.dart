@@ -1,5 +1,12 @@
 /// Groups of reminders, each with its own Android notification channel.
-enum ReminderCategory { morning, nutrition, hydration, fitness, sleep, supplement }
+enum ReminderCategory {
+  morning,
+  nutrition,
+  hydration,
+  fitness,
+  sleep,
+  supplement
+}
 
 extension ReminderCategoryMeta on ReminderCategory {
   String get label => switch (this) {
@@ -38,8 +45,15 @@ class ReminderDef {
   final String defaultTime;
 }
 
-ReminderDef _r(int n, ReminderCategory c, String id, String label, String time, String body) =>
-    ReminderDef(id: id, notificationId: n, category: c, label: label, body: body, defaultTime: time);
+ReminderDef _r(int n, ReminderCategory c, String id, String label, String time,
+        String body) =>
+    ReminderDef(
+        id: id,
+        notificationId: n,
+        category: c,
+        label: label,
+        body: body,
+        defaultTime: time);
 
 ReminderDef _supp(int n, String id, String name, String time) => ReminderDef(
       id: 'supp_$id',
@@ -52,10 +66,10 @@ ReminderDef _supp(int n, String id, String name, String time) => ReminderDef(
 
 /// Port of `remindersStore.ts` and `supplementsStore.ts` defaults.
 final List<ReminderDef> reminderCatalog = [
-  _r(1, ReminderCategory.morning, 'morning_checkin', 'Morning Check-in', '07:30',
-      'Rise & grind! Open FitTrack to set your goals for the day.'),
-  _r(2, ReminderCategory.morning, 'morning_preworkout', 'Pre-Workout Fuel', '06:30',
-      'Eat your pre-workout meal 60–90 min before training.'),
+  _r(1, ReminderCategory.morning, 'morning_checkin', 'Morning Check-in',
+      '07:30', 'Rise & grind! Open FitTrack to set your goals for the day.'),
+  _r(2, ReminderCategory.morning, 'morning_preworkout', 'Pre-Workout Fuel',
+      '06:30', 'Eat your pre-workout meal 60–90 min before training.'),
   _r(3, ReminderCategory.nutrition, 'log_breakfast', 'Log Breakfast', '08:00',
       'Breakfast time! Track your morning meal to stay on top of macros.'),
   _r(4, ReminderCategory.nutrition, 'log_lunch', 'Log Lunch', '12:30',
@@ -66,18 +80,18 @@ final List<ReminderDef> reminderCatalog = [
       'Dinner time! Log your evening meal before you forget.'),
   _r(7, ReminderCategory.hydration, 'water_morning', 'Morning Water', '08:30',
       'Start hydrated! Drink a glass of water to kick off your day.'),
-  _r(8, ReminderCategory.hydration, 'water_midmorning', 'Mid-Morning Water', '10:30',
-      'Stay on top of your hydration — time for water!'),
+  _r(8, ReminderCategory.hydration, 'water_midmorning', 'Mid-Morning Water',
+      '10:30', 'Stay on top of your hydration — time for water!'),
   _r(9, ReminderCategory.hydration, 'water_lunch', 'Lunch Water', '13:00',
       'Have a glass of water with your lunch.'),
-  _r(10, ReminderCategory.hydration, 'water_afternoon', 'Afternoon Water', '15:00',
-      'Afternoon slump? Water helps — drink up!'),
+  _r(10, ReminderCategory.hydration, 'water_afternoon', 'Afternoon Water',
+      '15:00', 'Afternoon slump? Water helps — drink up!'),
   _r(11, ReminderCategory.hydration, 'water_evening', 'Evening Water', '17:30',
       'Evening hydration check — one more glass!'),
   _r(12, ReminderCategory.hydration, 'water_night', 'Night Water', '19:30',
       'Last water reminder of the day. Stay hydrated!'),
-  _r(13, ReminderCategory.fitness, 'workout_reminder', 'Workout Reminder', '18:00',
-      "Time to train! Your body is ready. Let's get it done."),
+  _r(13, ReminderCategory.fitness, 'workout_reminder', 'Workout Reminder',
+      '18:00', "Time to train! Your body is ready. Let's get it done."),
   _r(14, ReminderCategory.fitness, 'cardio_session', 'Cardio Session', '07:00',
       'Morning cardio time! Get your heart pumping.'),
   _r(15, ReminderCategory.sleep, 'sleep_winddown', 'Wind Down', '21:30',

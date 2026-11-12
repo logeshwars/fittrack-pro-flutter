@@ -45,7 +45,9 @@ class ReminderSettings {
             final time = saved['time'];
             return ReminderPref(
               enabled: saved['enabled'] == true,
-              time: time is String && parseTime(time) != null ? time : d.defaultTime,
+              time: time is String && parseTime(time) != null
+                  ? time
+                  : d.defaultTime,
             );
           }(),
       });
@@ -64,7 +66,8 @@ class ReminderSettings {
   ReminderPref of(ReminderDef def) =>
       prefs[def.id] ?? ReminderPref(enabled: false, time: def.defaultTime);
 
-  ReminderSettings update(String id, ReminderPref Function(ReminderPref) change) {
+  ReminderSettings update(
+      String id, ReminderPref Function(ReminderPref) change) {
     final current = prefs[id];
     if (current == null) {
       return this;
@@ -147,8 +150,10 @@ List<ScheduledReminder> buildSchedule(ReminderSettings settings) {
 
 /// Next local calendar date a daily [hour]:[minute] reminder first fires.
 /// Today if still in the future, otherwise tomorrow.
-({int year, int month, int day}) firstFireDate(DateTime now, int hour, int minute) {
+({int year, int month, int day}) firstFireDate(
+    DateTime now, int hour, int minute) {
   final today = DateTime(now.year, now.month, now.day, hour, minute);
-  final target = today.isAfter(now) ? today : DateTime(now.year, now.month, now.day + 1);
+  final target =
+      today.isAfter(now) ? today : DateTime(now.year, now.month, now.day + 1);
   return (year: target.year, month: target.month, day: target.day);
 }

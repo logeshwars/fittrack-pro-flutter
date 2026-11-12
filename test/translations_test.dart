@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Map<String, dynamic>> readLanguage(String lang) => {
       for (final ns in translationNamespaces)
-        ns: jsonDecode(File('assets/translations/$lang/$ns.json').readAsStringSync())
+        ns: jsonDecode(
+                File('assets/translations/$lang/$ns.json').readAsStringSync())
             as Map<String, dynamic>,
     };
 
@@ -22,15 +23,18 @@ Map<String, String> flat(Map<String, dynamic> json, [String prefix = '']) {
   return out;
 }
 
-Set<String> placeholders(String value) =>
-    RegExp(r'\{\{\s*(\w+)\s*\}\}').allMatches(value).map((m) => m.group(1)!).toSet();
+Set<String> placeholders(String value) => RegExp(r'\{\{\s*(\w+)\s*\}\}')
+    .allMatches(value)
+    .map((m) => m.group(1)!)
+    .toSet();
 
 void main() {
   final english = readLanguage('en');
 
   test('every shipped language has all namespaces as valid JSON', () {
     for (final lang in supportedLanguages) {
-      expect(readLanguage(lang.code).length, translationNamespaces.length, reason: lang.code);
+      expect(readLanguage(lang.code).length, translationNamespaces.length,
+          reason: lang.code);
     }
   });
 
@@ -80,11 +84,15 @@ void main() {
 
   test('plural suffixes pick the right form', () {
     final t = Translations.fromJson(language: 'en', namespaces: english);
-    expect(t.t('settings:activeReminder', args: {'count': 1}), '1 active reminder');
+    expect(t.t('settings:activeReminder', args: {'count': 1}),
+        '1 active reminder');
     final plural = Translations.fromJson(
       language: 'en',
       namespaces: {
-        'common': {'item_one': '{{count}} item', 'item_other': '{{count}} items'},
+        'common': {
+          'item_one': '{{count}} item',
+          'item_other': '{{count}} items'
+        },
       },
     );
     expect(plural.t('item', count: 1), '1 item');

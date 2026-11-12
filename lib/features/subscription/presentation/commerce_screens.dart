@@ -27,7 +27,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   String? _selectedId;
   bool _busy = false;
 
-  Future<void> _run(Future<void> Function() action, String successMessage) async {
+  Future<void> _run(
+      Future<void> Function() action, String successMessage) async {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     setState(() => _busy = true);
@@ -78,12 +79,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 children: [
-                  Icon(Icons.workspace_premium_outlined, size: 52, color: AppColors.xp),
+                  Icon(Icons.workspace_premium_outlined,
+                      size: 52, color: AppColors.xp),
                   const SizedBox(height: 14),
                   Text(
                     'FitTrack Pro',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: colors.text),
+                    style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: colors.text),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -100,7 +105,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           Icon(icon, size: 20, color: colors.accent),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(text, style: TextStyle(fontSize: 14, color: colors.text)),
+                            child: Text(text,
+                                style: TextStyle(
+                                    fontSize: 14, color: colors.text)),
                           ),
                         ],
                       ),
@@ -112,20 +119,27 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     plans.when(
                       loading: () => Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                color: colors.accent)),
                       ),
-                      error: (_, __) => _Retry(onRetry: () => ref.invalidate(planOffersProvider)),
+                      error: (_, __) => _Retry(
+                          onRetry: () => ref.invalidate(planOffersProvider)),
                       data: (offers) => offers.isEmpty
                           ? const _Notice(
-                              text: 'Subscriptions are not available in this build yet.',
+                              text:
+                                  'Subscriptions are not available in this build yet.',
                             )
                           : _Plans(
                               offers: offers,
                               selectedId: _selectedId ?? offers.first.id,
-                              onSelect: (id) => setState(() => _selectedId = id),
+                              onSelect: (id) =>
+                                  setState(() => _selectedId = id),
                               busy: _busy,
                               onBuy: (plan) => _run(
-                                () => ref.read(subscriptionProvider.notifier).purchase(plan),
+                                () => ref
+                                    .read(subscriptionProvider.notifier)
+                                    .purchase(plan),
                                 'Welcome to FitTrack Pro!',
                               ),
                             ),
@@ -136,10 +150,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       onPressed: _busy
                           ? null
                           : () => _run(
-                                () => ref.read(subscriptionProvider.notifier).restore(),
+                                () => ref
+                                    .read(subscriptionProvider.notifier)
+                                    .restore(),
                                 'Purchases restored.',
                               ),
-                      child: Text('Restore purchases', style: TextStyle(color: colors.muted)),
+                      child: Text('Restore purchases',
+                          style: TextStyle(color: colors.muted)),
                     ),
                   ),
                   Center(
@@ -183,8 +200,10 @@ class _Plans extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    final selected = offers.firstWhere((o) => o.id == selectedId, orElse: () => offers.first);
-    final monthly = offers.where((o) => o.period == PlanPeriod.monthly).firstOrNull;
+    final selected = offers.firstWhere((o) => o.id == selectedId,
+        orElse: () => offers.first);
+    final monthly =
+        offers.where((o) => o.period == PlanPeriod.monthly).firstOrNull;
     return Column(
       children: [
         for (final offer in offers)
@@ -199,15 +218,21 @@ class _Plans extends StatelessWidget {
                   color: colors.card,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: offer.id == selected.id ? colors.accent : colors.border2,
+                    color: offer.id == selected.id
+                        ? colors.accent
+                        : colors.border2,
                     width: offer.id == selected.id ? 2 : 1,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      offer.id == selected.id ? Icons.radio_button_checked : Icons.radio_button_off,
-                      color: offer.id == selected.id ? colors.accent : colors.faint,
+                      offer.id == selected.id
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: offer.id == selected.id
+                          ? colors.accent
+                          : colors.faint,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -216,9 +241,12 @@ class _Plans extends StatelessWidget {
                         children: [
                           Text(
                             offer.title,
-                            style: TextStyle(fontWeight: FontWeight.w800, color: colors.text),
+                            style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: colors.text),
                           ),
-                          if (offer.period == PlanPeriod.yearly && monthly != null)
+                          if (offer.period == PlanPeriod.yearly &&
+                              monthly != null)
                             Builder(builder: (_) {
                               final pct = yearlySavingsPercent(
                                 monthly: monthly.price,
@@ -240,7 +268,8 @@ class _Plans extends StatelessWidget {
                     ),
                     Text(
                       offer.priceString,
-                      style: TextStyle(fontWeight: FontWeight.w900, color: colors.text),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900, color: colors.text),
                     ),
                   ],
                 ),
@@ -267,7 +296,8 @@ class _Plans extends StatelessWidget {
                     selected.trialDays > 0
                         ? 'START ${selected.trialDays}-DAY FREE TRIAL'
                         : 'SUBSCRIBE',
-                    style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w900, letterSpacing: 1),
                   ),
           ),
         ),
@@ -322,7 +352,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _manage(String url) async {
     final messenger = ScaffoldMessenger.of(context);
-    final ok = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    final ok =
+        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     if (!ok) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Could not open the store.')),
@@ -358,18 +389,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.workspace_premium_outlined, size: 48, color: sub.isPro ? AppColors.xp : colors.accent),
+              Icon(Icons.workspace_premium_outlined,
+                  size: 48, color: sub.isPro ? AppColors.xp : colors.accent),
               const SizedBox(height: 18),
               Text(
                 status,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: colors.text),
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: colors.text),
               ),
               const SizedBox(height: 8),
               Text(
                 detail,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.5, color: colors.muted),
+                style:
+                    TextStyle(fontSize: 14, height: 1.5, color: colors.muted),
               ),
               const SizedBox(height: 26),
               if (!sub.isPro)
@@ -379,7 +415,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     backgroundColor: colors.accent,
                     foregroundColor: colors.accentText,
                   ),
-                  child: const Text('SEE PLANS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  child: const Text('SEE PLANS',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900, letterSpacing: 1)),
                 ),
               if (sub.isPro && sub.managementUrl != null)
                 OutlinedButton(
@@ -388,13 +426,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               TextButton(
                 onPressed: _busy ? null : _restore,
-                child: Text('Restore purchases', style: TextStyle(color: colors.muted)),
+                child: Text('Restore purchases',
+                    style: TextStyle(color: colors.muted)),
               ),
               TextButton(
                 onPressed: () => context.pop(),
                 child: Text(
                   'CLOSE',
-                  style: TextStyle(color: colors.accent, fontWeight: FontWeight.w800, letterSpacing: 1),
+                  style: TextStyle(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1),
                 ),
               ),
             ],
@@ -414,8 +456,10 @@ class _Notice extends StatelessWidget {
     final colors = AppPalette.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12)),
-      child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
+      decoration: BoxDecoration(
+          color: colors.card, borderRadius: BorderRadius.circular(12)),
+      child: Text(text,
+          textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
     );
   }
 }

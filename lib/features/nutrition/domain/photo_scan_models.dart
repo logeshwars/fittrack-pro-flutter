@@ -50,7 +50,8 @@ class FoodScanItem {
           ? (j['food_name'] as String).trim()
           : 'Unknown food',
       estimatedGrams: _d(j['estimated_grams'], 200),
-      quantityValue: j['quantity_value'] == null ? null : _d(j['quantity_value']),
+      quantityValue:
+          j['quantity_value'] == null ? null : _d(j['quantity_value']),
       quantityUnit: (j['quantity_unit'] as String?) ?? 'g',
       proteinG: _d(j['protein_g']),
       carbsG: _d(j['carbs_g']),
@@ -73,7 +74,9 @@ class FoodScanItem {
       caloriesPer100g: calories * f,
       carbsPer100g: carbsG * f,
       fatPer100g: fatG * f,
-      micronutrients: {for (final e in micronutrients.entries) e.key: e.value * f},
+      micronutrients: {
+        for (final e in micronutrients.entries) e.key: e.value * f
+      },
       source: FoodSource.local,
     );
   }

@@ -11,7 +11,10 @@ DateTime startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 List<DateTime> weekDays(DateTime now) {
   final today = startOfDay(now);
   final monday = today.subtract(Duration(days: today.weekday - 1));
-  return [for (var i = 0; i < 7; i++) DateTime(monday.year, monday.month, monday.day + i)];
+  return [
+    for (var i = 0; i < 7; i++)
+      DateTime(monday.year, monday.month, monday.day + i)
+  ];
 }
 
 /// Sums [value] per local calendar day.
@@ -57,7 +60,9 @@ int heatLevel(double value, double max) {
 }
 
 /// For each of [days], whether [byDay] reached [goal].
-List<bool> goalHits(List<DateTime> days, Map<String, double> byDay, double goal) => [
+List<bool> goalHits(
+        List<DateTime> days, Map<String, double> byDay, double goal) =>
+    [
       for (final d in days) goal > 0 && (byDay[dateKey(d)] ?? 0) >= goal,
     ];
 

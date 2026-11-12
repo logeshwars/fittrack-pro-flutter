@@ -51,7 +51,8 @@ class TranslationsScope extends InheritedWidget {
   final Translations translations;
 
   static Translations of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<TranslationsScope>();
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<TranslationsScope>();
     return scope?.translations ?? Translations.empty;
   }
 

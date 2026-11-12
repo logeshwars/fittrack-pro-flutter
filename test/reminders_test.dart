@@ -24,8 +24,10 @@ class FakeGateway implements NotificationGateway {
 
 void main() {
   test('catalog ids and notification ids are unique', () {
-    expect({for (final d in reminderCatalog) d.id}.length, reminderCatalog.length);
-    expect({for (final d in reminderCatalog) d.notificationId}.length, reminderCatalog.length);
+    expect(
+        {for (final d in reminderCatalog) d.id}.length, reminderCatalog.length);
+    expect({for (final d in reminderCatalog) d.notificationId}.length,
+        reminderCatalog.length);
     expect(reminderCatalog.length, 25);
   });
 
@@ -53,7 +55,8 @@ void main() {
     expect(decoded.prefs['water_night']!.time, '20:05');
     expect(ReminderSettings.decode('not json').enabledCount, 0);
     expect(ReminderSettings.decode(null).prefs.length, reminderCatalog.length);
-    final badTime = ReminderSettings.decode('{"log_lunch":{"enabled":true,"time":"99:99"}}');
+    final badTime = ReminderSettings.decode(
+        '{"log_lunch":{"enabled":true,"time":"99:99"}}');
     expect(badTime.prefs['log_lunch']!.time, '12:30');
   });
 
@@ -71,7 +74,8 @@ void main() {
     expect(firstFireDate(now, 18, 0), (year: 2026, month: 11, day: 12));
     expect(firstFireDate(now, 8, 0), (year: 2026, month: 11, day: 13));
     expect(firstFireDate(now, 10, 0), (year: 2026, month: 11, day: 13));
-    expect(firstFireDate(DateTime(2026, 12, 31, 23), 7, 0), (year: 2027, month: 1, day: 1));
+    expect(firstFireDate(DateTime(2026, 12, 31, 23), 7, 0),
+        (year: 2027, month: 1, day: 1));
   });
 
   group('RemindersController', () {
@@ -130,8 +134,9 @@ void main() {
 
     test('saved reminders are re-registered on launch', () async {
       SharedPreferences.setMockInitialValues({
-        remindersPrefsKey:
-            ReminderSettings.defaults().update('log_dinner', (p) => p.copyWith(enabled: true)).encode(),
+        remindersPrefsKey: ReminderSettings.defaults()
+            .update('log_dinner', (p) => p.copyWith(enabled: true))
+            .encode(),
       });
       final gateway = FakeGateway();
       final container = ProviderContainer(

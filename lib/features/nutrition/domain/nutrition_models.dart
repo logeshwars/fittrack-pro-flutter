@@ -1,5 +1,17 @@
 class NutritionLog {
-  const NutritionLog({required this.id, required this.foodName, required this.quantityG, required this.proteinG, required this.loggedAt, this.mealType, this.calories, this.carbsG, this.fatG, this.fiberG, this.micronutrients = const {}, this.foodId});
+  const NutritionLog(
+      {required this.id,
+      required this.foodName,
+      required this.quantityG,
+      required this.proteinG,
+      required this.loggedAt,
+      this.mealType,
+      this.calories,
+      this.carbsG,
+      this.fatG,
+      this.fiberG,
+      this.micronutrients = const {},
+      this.foodId});
   final String id;
   final String foodName;
   final String? mealType;
@@ -14,26 +26,31 @@ class NutritionLog {
   final String? foodId;
 
   factory NutritionLog.fromJson(Map<String, dynamic> json) => NutritionLog(
-    id: json['id'] as String,
-    foodName: json['food_name'] as String,
-    mealType: json['meal_type'] as String?,
-    quantityG: (json['quantity_g'] as num).toDouble(),
-    proteinG: (json['protein_g'] as num).toDouble(),
-    calories: (json['calories'] as num?)?.toDouble(),
-    carbsG: (json['carbs_g'] as num?)?.toDouble(),
-    fatG: (json['fat_g'] as num?)?.toDouble(),
-    fiberG: (json['fiber_g'] as num?)?.toDouble(),
-    loggedAt: DateTime.parse(json['logged_at'] as String),
-    foodId: json['food_id'] as String?,
-    micronutrients: {
-      for (final e in ((json['micronutrients'] as Map?) ?? const {}).entries)
-        if (e.value is num) e.key.toString(): (e.value as num).toDouble(),
-    },
-  );
+        id: json['id'] as String,
+        foodName: json['food_name'] as String,
+        mealType: json['meal_type'] as String?,
+        quantityG: (json['quantity_g'] as num).toDouble(),
+        proteinG: (json['protein_g'] as num).toDouble(),
+        calories: (json['calories'] as num?)?.toDouble(),
+        carbsG: (json['carbs_g'] as num?)?.toDouble(),
+        fatG: (json['fat_g'] as num?)?.toDouble(),
+        fiberG: (json['fiber_g'] as num?)?.toDouble(),
+        loggedAt: DateTime.parse(json['logged_at'] as String),
+        foodId: json['food_id'] as String?,
+        micronutrients: {
+          for (final e
+              in ((json['micronutrients'] as Map?) ?? const {}).entries)
+            if (e.value is num) e.key.toString(): (e.value as num).toDouble(),
+        },
+      );
 }
 
 class NutritionTotals {
-  const NutritionTotals({required this.proteinG, required this.carbsG, required this.fatG, required this.calories});
+  const NutritionTotals(
+      {required this.proteinG,
+      required this.carbsG,
+      required this.fatG,
+      required this.calories});
   final double proteinG;
   final double carbsG;
   final double fatG;
@@ -46,6 +63,7 @@ class NutritionTotals {
       fat += log.fatG ?? 0;
       calories += log.calories ?? 0;
     }
-    return NutritionTotals(proteinG: protein, carbsG: carbs, fatG: fat, calories: calories);
+    return NutritionTotals(
+        proteinG: protein, carbsG: carbs, fatG: fat, calories: calories);
   }
 }

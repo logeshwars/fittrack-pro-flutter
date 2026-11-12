@@ -75,13 +75,15 @@ class LeaderboardScreen extends ConsumerWidget {
               data.when(
                 loading: () => Padding(
                   padding: const EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator(color: colors.accent)),
+                  child: Center(
+                      child: CircularProgressIndicator(color: colors.accent)),
                 ),
                 error: (_, __) => Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      Text('Unable to load the leaderboard.', style: TextStyle(color: colors.muted)),
+                      Text('Unable to load the leaderboard.',
+                          style: TextStyle(color: colors.muted)),
                       TextButton(
                         onPressed: () => ref.invalidate(leaderboardProvider),
                         child: const Text('Retry'),
@@ -106,7 +108,8 @@ class LeaderboardScreen extends ConsumerWidget {
                               _Row(
                                 entry: value.entries[i],
                                 position: i + 1,
-                                isMe: value.entries[i]['google_user_id'] == value.myId,
+                                isMe: value.entries[i]['google_user_id'] ==
+                                    value.myId,
                               ),
                           ],
                         ),
@@ -130,7 +133,8 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final profile = entry['profiles'];
-    final name = (profile is Map ? profile['display_name'] as String? : null) ?? 'Unknown';
+    final name = (profile is Map ? profile['display_name'] as String? : null) ??
+        'Unknown';
     final initials = name
         .split(' ')
         .where((p) => p.isNotEmpty)
@@ -158,7 +162,9 @@ class _Row extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            Container(width: 3, color: podium ?? (isMe ? colors.accent : colors.border2)),
+            Container(
+                width: 3,
+                color: podium ?? (isMe ? colors.accent : colors.border2)),
             SizedBox(
               width: 38,
               child: Center(
@@ -175,7 +181,11 @@ class _Row extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: colors.border2,
-              child: Text(initials, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: colors.text)),
+              child: Text(initials,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -188,7 +198,8 @@ class _Row extends StatelessWidget {
                       isMe ? '$name (you)' : name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.w800, color: colors.text),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, color: colors.text),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -203,7 +214,10 @@ class _Row extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
                 '$score',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: tierColor(tier)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: tierColor(tier)),
               ),
             ),
           ],

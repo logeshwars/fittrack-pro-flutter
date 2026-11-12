@@ -53,7 +53,9 @@ double? _offCalories(Map<String, dynamic> n) {
   if (kcal != null) {
     return kcal.roundToDouble();
   }
-  final kj = _num(n['energy-kj_100g']) ?? _num(n['energy-kj']) ?? _num(n['energy_100g']);
+  final kj = _num(n['energy-kj_100g']) ??
+      _num(n['energy-kj']) ??
+      _num(n['energy_100g']);
   return kj == null ? null : (kj / 4.184).roundToDouble();
 }
 
@@ -86,9 +88,10 @@ Map<String, double> offMicronutrients(Map<String, dynamic> n) {
 
 /// Parses one OpenFoodFacts product; returns null when it has no name.
 FoodResult? parseOffProduct(Map<String, dynamic> p, String barcode) {
-  final name =
-      ((p['product_name'] as String?) ?? (p['product_name_en'] as String?) ?? '')
-          .trim();
+  final name = ((p['product_name'] as String?) ??
+          (p['product_name_en'] as String?) ??
+          '')
+      .trim();
   if (name.isEmpty) {
     return null;
   }

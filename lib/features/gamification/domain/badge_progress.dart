@@ -20,8 +20,9 @@ String tierLabel(String tier) =>
 double? badgeStatValue(BadgeDefinition badge, Map<String, dynamic> stats) {
   double n(String key) => (stats[key] as num?)?.toDouble() ?? 0;
   return switch (badge.requirementType) {
-    'streak_days' =>
-      n('longest_streak') > n('current_streak') ? n('longest_streak') : n('current_streak'),
+    'streak_days' => n('longest_streak') > n('current_streak')
+        ? n('longest_streak')
+        : n('current_streak'),
     'total_workouts' => n('total_workouts'),
     'total_volume_kg' => n('total_volume_kg'),
     'total_prs' => n('total_prs'),

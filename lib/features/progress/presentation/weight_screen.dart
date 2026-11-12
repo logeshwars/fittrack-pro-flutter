@@ -19,7 +19,8 @@ final weightHistoryProvider =
 
 /// Trend math shared with tests: change over the window and 7-entry average.
 class WeightTrend {
-  const WeightTrend({required this.latest, required this.change, required this.average});
+  const WeightTrend(
+      {required this.latest, required this.change, required this.average});
   final double? latest;
   final double? change;
   final double? average;
@@ -70,7 +71,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
               TextField(
                 controller: weight,
                 autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                   labelText: 'Weight',
                   suffixText: 'kg',
@@ -90,7 +92,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                   final picked = await showDatePicker(
                     context: ctx,
                     initialDate: date,
-                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    firstDate:
+                        DateTime.now().subtract(const Duration(days: 365)),
                     lastDate: DateTime.now(),
                   );
                   if (picked != null) {
@@ -119,7 +122,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
     }
     final messenger = ScaffoldMessenger.of(context);
     if (value == null || value <= 0 || value > 500) {
-      messenger.showSnackBar(const SnackBar(content: Text('Enter a valid weight')));
+      messenger
+          .showSnackBar(const SnackBar(content: Text('Enter a valid weight')));
       return;
     }
     await ref
@@ -147,7 +151,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
       ),
       body: logs.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Could not load weight history')),
+        error: (_, __) =>
+            const Center(child: Text('Could not load weight history')),
         data: (all) {
           if (all.isEmpty) {
             return Center(
@@ -158,7 +163,10 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
             );
           }
           final cutoff = DateTime.now().subtract(Duration(days: _range));
-          final windowed = [for (final l in all) if (l.loggedAt.isAfter(cutoff)) l];
+          final windowed = [
+            for (final l in all)
+              if (l.loggedAt.isAfter(cutoff)) l
+          ];
           final shown = windowed.isEmpty ? all.take(1).toList() : windowed;
           final trend = WeightTrend.from(shown);
           final points = [
@@ -236,7 +244,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                                 reservedSize: 34,
                                 getTitlesWidget: (v, meta) => Text(
                                   v.toStringAsFixed(0),
-                                  style: TextStyle(fontSize: 10, color: colors.muted),
+                                  style: TextStyle(
+                                      fontSize: 10, color: colors.muted),
                                 ),
                               ),
                             ),
@@ -270,7 +279,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                       color: colors.danger,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.delete_outline, color: Colors.white),
+                    child:
+                        const Icon(Icons.delete_outline, color: Colors.white),
                   ),
                   onDismissed: (_) async {
                     await ref.read(weightServiceProvider)?.deleteLog(l.id);
@@ -291,12 +301,15 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                             children: [
                               Text(
                                 DateFormat('EEE, MMM d').format(l.loggedAt),
-                                style: TextStyle(color: colors.text, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                    color: colors.text,
+                                    fontWeight: FontWeight.w700),
                               ),
                               if (l.note != null && l.note!.isNotEmpty)
                                 Text(
                                   l.note!,
-                                  style: TextStyle(fontSize: 11, color: colors.muted),
+                                  style: TextStyle(
+                                      fontSize: 11, color: colors.muted),
                                 ),
                             ],
                           ),
@@ -336,10 +349,13 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: colors.text),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.w900, color: colors.text),
         ),
         const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 9, letterSpacing: 1.4, color: colors.muted)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 9, letterSpacing: 1.4, color: colors.muted)),
       ],
     );
   }

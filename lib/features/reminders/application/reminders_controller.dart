@@ -26,14 +26,17 @@ class RemindersController extends AsyncNotifier<ReminderSettings> {
   @override
   Future<ReminderSettings> build() async {
     final prefs = await SharedPreferences.getInstance();
-    final settings = ReminderSettings.decode(prefs.getString(remindersPrefsKey));
+    final settings =
+        ReminderSettings.decode(prefs.getString(remindersPrefsKey));
     await _sync(settings);
     return settings;
   }
 
   Future<void> _sync(ReminderSettings settings) async {
     try {
-      await ref.read(notificationGatewayProvider).replaceAll(buildSchedule(settings));
+      await ref
+          .read(notificationGatewayProvider)
+          .replaceAll(buildSchedule(settings));
     } on Object {
       // Scheduling is best effort; the choice itself is still saved.
     }
@@ -58,7 +61,8 @@ class RemindersController extends AsyncNotifier<ReminderSettings> {
   Future<ToggleResult> setEnabled(String id, {required bool enabled}) async {
     final current = state.valueOrNull ?? ReminderSettings.defaults();
     if (enabled) {
-      final granted = await ref.read(notificationGatewayProvider).requestPermission();
+      final granted =
+          await ref.read(notificationGatewayProvider).requestPermission();
       if (!granted) {
         return ToggleResult.permissionDenied;
       }

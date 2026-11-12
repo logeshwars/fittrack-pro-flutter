@@ -87,9 +87,10 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
             controller: _controller,
             onDetect: _onDetect,
             errorBuilder: (context, error, child) => _PermissionError(
-              message: error.errorCode == MobileScannerErrorCode.permissionDenied
-                  ? 'Grant camera permission to scan product barcodes.'
-                  : 'The camera is unavailable.',
+              message:
+                  error.errorCode == MobileScannerErrorCode.permissionDenied
+                      ? 'Grant camera permission to scan product barcodes.'
+                      : 'The camera is unavailable.',
               onManual: () => context.pushReplacement('/nutrition/log'),
             ),
           ),

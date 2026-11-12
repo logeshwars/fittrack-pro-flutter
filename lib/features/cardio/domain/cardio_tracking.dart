@@ -31,8 +31,7 @@ int estimateCalories({
   double weightKg = 70,
   double heightCm = 170,
 }) {
-  final bsa =
-      0.007184 * pow(heightCm, 0.725) * pow(weightKg, 0.425);
+  final bsa = 0.007184 * pow(heightCm, 0.725) * pow(weightKg, 0.425);
   final met = cardioMet[type] ?? 5.0;
   return (met * bsa * 58.2 * (seconds / 3600)).round();
 }

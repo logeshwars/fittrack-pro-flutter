@@ -70,7 +70,6 @@ class _DashboardBody extends StatelessWidget {
   final bool loading;
   final String? message;
 
-
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
@@ -217,10 +216,12 @@ class _DashboardBody extends StatelessWidget {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.cardio.withValues(alpha: 0.12),
+                                    color: AppColors.cardio
+                                        .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(
-                                      color: AppColors.cardio.withValues(alpha: 0.25),
+                                      color: AppColors.cardio
+                                          .withValues(alpha: 0.25),
                                     ),
                                   ),
                                   child: Row(
@@ -292,7 +293,8 @@ class _DashboardBody extends StatelessWidget {
             )
           else if (!data.configured)
             const _StatusBanner(
-              message: 'Backend not configured. Add the Supabase build secrets to load live data.',
+              message:
+                  'Backend not configured. Add the Supabase build secrets to load live data.',
               color: AppColors.warningDark,
             )
           else if (!data.signedIn)
@@ -353,7 +355,8 @@ class _DashboardBody extends StatelessWidget {
                       icon: Icons.directions_walk,
                       value: formatSteps(steps.steps),
                       label: 'Steps',
-                      sublabel: '/ ${(data.stepGoal / 1000).toStringAsFixed(0)}k',
+                      sublabel:
+                          '/ ${(data.stepGoal / 1000).toStringAsFixed(0)}k',
                       done: data.stepGoal > 0 && steps.steps >= data.stepGoal,
                     ),
                   ],
@@ -491,8 +494,8 @@ class _DashboardBody extends StatelessWidget {
                     onAction: () => context.go('/workout'),
                   ),
                   ...data.recentWorkouts.take(3).map(
-                    (workout) => _WorkoutCard(workout: workout),
-                  ),
+                        (workout) => _WorkoutCard(workout: workout),
+                      ),
                 ],
               ),
             ),
@@ -514,7 +517,9 @@ class _DashboardBody extends StatelessWidget {
     final now = DateTime.now();
     final monday = DateTime(now.year, now.month, now.day)
         .subtract(Duration(days: now.weekday - DateTime.monday));
-    return workouts.where((workout) => !workout.startedAt.isBefore(monday)).length;
+    return workouts
+        .where((workout) => !workout.startedAt.isBefore(monday))
+        .length;
   }
 
   static String _sleepDuration(int minutes) {
@@ -646,9 +651,11 @@ class _WeekGrid extends StatelessWidget {
     final colors = AppPalette.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final monday = today.subtract(Duration(days: now.weekday - DateTime.monday));
+    final monday =
+        today.subtract(Duration(days: now.weekday - DateTime.monday));
     final workoutDays = workouts
-        .map((w) => DateTime(w.startedAt.year, w.startedAt.month, w.startedAt.day))
+        .map((w) =>
+            DateTime(w.startedAt.year, w.startedAt.month, w.startedAt.day))
         .toSet();
 
     return Row(
@@ -833,7 +840,9 @@ class _WorkoutCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat('EEE · MMM d').format(workout.startedAt).toUpperCase(),
+                    DateFormat('EEE · MMM d')
+                        .format(workout.startedAt)
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,

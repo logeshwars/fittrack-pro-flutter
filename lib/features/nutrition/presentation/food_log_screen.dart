@@ -78,9 +78,8 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     super.initState();
     final now = DateTime.now();
     _day = dayOnly(widget.date ?? now);
-    _meal = mealOrder.contains(widget.meal)
-        ? widget.meal!
-        : defaultMealForNow(now);
+    _meal =
+        mealOrder.contains(widget.meal) ? widget.meal! : defaultMealForNow(now);
     _results = searchLocalFoods(_query);
     final initial = widget.initialFood;
     if (initial != null) {
@@ -540,10 +539,14 @@ class _QuantitySheetState extends State<_QuantitySheet> {
           const SizedBox(height: 16),
           Row(
             children: [
-              stat('PROTEIN g', scaled.protein.toStringAsFixed(1), AppColors.nutrition),
-              stat('KCAL', scaled.calories?.round().toString() ?? '—', AppColors.workout),
-              stat('CARBS g', scaled.carbs?.toStringAsFixed(1) ?? '—', AppColors.water),
-              stat('FAT g', scaled.fat?.toStringAsFixed(1) ?? '—', AppColors.xp),
+              stat('PROTEIN g', scaled.protein.toStringAsFixed(1),
+                  AppColors.nutrition),
+              stat('KCAL', scaled.calories?.round().toString() ?? '—',
+                  AppColors.workout),
+              stat('CARBS g', scaled.carbs?.toStringAsFixed(1) ?? '—',
+                  AppColors.water),
+              stat(
+                  'FAT g', scaled.fat?.toStringAsFixed(1) ?? '—', AppColors.xp),
             ],
           ),
           const SizedBox(height: 18),
@@ -676,7 +679,8 @@ class _ManualTabState extends State<_ManualTab> {
             ),
           ),
           _num('Quantity (g)', _grams, required: true),
-          _num('Protein (g) for this quantity', _protein, validator: _nonNegative),
+          _num('Protein (g) for this quantity', _protein,
+              validator: _nonNegative),
           _num('Calories (kcal)', _calories),
           _num('Carbs (g)', _carbs),
           _num('Fat (g)', _fat),

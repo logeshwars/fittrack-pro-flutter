@@ -35,7 +35,8 @@ final goalTargetsProvider =
   const d = GoalTargets();
   var protein = _parse(prefs, 'protein', d.protein);
   final profileService = ref.watch(profileServiceProvider);
-  if (profileService != null && prefs.getString('fittrack_goal_protein') == null) {
+  if (profileService != null &&
+      prefs.getString('fittrack_goal_protein') == null) {
     try {
       final profile = await profileService.profile();
       final fromProfile = (profile?['protein_goal_g'] as num?)?.toDouble();

@@ -7,7 +7,13 @@ class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
   final Widget child;
 
-  static const _paths = ['/today', '/workout', '/nutrition', '/cardio', '/progress'];
+  static const _paths = [
+    '/today',
+    '/workout',
+    '/nutrition',
+    '/cardio',
+    '/progress'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +24,8 @@ class AppShell extends StatelessWidget {
     );
     final selectedIndex = index < 0 ? 0 : index;
 
-    Widget tabIcon(int tab, Color color, {required bool focused}) => switch (tab) {
+    Widget tabIcon(int tab, Color color, {required bool focused}) =>
+        switch (tab) {
           0 => TabTodayIcon(size: 26, color: color, focused: focused),
           1 => TabWorkoutIcon(size: 26, color: color, focused: focused),
           2 => TabNutritionIcon(size: 26, color: color, focused: focused),

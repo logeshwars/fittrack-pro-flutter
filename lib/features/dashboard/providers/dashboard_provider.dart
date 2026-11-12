@@ -60,7 +60,8 @@ Future<T> _safe<T>(Future<T> Function() load, T fallback) async {
 double _sum(Iterable<Map<String, dynamic>> rows, String key) =>
     rows.fold<double>(0, (s, r) => s + ((r[key] as num?)?.toDouble() ?? 0));
 
-final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
+final dashboardProvider =
+    FutureProvider.autoDispose<DashboardData>((ref) async {
   if (!AppConfig.hasSupabase) {
     return const DashboardData(configured: false, signedIn: false);
   }
@@ -83,12 +84,17 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
   );
 
   final recent = await Future.wait<Object?>([
-    _safe<List<Workout>>(() async => await workouts?.history(limit: 10) ?? const [], const []),
-    _safe<List<Map<String, dynamic>>>(() async => await nutrition?.todayLogs() ?? const [], const []),
-    _safe<List<Map<String, dynamic>>>(() async => await cardio?.today() ?? const [], const []),
-    _safe<List<Map<String, dynamic>>>(() async => await sleep?.history(limit: 1) ?? const [], const []),
+    _safe<List<Workout>>(
+        () async => await workouts?.history(limit: 10) ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(
+        () async => await nutrition?.todayLogs() ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(
+        () async => await cardio?.today() ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(
+        () async => await sleep?.history(limit: 1) ?? const [], const []),
     _safe<Map<String, dynamic>?>(() async => await weight?.latest(), null),
-    _safe<Map<String, dynamic>?>(() async => await profileService?.profile(), null),
+    _safe<Map<String, dynamic>?>(
+        () async => await profileService?.profile(), null),
     _safe<Map<String, dynamic>?>(() async => await gamification?.stats(), null),
   ]);
 
@@ -101,13 +107,12 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
   final stats = recent[6] as Map<String, dynamic>?;
 
   final metadata = user.userMetadata ?? const <String, dynamic>{};
-  var displayName = (
-    metadata['full_name'] ??
-    metadata['name'] ??
-    metadata['display_name'] ??
-    user.email?.split('@').first ??
-    'there'
-  ).toString();
+  var displayName = (metadata['full_name'] ??
+          metadata['name'] ??
+          metadata['display_name'] ??
+          user.email?.split('@').first ??
+          'there')
+      .toString();
   var avatarUrl = (metadata['avatar_url'] ?? metadata['picture'])?.toString();
   final profileName = (profile?['display_name'] as String?)?.trim();
   if (profileName != null && profileName.isNotEmpty) {

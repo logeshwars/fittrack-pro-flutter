@@ -39,11 +39,13 @@ void main() {
   });
 
   test('compressForUpload downsizes wide images, keeps small ones', () {
-    final big = Uint8List.fromList(img.encodePng(img.Image(width: 1600, height: 800)));
+    final big =
+        Uint8List.fromList(img.encodePng(img.Image(width: 1600, height: 800)));
     final out = img.decodeJpg(compressForUpload(big))!;
     expect(out.width, 800);
     expect(out.height, 400);
-    final small = Uint8List.fromList(img.encodePng(img.Image(width: 300, height: 200)));
+    final small =
+        Uint8List.fromList(img.encodePng(img.Image(width: 300, height: 200)));
     expect(img.decodeJpg(compressForUpload(small))!.width, 300);
     expect(() => compressForUpload(Uint8List.fromList([1, 2, 3])),
         throwsA(isA<PhotoScanFailure>()));

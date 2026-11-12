@@ -439,7 +439,8 @@ class AlertsSettingsScreen extends ConsumerWidget {
     final settings = ref.watch(remindersProvider);
 
     return settings.when(
-      loading: () => _LoadingScreen(title: context.t('settings:notifications'), colors: colors),
+      loading: () => _LoadingScreen(
+          title: context.t('settings:notifications'), colors: colors),
       error: (_, __) => Scaffold(
         backgroundColor: colors.bg,
         body: SafeArea(
@@ -479,15 +480,20 @@ class AlertsSettingsScreen extends ConsumerWidget {
                 _SectionTitle(category.label.toUpperCase()),
                 _Surface(
                   children: [
-                    for (final def in reminderCatalog.where((d) => d.category == category))
+                    for (final def
+                        in reminderCatalog.where((d) => d.category == category))
                       _ReminderRow(
                         def: def,
                         pref: value.of(def),
                         color: _color(category),
                         icon: _icon(category),
-                        last: def == reminderCatalog.where((d) => d.category == category).last,
+                        last: def ==
+                            reminderCatalog
+                                .where((d) => d.category == category)
+                                .last,
                         onToggle: (on) => _toggle(context, ref, def, on),
-                        onTime: () => _pickTime(context, ref, def, value.of(def).time),
+                        onTime: () =>
+                            _pickTime(context, ref, def, value.of(def).time),
                       ),
                   ],
                 ),
@@ -496,7 +502,8 @@ class AlertsSettingsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
                 child: Text(
                   'Reminders repeat daily at the time you choose and work offline.',
-                  style: TextStyle(fontSize: 11, height: 1.5, color: colors.faint),
+                  style:
+                      TextStyle(fontSize: 11, height: 1.5, color: colors.faint),
                 ),
               ),
             ],
@@ -541,7 +548,10 @@ class _ReminderRow extends StatelessWidget {
           Expanded(
             child: Text(
               def.label,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.text),
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: colors.text),
             ),
           ),
           InkWell(
@@ -761,7 +771,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     if (_loading) {
-      return _LoadingScreen(title: context.t('settings:appSettings'), colors: colors);
+      return _LoadingScreen(
+          title: context.t('settings:appSettings'), colors: colors);
     }
 
     return Scaffold(

@@ -115,7 +115,9 @@ class Translations {
 
   (String, String) _split(String key, String namespace) {
     final i = key.indexOf(':');
-    return i < 0 ? (namespace, key) : (key.substring(0, i), key.substring(i + 1));
+    return i < 0
+        ? (namespace, key)
+        : (key.substring(0, i), key.substring(i + 1));
   }
 
   String? _lookup(String ns, String path) =>
@@ -157,7 +159,8 @@ Future<Translations> loadTranslations(
     final out = <String, Map<String, dynamic>>{};
     for (final ns in translationNamespaces) {
       try {
-        final raw = await assets.loadString('assets/translations/$lang/$ns.json');
+        final raw =
+            await assets.loadString('assets/translations/$lang/$ns.json');
         final decoded = jsonDecode(raw);
         if (decoded is Map<String, dynamic>) {
           out[ns] = decoded;

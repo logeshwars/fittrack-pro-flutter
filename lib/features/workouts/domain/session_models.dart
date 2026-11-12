@@ -153,10 +153,9 @@ class SessionState {
   bool get allSetsHaveRpe =>
       totalSets > 0 && allSets.every((s) => s.rpe != null);
 
-  SessionExercise? get current =>
-      exercises.isEmpty
-          ? null
-          : exercises[currentIndex.clamp(0, exercises.length - 1).toInt()];
+  SessionExercise? get current => exercises.isEmpty
+      ? null
+      : exercises[currentIndex.clamp(0, exercises.length - 1).toInt()];
 
   SessionState copyWith({
     List<SessionExercise>? exercises,

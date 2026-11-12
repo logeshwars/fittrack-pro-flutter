@@ -188,7 +188,10 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
       ref,
       _name,
       exercises,
-      [for (final e in all) if (ids.contains(e.id)) e],
+      [
+        for (final e in all)
+          if (ids.contains(e.id)) e
+      ],
     );
     if (mounted) {
       setState(() => _busy = false);
@@ -245,7 +248,8 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
           loading: () => Center(
             child: CircularProgressIndicator(color: colors.accent),
           ),
-          error: (_, __) => const Center(child: Text('Could not load exercises')),
+          error: (_, __) =>
+              const Center(child: Text('Could not load exercises')),
           data: (exercises) {
             final items = _items(exercises);
             return ListView(
@@ -460,7 +464,10 @@ class WorkoutPresetScreen extends ConsumerWidget {
       ref,
       preset.name,
       preset.exercises,
-      [for (final e in all) if (ids.contains(e.id)) e],
+      [
+        for (final e in all)
+          if (ids.contains(e.id)) e
+      ],
     );
   }
 
@@ -685,12 +692,13 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
                     ),
                     Text('${_items[i].defaultSets}'),
                     IconButton(
-                      onPressed: () => setState(() => _items[i] = PresetExercise(
-                            exerciseId: _items[i].exerciseId,
-                            exerciseName: _items[i].exerciseName,
-                            muscleGroup: _items[i].muscleGroup,
-                            defaultSets: _items[i].defaultSets + 1,
-                          )),
+                      onPressed: () =>
+                          setState(() => _items[i] = PresetExercise(
+                                exerciseId: _items[i].exerciseId,
+                                exerciseName: _items[i].exerciseName,
+                                muscleGroup: _items[i].muscleGroup,
+                                defaultSets: _items[i].defaultSets + 1,
+                              )),
                       icon: const Icon(Icons.add),
                     ),
                     IconButton(
@@ -769,7 +777,8 @@ class _PickSheetState extends State<_PickSheet> {
                 itemCount: shown.length,
                 itemBuilder: (_, i) => ListTile(
                   title: Text(shown[i].name),
-                  subtitle: Text('${shown[i].muscleGroup} · ${shown[i].equipment}'),
+                  subtitle:
+                      Text('${shown[i].muscleGroup} · ${shown[i].equipment}'),
                   onTap: () => Navigator.of(context).pop(shown[i]),
                 ),
               ),

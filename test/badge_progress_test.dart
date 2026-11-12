@@ -13,11 +13,13 @@ void main() {
   });
 
   test('streak badges use the best of current and longest streak', () {
-    expect(badgeProgress(streak7, {'current_streak': 2, 'longest_streak': 7}), 1);
+    expect(
+        badgeProgress(streak7, {'current_streak': 2, 'longest_streak': 7}), 1);
   });
 
   test('untracked requirement types never auto-earn', () {
-    final early = badgeDefinitions.firstWhere((b) => b.requirementType == 'early_morning_workout');
+    final early = badgeDefinitions
+        .firstWhere((b) => b.requirementType == 'early_morning_workout');
     expect(badgeProgress(early, {'total_workouts': 1000}), 0);
     expect(isBadgeEarned(early, {}, {early.id}), isTrue);
     expect(isBadgeEarned(early, {}, {}), isFalse);

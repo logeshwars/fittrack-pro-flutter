@@ -16,10 +16,20 @@ void main() {
   });
 
   test('canConnect only when the user can act', () {
-    expect(const StepsState(availability: StepsAvailability.needsPermission).canConnect, isTrue);
-    expect(const StepsState(availability: StepsAvailability.needsInstall).canConnect, isTrue);
-    expect(const StepsState(availability: StepsAvailability.ready).canConnect, isFalse);
-    expect(const StepsState(availability: StepsAvailability.unsupported).canConnect, isFalse);
+    expect(
+        const StepsState(availability: StepsAvailability.needsPermission)
+            .canConnect,
+        isTrue);
+    expect(
+        const StepsState(availability: StepsAvailability.needsInstall)
+            .canConnect,
+        isTrue);
+    expect(const StepsState(availability: StepsAvailability.ready).canConnect,
+        isFalse);
+    expect(
+        const StepsState(availability: StepsAvailability.unsupported)
+            .canConnect,
+        isFalse);
   });
 
   test('healthStoreName', () {
