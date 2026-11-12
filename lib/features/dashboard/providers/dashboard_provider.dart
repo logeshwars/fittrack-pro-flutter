@@ -15,6 +15,7 @@ class DashboardData {
     this.proteinG = 0,
     this.proteinGoalG = 150,
     this.calorieGoal = 2000,
+    this.stepGoal = 10000,
     this.calories = 0,
     this.cardioMinutes = 0,
     this.latestWeightKg,
@@ -33,6 +34,7 @@ class DashboardData {
   final double proteinG;
   final int proteinGoalG;
   final int calorieGoal;
+  final int stepGoal;
   final double calories;
   final int cardioMinutes;
   final double? latestWeightKg;
@@ -124,6 +126,7 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
     proteinG: _sum(foodRows, 'protein_g'),
     proteinGoalG: goals.protein.round(),
     calorieGoal: goals.calories.round(),
+    stepGoal: goals.steps.round(),
     calories: _sum(foodRows, 'calories'),
     cardioMinutes: (_sum(cardioRows, 'duration_seconds') / 60).round(),
     latestWeightKg: (latestWeight?['weight_kg'] as num?)?.toDouble(),

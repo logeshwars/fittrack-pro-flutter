@@ -97,3 +97,10 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
 - `SubscriptionController` logs in/out with the Supabase user and re-reads the entitlement on every app foreground (`SubscriptionLifecycle` in `app.dart`). `isProProvider` is the single gate; logged data is never gated.
 - Paywall (plan picker, trial CTA, savings badge, restore) and Subscription screen (status, renewal date, manage in store via `url_launcher`).
 - Needs real-store verification with sandbox testers; client state is a cache of the entitlement, and the server-side webhook (`revenuecat-webhook`) remains the authority for server-enforced limits.
+
+## Batch 28 – Health Connect / HealthKit steps
+- `HealthStepsGateway` port with a `health`-package implementation; `stepsProvider` refreshes on start, every 5 minutes and on app resume, and awards +20 XP once per day when the step goal is reached.
+- Dashboard step ring shows live steps against the Goals-screen target and offers a Connect action (system permission sheet, or Health Connect install).
+- `tool/patch_native.py` now also switches `MainActivity` to `FlutterFragmentActivity` and sets `minSdk = 26` (Health Connect requirements). Idempotent.
+- Manual iOS step: enable the HealthKit capability for the Runner target in Xcode (adds the `com.apple.developer.healthkit` entitlement); it cannot be patched reliably from a script. HealthKit never reveals read access, so iOS treats "permission asked" as ready.
+- Removed `IntegrationGates` (all integrations were hard-disabled flags that nothing read).

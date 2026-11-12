@@ -56,6 +56,28 @@ def patch_android() -> None:
     manifest.write_text(s)
 
 
+def patch_android_build() -> None:
+    """Health Connect needs FlutterFragmentActivity and minSdk 26."""
+    for activity in Path("android/app/src/main").glob("**/MainActivity.*"):
+        text = activity.read_text()
+        if "FlutterFragmentActivity" not in text and "FlutterActivity" in text:
+            text = text.replace(
+                "import io.flutter.embedding.android.FlutterActivity",
+                "import io.flutter.embedding.android.FlutterFragmentActivity",
+            ).replace(": FlutterActivity()", ": FlutterFragmentActivity()")
+            activity.write_text(text)
+    for name in ("build.gradle.kts", "build.gradle"):
+        gradle = Path("android/app") / name
+        if not gradle.exists():
+            continue
+        text = gradle.read_text()
+        for old in ("minSdk = flutter.minSdkVersion", "minSdkVersion flutter.minSdkVersion"):
+            if old in text:
+                new = "minSdk = 26" if "=" in old else "minSdkVersion 26"
+                text = text.replace(old, new)
+        gradle.write_text(text)
+
+
 def patch_ios() -> None:
     plist = Path("ios/Runner/Info.plist")
     if not plist.exists():
@@ -73,5 +95,6 @@ def patch_ios() -> None:
 
 if __name__ == "__main__":
     patch_android()
+    patch_android_build()
     patch_ios()
     print("Native permissions patched.")

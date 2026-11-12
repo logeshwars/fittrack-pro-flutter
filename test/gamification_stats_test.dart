@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fittrack_pro/features/gamification/domain/gamification_stats.dart';
-import 'package:fittrack_pro/core/integrations/integration_gates.dart';
 
 void main() {
   test('XP level matches existing app', () {
@@ -14,10 +13,5 @@ void main() {
     expect(stats.totalXp, 1200);
     expect(stats.totalVolumeKg, 123.5);
     expect(stats.currentStreak, 0);
-  });
-  test('external integrations are disabled until verified', () {
-    for (final feature in IntegrationFeature.values) {
-      expect(IntegrationGates.enabled(feature), isFalse);
-    }
   });
 }

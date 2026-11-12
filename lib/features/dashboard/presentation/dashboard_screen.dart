@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_ui.dart';
+import '../../health/application/steps_controller.dart';
+import '../../health/domain/health_steps.dart';
 import '../../workouts/domain/workout_models.dart';
 import '../providers/dashboard_provider.dart';
 
@@ -14,30 +18,35 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(dashboardProvider);
+    final stepsState = ref.watch(stepsProvider);
+    Future<void> refresh() async {
+      ref.invalidate(dashboardProvider);
+      unawaited(ref.read(stepsProvider.notifier).refresh());
+      await ref.read(dashboardProvider.future);
+    }
+
+    Future<void> connectHealth() => ref.read(stepsProvider.notifier).connect();
 
     return state.when(
       loading: () => _DashboardBody(
         data: const DashboardData(configured: false, signedIn: false),
         loading: true,
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
       error: (error, _) => _DashboardBody(
         data: const DashboardData(configured: false, signedIn: false),
         message: 'Dashboard unavailable. Pull to retry.',
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
       data: (data) => _DashboardBody(
         data: data,
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
     );
   }
@@ -47,16 +56,19 @@ class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.data,
     required this.onRefresh,
+    required this.steps,
+    required this.onConnectHealth,
     this.loading = false,
     this.message,
   });
 
   final DashboardData data;
   final Future<void> Function() onRefresh;
+  final StepsState steps;
+  final Future<void> Function() onConnectHealth;
   final bool loading;
   final String? message;
 
-  static const _stepGoal = 10000;
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +81,7 @@ class _DashboardBody extends StatelessWidget {
         : 0.0;
     final caloriesPct =
         (data.calories / data.calorieGoal).clamp(0, 1).toDouble();
-    const steps = 0;
-    const stepsPct = 0.0;
+    final stepsPct = stepsProgress(steps.steps, data.stepGoal.toDouble());
     final xpBase = (data.level - 1) * 500;
     final xpCap = data.level * 500;
     final xpPct = xpCap > xpBase
@@ -339,12 +350,25 @@ class _DashboardBody extends StatelessWidget {
                       progress: stepsPct,
                       color: AppColors.water,
                       icon: Icons.directions_walk,
-                      value: '$steps',
+                      value: formatSteps(steps.steps),
                       label: 'Steps',
-                      sublabel: '/ ${(_stepGoal / 1000).toStringAsFixed(0)}k',
+                      sublabel: '/ ${(data.stepGoal / 1000).toStringAsFixed(0)}k',
+                      done: data.stepGoal > 0 && steps.steps >= data.stepGoal,
                     ),
                   ],
                 ),
+                if (steps.canConnect)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: onConnectHealth,
+                      icon: const Icon(Icons.directions_walk, size: 16),
+                      label: Text(
+                        'Connect ${healthStoreName(isIos: Theme.of(context).platform == TargetPlatform.iOS)} to track steps',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
