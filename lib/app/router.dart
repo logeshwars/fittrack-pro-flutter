@@ -10,6 +10,7 @@ import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/workouts/presentation/workout_screen.dart';
 import '../features/workouts/presentation/workout_draft_screen.dart';
 import '../features/workouts/presentation/workout_secondary_screens.dart';
+import '../features/workouts/presentation/workout_template_screens.dart';
 import '../features/workouts/presentation/workout_session_screen.dart';
 import '../features/nutrition/presentation/nutrition_screen.dart';
 import '../features/nutrition/presentation/food_draft_screen.dart';
@@ -63,6 +64,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/workout/draft', builder: (context, state) => const WorkoutDraftScreen()),
     GoRoute(path: '/workout/history/:id', builder: (context, state) => WorkoutHistoryDetailScreen(workoutId: state.pathParameters['id']!)),
     GoRoute(path: '/workout/split/:id', builder: (context, state) => WorkoutSplitScreen(splitId: state.pathParameters['id']!)),
+    GoRoute(path: '/workout/preset-new', builder: (context, state) => const PresetEditorScreen()),
     GoRoute(path: '/workout/preset/:id', builder: (context, state) => WorkoutPresetScreen(presetId: state.pathParameters['id']!)),
     GoRoute(path: '/workout/:id', builder: (context, state) => WorkoutSessionScreen(workoutId: state.pathParameters['id']!)),
     GoRoute(path: '/nutrition/draft', builder: (context, state) => const FoodDraftScreen()),

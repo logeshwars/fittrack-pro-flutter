@@ -2,19 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/config/app_config.dart';
+import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
-import '../data/workout_repository.dart';
+import '../data/exercise_repository.dart';
+import '../data/preset_service.dart';
+import '../data/workout_splits_data.dart';
 import '../domain/workout_models.dart';
 
-final workoutHistoryProvider = FutureProvider.autoDispose<List<Workout>>((ref) async {
-  if (!AppConfig.hasSupabase) return const [];
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
-  if (user == null) return const [];
-  return WorkoutRepository(client).getHistory(authenticatedUserId: user.id);
+/// Recent workouts for the history tab and date strip.
+final workoutHistoryProvider =
+    FutureProvider.autoDispose<List<Workout>>((ref) async {
+  final service = ref.watch(workoutServiceProvider);
+  if (service == null) {
+    return const [];
+  }
+  return service.history(limit: 50);
+});
+
+/// The user's saved routines.
+final presetsProvider =
+    FutureProvider.autoDispose<List<WorkoutPreset>>((ref) async {
+  final service = ref.watch(presetServiceProvider);
+  if (service == null) {
+    return const [];
+  }
+  return service.presets();
+});
+
+/// Every global exercise, used by the library, splits and the preset editor.
+final allExercisesProvider =
+    FutureProvider.autoDispose<List<Exercise>>((ref) async {
+  final service = ref.watch(workoutServiceProvider);
+  if (service == null) {
+    return const [];
+  }
+  return service.exercises();
 });
 
 class WorkoutScreen extends ConsumerStatefulWidget {
@@ -88,8 +111,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: _QuickStart(onTap: () => context.push('/workout/new')),
           ),
-          if (tab == 0) _Routines(onCreate: () => context.push('/workout/new')),
-          if (tab == 1) _Exercises(onOpen: () => context.push('/workout/new')),
+          if (tab == 0) _Routines(onCreate: () => context.push('/workout/preset-new')),
+          if (tab == 1) const _ExerciseLibrary(),
           if (tab == 2)
             history.when(
               loading: () => Padding(
@@ -188,101 +211,245 @@ class _QuickStart extends StatelessWidget {
   }
 }
 
-class _Routines extends StatelessWidget {
+class _Routines extends ConsumerWidget {
   const _Routines({required this.onCreate});
   final VoidCallback onCreate;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppPalette.of(context);
+    final presets = ref.watch(presetsProvider).valueOrNull ?? const [];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       child: Column(
         children: [
-          FitTrackSectionLabel(title: 'My Routines', action: 'New', onAction: onCreate),
-          InkWell(
-            onTap: onCreate,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 28),
-              decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: colors.border2)),
-              child: Column(children: [
-                Container(width: 44, height: 44, decoration: BoxDecoration(color: colors.accentTint, shape: BoxShape.circle), alignment: Alignment.center, child: Icon(Icons.add, color: colors.accent)),
-                const SizedBox(height: 8),
-                Text('Create your first routine', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.text)),
-                const SizedBox(height: 3),
-                Text('Saved-routine data migration comes next.', style: TextStyle(fontSize: 12, color: colors.faint)),
-              ]),
-            ),
+          FitTrackSectionLabel(
+            title: 'My Routines',
+            action: 'New',
+            onAction: onCreate,
           ),
+          if (presets.isEmpty)
+            InkWell(
+              onTap: onCreate,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 28),
+                decoration: BoxDecoration(
+                  color: colors.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.border2),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: colors.accentTint,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(Icons.add, color: colors.accent),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create your first routine',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          for (final preset in presets)
+            _TemplateCard(
+              title: preset.name,
+              subtitle: '${preset.exercises.length} exercises',
+              onTap: () => context.push('/workout/preset/${preset.id}'),
+            ),
           const SizedBox(height: 28),
           const FitTrackSectionLabel(title: 'Workout Splits'),
-          _Split(id: 'ppl', title: 'Push / Pull / Legs', subtitle: '3 days · Balanced strength split'),
-          _Split(id: 'upper-lower', title: 'Upper / Lower', subtitle: '4 days · Strength and hypertrophy'),
-          _Split(id: 'full-body', title: 'Full Body', subtitle: '3 days · Efficient total-body training'),
+          for (final split in globalSplits)
+            _TemplateCard(
+              title: split.name,
+              subtitle: '${split.days.length} days · ${split.description}',
+              onTap: () => context.push('/workout/split/${split.id}'),
+            ),
         ],
       ),
     );
   }
 }
 
-class _Split extends StatelessWidget {
-  const _Split({
-    required this.id,
+class _TemplateCard extends StatelessWidget {
+  const _TemplateCard({
     required this.title,
     required this.subtitle,
+    required this.onTap,
   });
-  final String id;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     return InkWell(
-      onTap: () => context.push('/workout/split/$id'),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
-        child: Row(children: [
-        Container(width: 44, height: 44, decoration: BoxDecoration(color: colors.accentTint, shape: BoxShape.circle), alignment: Alignment.center, child: Icon(Icons.fitness_center, color: colors.accent, size: 20)),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.text)),
-          const SizedBox(height: 2),
-          Text(subtitle, style: TextStyle(fontSize: 11, color: colors.muted)),
-        ])),
-        Icon(Icons.arrow_forward, size: 14, color: colors.faint),
-      ]),
+        decoration: BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.accentTint,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.fitness_center, color: colors.accent, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: colors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 11, color: colors.muted),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward, size: 14, color: colors.faint),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Exercises extends StatelessWidget {
-  const _Exercises({required this.onOpen});
-  final VoidCallback onOpen;
+class _ExerciseLibrary extends ConsumerStatefulWidget {
+  const _ExerciseLibrary();
+
+  @override
+  ConsumerState<_ExerciseLibrary> createState() => _ExerciseLibraryState();
+}
+
+class _ExerciseLibraryState extends ConsumerState<_ExerciseLibrary> {
+  String _query = '';
+  String? _group;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(color: colors.card, borderRadius: BorderRadius.circular(14)),
-          child: Column(children: [
-            Container(width: 56, height: 56, decoration: BoxDecoration(color: colors.accentTint, shape: BoxShape.circle), alignment: Alignment.center, child: Icon(Icons.fitness_center, size: 28, color: colors.accent)),
-            const SizedBox(height: 10),
-            Text('Browse exercises', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: colors.text)),
-            const SizedBox(height: 6),
-            Text('The React Native exercise library will be migrated into this slot.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: colors.muted)),
-          ]),
-        ),
+    final all = ref.watch(allExercisesProvider);
+    return all.when(
+      loading: () => Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator(color: colors.accent)),
       ),
+      error: (_, __) => const _Info(text: 'Unable to load exercises.'),
+      data: (list) {
+        final groups = {for (final e in list) e.muscleGroup}.toList()..sort();
+        final q = _query.trim().toLowerCase();
+        final shown = [
+          for (final e in list)
+            if ((_group == null || e.muscleGroup == _group) &&
+                (q.isEmpty || e.name.toLowerCase().contains(q)))
+              e,
+        ];
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: Column(
+            children: [
+              TextField(
+                onChanged: (v) => setState(() => _query = v),
+                decoration: const InputDecoration(
+                  hintText: 'Search exercises',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final g in [null, ...groups])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8, top: 8),
+                        child: ChoiceChip(
+                          label: Text(g ?? 'All'),
+                          selected: _group == g,
+                          onSelected: (_) => setState(() => _group = g),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (shown.isEmpty)
+                const _Info(text: 'No exercises match.')
+              else
+                for (final e in shown.take(200))
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                e.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.text,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${e.muscleGroup} · ${e.equipment}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

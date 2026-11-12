@@ -69,3 +69,9 @@ Legend: UI = screen exists, DATA = reads/writes the real services,
    the Android/iOS client IDs under "Authorized Client IDs".
 4. Test with a disposable legacy Google account and check
    `select * from identity_migration_audit`.
+
+
+## Batch 23 — workout history detail, presets, splits
+- Splits ported from `workoutSplits.ts` (4 splits) into `workout_splits_data.dart` (generated).
+- History detail on `WorkoutService.byId` with rename/delete; presets list/detail/editor on `PresetService`; split screen resolves exercises by name, swap sheet, start session, save as preset; exercise library tab.
+- Also generated (used by later tasks): `indian_foods_data.dart` (69 foods), `badges_data.dart` (40 badges).
