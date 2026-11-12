@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,8 +7,11 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_ui.dart';
+import '../../health/application/steps_controller.dart';
+import '../../health/domain/health_steps.dart';
 import '../../workouts/domain/workout_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../../../core/l10n/language_controller.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -14,30 +19,35 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(dashboardProvider);
+    final stepsState = ref.watch(stepsProvider);
+    Future<void> refresh() async {
+      ref.invalidate(dashboardProvider);
+      unawaited(ref.read(stepsProvider.notifier).refresh());
+      await ref.read(dashboardProvider.future);
+    }
+
+    Future<void> connectHealth() => ref.read(stepsProvider.notifier).connect();
 
     return state.when(
       loading: () => _DashboardBody(
         data: const DashboardData(configured: false, signedIn: false),
         loading: true,
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
       error: (error, _) => _DashboardBody(
         data: const DashboardData(configured: false, signedIn: false),
         message: 'Dashboard unavailable. Pull to retry.',
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
       data: (data) => _DashboardBody(
         data: data,
-        onRefresh: () async {
-          ref.invalidate(dashboardProvider);
-          await ref.read(dashboardProvider.future);
-        },
+        steps: stepsState,
+        onConnectHealth: connectHealth,
+        onRefresh: refresh,
       ),
     );
   }
@@ -47,30 +57,32 @@ class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.data,
     required this.onRefresh,
+    required this.steps,
+    required this.onConnectHealth,
     this.loading = false,
     this.message,
   });
 
   final DashboardData data;
   final Future<void> Function() onRefresh;
+  final StepsState steps;
+  final Future<void> Function() onConnectHealth;
   final bool loading;
   final String? message;
 
-  static const _calorieGoal = 2000;
-  static const _stepGoal = 10000;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final now = DateTime.now();
     final firstName = data.displayName.trim().split(' ').first;
-    final greeting = _greeting(now.hour);
+    final greeting = _greeting(context, now.hour);
     final proteinPct = data.proteinGoalG > 0
         ? (data.proteinG / data.proteinGoalG).clamp(0, 1).toDouble()
         : 0.0;
-    final caloriesPct = (data.calories / _calorieGoal).clamp(0, 1).toDouble();
-    const steps = 0;
-    const stepsPct = 0.0;
+    final caloriesPct =
+        (data.calories / data.calorieGoal).clamp(0, 1).toDouble();
+    final stepsPct = stepsProgress(steps.steps, data.stepGoal.toDouble());
     final xpBase = (data.level - 1) * 500;
     final xpCap = data.level * 500;
     final xpPct = xpCap > xpBase
@@ -205,12 +217,10 @@ class _DashboardBody extends StatelessWidget {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.cardio
-                                        .withValues(alpha: 0.12),
+                                    color: AppColors.cardio.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(
-                                      color: AppColors.cardio
-                                          .withValues(alpha: 0.25),
+                                      color: AppColors.cardio.withValues(alpha: 0.25),
                                     ),
                                   ),
                                   child: Row(
@@ -282,8 +292,7 @@ class _DashboardBody extends StatelessWidget {
             )
           else if (!data.configured)
             const _StatusBanner(
-              message:
-                  'Backend not configured. Add the Supabase build secrets to load live data.',
+              message: 'Backend not configured. Add the Supabase build secrets to load live data.',
               color: AppColors.warningDark,
             )
           else if (!data.signedIn)
@@ -334,20 +343,33 @@ class _DashboardBody extends StatelessWidget {
                       icon: Icons.local_fire_department,
                       value: data.calories.toStringAsFixed(0),
                       label: 'Calories',
-                      sublabel: '/ $_calorieGoal kcal',
-                      done: data.calories >= _calorieGoal,
+                      sublabel: '/ ${data.calorieGoal} kcal',
+                      done: data.calories >= data.calorieGoal,
                     ),
                     _VerticalDivider(color: colors.border2),
                     FitTrackMiniRing(
                       progress: stepsPct,
                       color: AppColors.water,
                       icon: Icons.directions_walk,
-                      value: '$steps',
+                      value: formatSteps(steps.steps),
                       label: 'Steps',
-                      sublabel: '/ ${(_stepGoal / 1000).toStringAsFixed(0)}k',
+                      sublabel: '/ ${(data.stepGoal / 1000).toStringAsFixed(0)}k',
+                      done: data.stepGoal > 0 && steps.steps >= data.stepGoal,
                     ),
                   ],
                 ),
+                if (steps.canConnect)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: onConnectHealth,
+                      icon: const Icon(Icons.directions_walk, size: 16),
+                      label: Text(
+                        'Connect ${healthStoreName(isIos: Theme.of(context).platform == TargetPlatform.iOS)} to track steps',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
@@ -386,7 +408,7 @@ class _DashboardBody extends StatelessWidget {
                         label: 'Start Workout',
                         sublabel: '+50 XP',
                         accent: colors.accent,
-                        onTap: () => context.go('/workout/draft'),
+                        onTap: () => context.go('/workout/new'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -464,37 +486,35 @@ class _DashboardBody extends StatelessWidget {
               child: Column(
                 children: [
                   FitTrackSectionLabel(
-                    title: 'Recent Workouts',
-                    action: 'See all',
+                    title: context.t('home:recentWorkouts'),
+                    action: context.t('home:seeAll'),
                     onAction: () => context.go('/workout'),
                   ),
                   ...data.recentWorkouts.take(3).map(
-                        (workout) => _WorkoutCard(workout: workout),
-                      ),
+                    (workout) => _WorkoutCard(workout: workout),
+                  ),
                 ],
               ),
             ),
           if (data.recentWorkouts.isEmpty && !loading)
-            _EmptyWorkout(onTap: () => context.go('/workout/draft')),
+            _EmptyWorkout(onTap: () => context.go('/workout/new')),
         ],
       ),
     );
   }
 
-  static String _greeting(int hour) {
-    if (hour < 5) return 'Up late?';
-    if (hour < 12) return 'Good morning,';
-    if (hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
+  static String _greeting(BuildContext context, int hour) {
+    if (hour < 5) return context.t('home:greetingLate');
+    if (hour < 12) return context.t('home:greetingMorning');
+    if (hour < 17) return context.t('home:greetingAfternoon');
+    return context.t('home:greetingEvening');
   }
 
   static int _weekWorkoutCount(List<Workout> workouts) {
     final now = DateTime.now();
     final monday = DateTime(now.year, now.month, now.day)
         .subtract(Duration(days: now.weekday - DateTime.monday));
-    return workouts
-        .where((workout) => !workout.startedAt.isBefore(monday))
-        .length;
+    return workouts.where((workout) => !workout.startedAt.isBefore(monday)).length;
   }
 
   static String _sleepDuration(int minutes) {
@@ -626,11 +646,9 @@ class _WeekGrid extends StatelessWidget {
     final colors = AppPalette.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final monday =
-        today.subtract(Duration(days: now.weekday - DateTime.monday));
+    final monday = today.subtract(Duration(days: now.weekday - DateTime.monday));
     final workoutDays = workouts
-        .map((w) =>
-            DateTime(w.startedAt.year, w.startedAt.month, w.startedAt.day))
+        .map((w) => DateTime(w.startedAt.year, w.startedAt.month, w.startedAt.day))
         .toSet();
 
     return Row(
@@ -815,9 +833,7 @@ class _WorkoutCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat('EEE · MMM d')
-                        .format(workout.startedAt)
-                        .toUpperCase(),
+                    DateFormat('EEE · MMM d').format(workout.startedAt).toUpperCase(),
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,

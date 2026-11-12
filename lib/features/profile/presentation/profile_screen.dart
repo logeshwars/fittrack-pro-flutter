@@ -5,6 +5,8 @@ import '../../../core/auth/auth_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
+import '../../../core/l10n/language_controller.dart';
+import '../../../core/widgets/custom_icons.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -26,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 40),
             children: [
               FitTrackScreenHeader(
-                title: 'Profile',
+                title: context.t('profile:title'),
                 subtitle: 'Your stats & settings',
                 trailing: IconButton(
                   onPressed: () => context.pop(),
@@ -91,30 +93,27 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.local_fire_department,
-                        iconColor: AppColors.cardio,
+                        icon: const FlameStreakIcon(size: 28),
                         value: '${data.currentStreak}',
-                        label: 'DAY STREAK',
+                        label: context.t('profile:dayStreak').toUpperCase(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.bolt,
-                        iconColor: colors.accent,
+                        icon: XPIcon(size: 28, color: colors.accent),
                         value: _compact(data.totalXp),
-                        label: 'TOTAL XP',
+                        label: context.t('profile:totalXP').toUpperCase(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _StatCard(
-                        icon: Icons.monitor_weight_outlined,
-                        iconColor: AppColors.weight,
+                        icon: TrophyIcon(size: 28, color: colors.accent),
                         value: data.latestWeightKg == null
                             ? '—'
                             : data.latestWeightKg!.toStringAsFixed(1),
-                        label: 'BODY KG',
+                        label: context.t('profile:bodyKg').toUpperCase(),
                       ),
                     ),
                   ],
@@ -190,7 +189,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'SETTINGS',
+                    context.t('profile:settings'),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -295,13 +294,11 @@ class ProfileScreen extends ConsumerWidget {
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
-    required this.iconColor,
     required this.value,
     required this.label,
   });
 
-  final IconData icon;
-  final Color iconColor;
+  final Widget icon;
   final String value;
   final String label;
 
@@ -316,7 +313,7 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 28, color: iconColor),
+          icon,
           const SizedBox(height: 6),
           Text(
             value,

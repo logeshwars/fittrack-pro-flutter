@@ -19,6 +19,14 @@ p.write_text(s)
 PY
 fi
 
+# Camera, location, notifications, activity recognition, Health Connect.
+python3 tool/patch_native.py
+
+# App icon and splash screen (config lives in pubspec.yaml).
+flutter pub get
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
+
 # iOS bundle ID is not modified automatically: inspect and set the
 # development bundle ID and signing team in Xcode before installing.
 echo "Native projects generated. Review signing and iOS bundle identifiers."

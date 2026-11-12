@@ -1,15 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/app_config.dart';
-import '../../cardio/data/cardio_repository.dart';
-import '../../cardio/domain/cardio_session.dart';
-import '../../gamification/data/gamification_repository.dart';
-import '../../gamification/domain/gamification_stats.dart';
-import '../../nutrition/data/nutrition_repository.dart';
-import '../../nutrition/domain/nutrition_models.dart';
-import '../../progress/data/progress_repository.dart';
-import '../../progress/domain/progress_models.dart';
-import '../../workouts/data/workout_repository.dart';
+import '../../../core/data/service_providers.dart';
+import '../../settings/data/goal_targets.dart';
 import '../../workouts/domain/workout_models.dart';
 
 class DashboardData {
@@ -21,6 +14,8 @@ class DashboardData {
     this.recentWorkouts = const [],
     this.proteinG = 0,
     this.proteinGoalG = 150,
+    this.calorieGoal = 2000,
+    this.stepGoal = 10000,
     this.calories = 0,
     this.cardioMinutes = 0,
     this.latestWeightKg,
@@ -38,6 +33,8 @@ class DashboardData {
   final List<Workout> recentWorkouts;
   final double proteinG;
   final int proteinGoalG;
+  final int calorieGoal;
+  final int stepGoal;
   final double calories;
   final int cardioMinutes;
   final double? latestWeightKg;
@@ -50,95 +47,93 @@ class DashboardData {
   int get workouts => recentWorkouts.length;
 }
 
-final dashboardProvider =
-    FutureProvider.autoDispose<DashboardData>((ref) async {
+/// Runs [load] and falls back to [fallback] so one failing source never makes
+/// the whole dashboard unavailable.
+Future<T> _safe<T>(Future<T> Function() load, T fallback) async {
+  try {
+    return await load();
+  } on Object {
+    return fallback;
+  }
+}
+
+double _sum(Iterable<Map<String, dynamic>> rows, String key) =>
+    rows.fold<double>(0, (s, r) => s + ((r[key] as num?)?.toDouble() ?? 0));
+
+final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
   if (!AppConfig.hasSupabase) {
     return const DashboardData(configured: false, signedIn: false);
   }
-
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
+  final user = Supabase.instance.client.auth.currentUser;
   if (user == null) {
     return const DashboardData(configured: true, signedIn: false);
   }
 
-  final id = user.id;
-  final results = await Future.wait<Object>([
-    WorkoutRepository(client).getHistory(
-      authenticatedUserId: id,
-      pageSize: 10,
-    ),
-    NutritionRepository(client).getRecentLogs(authenticatedUserId: id),
-    CardioRepository(client).recent(authenticatedUserId: id),
-    ProgressRepository(client).recent(authenticatedUserId: id),
+  final workouts = ref.watch(workoutServiceProvider);
+  final nutrition = ref.watch(nutritionServiceProvider);
+  final cardio = ref.watch(cardioServiceProvider);
+  final sleep = ref.watch(sleepServiceProvider);
+  final weight = ref.watch(weightServiceProvider);
+  final profileService = ref.watch(profileServiceProvider);
+  final gamification = ref.watch(gamificationServiceProvider);
+
+  final goals = await _safe(
+    () => ref.watch(goalTargetsProvider.future),
+    const GoalTargets(),
+  );
+
+  final recent = await Future.wait<Object?>([
+    _safe<List<Workout>>(() async => await workouts?.history(limit: 10) ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(() async => await nutrition?.todayLogs() ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(() async => await cardio?.today() ?? const [], const []),
+    _safe<List<Map<String, dynamic>>>(() async => await sleep?.history(limit: 1) ?? const [], const []),
+    _safe<Map<String, dynamic>?>(() async => await weight?.latest(), null),
+    _safe<Map<String, dynamic>?>(() async => await profileService?.profile(), null),
+    _safe<Map<String, dynamic>?>(() async => await gamification?.stats(), null),
   ]);
 
-  final workouts = results[0] as List<Workout>;
-  final nutrition = results[1] as List<NutritionLog>;
-  final cardio = results[2] as List<CardioSession>;
-  final progress =
-      results[3] as ({List<WeightLog> weights, List<SleepLog> sleep});
-  final nutritionTotals = NutritionTotals.fromLogs(nutrition);
+  final recentWorkouts = recent[0]! as List<Workout>;
+  final foodRows = recent[1]! as List<Map<String, dynamic>>;
+  final cardioRows = recent[2]! as List<Map<String, dynamic>>;
+  final sleepRows = recent[3]! as List<Map<String, dynamic>>;
+  final latestWeight = recent[4] as Map<String, dynamic>?;
+  final profile = recent[5] as Map<String, dynamic>?;
+  final stats = recent[6] as Map<String, dynamic>?;
 
   final metadata = user.userMetadata ?? const <String, dynamic>{};
-  var displayName = (metadata['full_name'] ??
-          metadata['name'] ??
-          metadata['display_name'] ??
-          user.email?.split('@').first ??
-          'there')
-      .toString();
-  String? avatarUrl =
-      (metadata['avatar_url'] ?? metadata['picture'])?.toString();
-  var proteinGoal = 150;
-
-  try {
-    final profile = await client
-        .from('profiles')
-        .select('display_name,avatar_url,protein_goal_g')
-        .eq('google_user_id', id)
-        .maybeSingle();
-    if (profile != null) {
-      final profileName = (profile['display_name'] as String?)?.trim();
-      if (profileName != null && profileName.isNotEmpty) {
-        displayName = profileName;
-      }
-      avatarUrl = (profile['avatar_url'] as String?) ?? avatarUrl;
-      proteinGoal = (profile['protein_goal_g'] as num?)?.toInt() ?? proteinGoal;
-    }
-  } catch (_) {
-    // Profile enrichment must not make the dashboard unavailable.
+  var displayName = (
+    metadata['full_name'] ??
+    metadata['name'] ??
+    metadata['display_name'] ??
+    user.email?.split('@').first ??
+    'there'
+  ).toString();
+  var avatarUrl = (metadata['avatar_url'] ?? metadata['picture'])?.toString();
+  final profileName = (profile?['display_name'] as String?)?.trim();
+  if (profileName != null && profileName.isNotEmpty) {
+    displayName = profileName;
   }
+  avatarUrl = (profile?['avatar_url'] as String?) ?? avatarUrl;
 
-  GamificationStats? gamification;
-  try {
-    gamification = await GamificationRepository(client).readOwnStats(
-      authenticatedUserId: id,
-    );
-  } catch (_) {
-    // Keep the dashboard usable while the gamification RLS audit is ongoing.
-  }
-
-  final latestSleep = progress.sleep.isEmpty ? null : progress.sleep.first;
+  final latestSleep = sleepRows.isEmpty ? null : sleepRows.first;
 
   return DashboardData(
     configured: true,
     signedIn: true,
     displayName: displayName,
     avatarUrl: avatarUrl,
-    recentWorkouts: workouts,
-    proteinG: nutritionTotals.proteinG,
-    proteinGoalG: proteinGoal,
-    calories: nutritionTotals.calories,
-    cardioMinutes: cardio.fold<int>(
-      0,
-      (sum, item) => sum + ((item.durationSeconds ?? 0) ~/ 60),
-    ),
-    latestWeightKg:
-        progress.weights.isEmpty ? null : progress.weights.first.weightKg,
-    latestSleepMinutes: latestSleep?.durationMinutes,
-    sleepQuality: latestSleep?.quality,
-    totalXp: gamification?.totalXp ?? 0,
-    level: gamification?.level ?? 1,
-    currentStreak: gamification?.currentStreak ?? 0,
+    recentWorkouts: recentWorkouts,
+    proteinG: _sum(foodRows, 'protein_g'),
+    proteinGoalG: goals.protein.round(),
+    calorieGoal: goals.calories.round(),
+    stepGoal: goals.steps.round(),
+    calories: _sum(foodRows, 'calories'),
+    cardioMinutes: (_sum(cardioRows, 'duration_seconds') / 60).round(),
+    latestWeightKg: (latestWeight?['weight_kg'] as num?)?.toDouble(),
+    latestSleepMinutes: (latestSleep?['duration_minutes'] as num?)?.toInt(),
+    sleepQuality: (latestSleep?['quality'] as num?)?.toInt(),
+    totalXp: (stats?['total_xp'] as num?)?.toInt() ?? 0,
+    level: (stats?['level'] as num?)?.toInt() ?? 1,
+    currentStreak: (stats?['current_streak'] as num?)?.toInt() ?? 0,
   );
 });

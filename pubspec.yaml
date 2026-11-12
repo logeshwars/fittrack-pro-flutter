@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^2.6.1
   go_router: ^14.8.1
   supabase_flutter: ^2.8.4
@@ -20,11 +22,54 @@ dependencies:
   path: ^1.9.0
   uuid: ^4.5.1
   http: ^1.2.2
+  mobile_scanner: ^5.2.3
+  image_picker: ^1.1.2
+  image: ^4.3.0
+  geolocator: ^13.0.2
+  fl_chart: ^0.69.0
+  purchases_flutter: ^8.2.1
+  url_launcher: ^6.3.0
+  health: ^13.3.1
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+  flutter_timezone: ^3.0.1
+  flutter_svg: ^2.0.10
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.2
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/translations/en/
+    - assets/translations/hi/
+    - assets/translations/ta/
+    - assets/translations/ar/
+    - assets/translations/es/
+    - assets/translations/de/
+    - assets/translations/ja/
+    - assets/translations/pt/
+    - assets/translations/fr/
+
+# App icon and splash match the React Native app (barbell + bolt mark on #0D0D0D).
+# Generated into the native projects by tool/bootstrap_native.sh.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon.png
+  remove_alpha_ios: true
+  adaptive_icon_background: assets/icon/android-icon-background.png
+  adaptive_icon_foreground: assets/icon/android-icon-foreground.png
+  adaptive_icon_monochrome: assets/icon/android-icon-monochrome.png
+
+flutter_native_splash:
+  color: "#0D0D0D"
+  image: assets/icon/splash-logo.png
+  android_12:
+    color: "#0D0D0D"
+    image: assets/icon/android-icon-foreground.png
+    icon_background_color: "#0D0D0D"

@@ -2,21 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/config/app_config.dart';
+import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
-import '../data/cardio_repository.dart';
+import '../application/cardio_controller.dart';
+import '../data/cardio_service.dart';
 import '../domain/cardio_session.dart';
+import '../domain/cardio_tracking.dart';
 
 final cardioProvider =
     FutureProvider.autoDispose<List<CardioSession>>((ref) async {
-  if (!AppConfig.hasSupabase) return [];
-  final client = Supabase.instance.client;
-  final user = client.auth.currentUser;
-  return user == null
-      ? []
-      : CardioRepository(client).recent(authenticatedUserId: user.id);
+  final service = ref.watch(cardioServiceProvider);
+  if (service == null) {
+    return const [];
+  }
+  final rows = await service.history(limit: 30);
+  return [for (final r in rows) CardioSession.fromJson(r)];
+});
+
+final cardioStatsProvider = FutureProvider.autoDispose<CardioStats?>((ref) async {
+  final service = ref.watch(cardioServiceProvider);
+  return service?.stats();
 });
 
 class CardioScreen extends ConsumerWidget {
@@ -32,6 +38,7 @@ class CardioScreen extends ConsumerWidget {
       backgroundColor: colors.card,
       onRefresh: () async {
         ref.invalidate(cardioProvider);
+        ref.invalidate(cardioStatsProvider);
         await ref.read(cardioProvider.future);
       },
       child: ListView(
@@ -43,6 +50,8 @@ class CardioScreen extends ConsumerWidget {
             subtitle: 'Track duration, distance and effort',
             icon: Icons.directions_run,
           ),
+          const _ResumeBanner(),
+          _StatsStrip(stats: ref.watch(cardioStatsProvider).valueOrNull),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
             child: FitTrackSectionLabel(title: 'Start an Activity'),
@@ -57,42 +66,12 @@ class CardioScreen extends ConsumerWidget {
               mainAxisSpacing: 10,
               childAspectRatio: .88,
               children: const [
-                _ActivityTile(
-                    type: 'running',
-                    label: 'Running',
-                    hint: 'Road · Treadmill',
-                    icon: Icons.directions_run,
-                    accent: AppColors.cardio),
-                _ActivityTile(
-                    type: 'cycling',
-                    label: 'Cycling',
-                    hint: 'Indoor · Outdoor',
-                    icon: Icons.directions_bike,
-                    accent: Color(0xFF4CAF50)),
-                _ActivityTile(
-                    type: 'walking',
-                    label: 'Walking',
-                    hint: 'Walk · Hike',
-                    icon: Icons.directions_walk,
-                    accent: Color(0xFF2196F3)),
-                _ActivityTile(
-                    type: 'hiit',
-                    label: 'HIIT',
-                    hint: 'Intervals',
-                    icon: Icons.timer_outlined,
-                    accent: Color(0xFF9C27B0)),
-                _ActivityTile(
-                    type: 'swimming',
-                    label: 'Swimming',
-                    hint: 'Pool · Open water',
-                    icon: Icons.pool,
-                    accent: Color(0xFF00BCD4)),
-                _ActivityTile(
-                    type: 'other',
-                    label: 'Other',
-                    hint: 'Custom cardio',
-                    icon: Icons.favorite_outline,
-                    accent: Color(0xFF607D8B)),
+                _ActivityTile(type: 'running', label: 'Running', hint: 'Road · Treadmill', icon: Icons.directions_run, accent: AppColors.cardio),
+                _ActivityTile(type: 'cycling', label: 'Cycling', hint: 'Indoor · Outdoor', icon: Icons.directions_bike, accent: Color(0xFF4CAF50)),
+                _ActivityTile(type: 'walking', label: 'Walking', hint: 'Walk · Hike', icon: Icons.directions_walk, accent: Color(0xFF2196F3)),
+                _ActivityTile(type: 'hiit', label: 'HIIT', hint: 'Intervals', icon: Icons.timer_outlined, accent: Color(0xFF9C27B0)),
+                _ActivityTile(type: 'swimming', label: 'Swimming', hint: 'Pool · Open water', icon: Icons.pool, accent: Color(0xFF00BCD4)),
+                _ActivityTile(type: 'other', label: 'Other', hint: 'Custom cardio', icon: Icons.favorite_outline, accent: Color(0xFF607D8B)),
               ],
             ),
           ),
@@ -100,20 +79,16 @@ class CardioScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
             child: FitTrackSectionLabel(
               title: 'Recent Sessions',
-              action: sessions.valueOrNull == null
-                  ? null
-                  : '${sessions.valueOrNull!.length}',
+              action: sessions.valueOrNull == null ? null : '${sessions.valueOrNull!.length}',
               onAction: sessions.valueOrNull == null ? null : () {},
             ),
           ),
           sessions.when(
             loading: () => Padding(
               padding: const EdgeInsets.all(24),
-              child: Center(
-                  child: CircularProgressIndicator(color: colors.accent)),
+              child: Center(child: CircularProgressIndicator(color: colors.accent)),
             ),
-            error: (_, __) =>
-                const _Info(text: 'Unable to load cardio sessions.'),
+            error: (_, __) => const _Info(text: 'Unable to load cardio sessions.'),
             data: (items) {
               if (items.isEmpty) {
                 return const _Info(
@@ -123,8 +98,29 @@ class CardioScreen extends ConsumerWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
-                  children:
-                      items.map((item) => _SessionCard(session: item)).toList(),
+                  children: [
+                    for (final item in items)
+                      Dismissible(
+                        key: ValueKey(item.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(right: 20),
+                          alignment: Alignment.centerRight,
+                          decoration: BoxDecoration(
+                            color: colors.danger,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.delete_outline, color: Colors.white),
+                        ),
+                        onDismissed: (_) async {
+                          await ref.read(cardioServiceProvider)?.deleteSession(item.id);
+                          ref.invalidate(cardioProvider);
+                          ref.invalidate(cardioStatsProvider);
+                        },
+                        child: _SessionCard(session: item),
+                      ),
+                  ],
                 ),
               );
             },
@@ -242,8 +238,7 @@ class _SessionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    DateFormat('EEE · MMM d · h:mm a')
-                        .format(session.startedAt.toLocal()),
+                    DateFormat('EEE · MMM d · h:mm a').format(session.startedAt.toLocal()),
                     style: TextStyle(fontSize: 10, color: colors.muted),
                   ),
                   const SizedBox(height: 6),
@@ -311,6 +306,104 @@ class _Info extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: colors.muted),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResumeBanner extends ConsumerStatefulWidget {
+  const _ResumeBanner();
+
+  @override
+  ConsumerState<_ResumeBanner> createState() => _ResumeBannerState();
+}
+
+class _ResumeBannerState extends ConsumerState<_ResumeBanner> {
+  @override
+  void initState() {
+    super.initState();
+    // Restore a session that was running when the app was closed.
+    Future<void>(() => ref.read(cardioControllerProvider.notifier).restore())
+        .catchError((Object _) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = ref.watch(cardioControllerProvider);
+    if (active == null) {
+      return const SizedBox.shrink();
+    }
+    final colors = AppPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: InkWell(
+        onTap: () => context.push('/cardio/session?type=${active.type}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.accentTint,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.accent),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.timer_outlined, color: colors.accent),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '${cardioLabels[active.type] ?? 'Cardio'} in progress — tap to resume',
+                  style: TextStyle(fontWeight: FontWeight.w800, color: colors.text),
+                ),
+              ),
+              Icon(Icons.arrow_forward, size: 16, color: colors.muted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip({required this.stats});
+  final CardioStats? stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = stats;
+    if (s == null || s.totalSessions == 0) {
+      return const SizedBox.shrink();
+    }
+    final colors = AppPalette.of(context);
+    Widget cell(String value, String label) => Expanded(
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: colors.text,
+                ),
+              ),
+              Text(label, style: TextStyle(fontSize: 9, color: colors.muted, letterSpacing: 1.2)),
+            ],
+          ),
+        );
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          cell('${s.totalSessions}', 'SESSIONS · 30D'),
+          cell('${s.totalMinutes}', 'MINUTES'),
+          cell(s.totalDistanceKm.toStringAsFixed(1), 'KM'),
         ],
       ),
     );

@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/custom_icons.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
   final Widget child;
 
-  static const _paths = [
-    '/today',
-    '/workout',
-    '/nutrition',
-    '/cardio',
-    '/progress'
-  ];
+  static const _paths = ['/today', '/workout', '/nutrition', '/cardio', '/progress'];
 
   @override
   Widget build(BuildContext context) {
@@ -23,20 +18,13 @@ class AppShell extends StatelessWidget {
     );
     final selectedIndex = index < 0 ? 0 : index;
 
-    const icons = [
-      Icons.today_outlined,
-      Icons.fitness_center_outlined,
-      Icons.restaurant_outlined,
-      Icons.directions_run_outlined,
-      Icons.insights_outlined,
-    ];
-    const selectedIcons = [
-      Icons.today,
-      Icons.fitness_center,
-      Icons.restaurant,
-      Icons.directions_run,
-      Icons.insights,
-    ];
+    Widget tabIcon(int tab, Color color, {required bool focused}) => switch (tab) {
+          0 => TabTodayIcon(size: 26, color: color, focused: focused),
+          1 => TabWorkoutIcon(size: 26, color: color, focused: focused),
+          2 => TabNutritionIcon(size: 26, color: color, focused: focused),
+          3 => TabCardioIcon(size: 26, color: color, focused: focused),
+          _ => TabProgressIcon(size: 26, color: color, focused: focused),
+        };
     const domains = [
       AppColors.recovery,
       AppColors.workout,
@@ -74,13 +62,7 @@ class AppShell extends StatelessWidget {
                         AnimatedScale(
                           duration: const Duration(milliseconds: 150),
                           scale: selected ? 1.08 : 1,
-                          child: Icon(
-                            selected
-                                ? selectedIcons[tabIndex]
-                                : icons[tabIndex],
-                            size: 26,
-                            color: color,
-                          ),
+                          child: tabIcon(tabIndex, color, focused: selected),
                         ),
                         const SizedBox(height: 5),
                         AnimatedContainer(
