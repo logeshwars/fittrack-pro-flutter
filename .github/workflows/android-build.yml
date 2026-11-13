@@ -155,3 +155,39 @@ jobs:
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Notify Telegram
+        # Runs on success and failure. Skipped on pull requests (no secrets)
+        # and until TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are configured.
+        if: ${{ always() && github.event_name != 'pull_request' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_CHAT_ID" ]]; then
+            echo "::notice::Telegram secrets not set; skipping notification"
+            exit 0
+          fi
+          APK=build/app/outputs/flutter-apk/app-debug.apk
+          if [[ "$JOB_STATUS" == "success" ]]; then ICON="✅"; WORD="succeeded"; else ICON="❌"; WORD="$JOB_STATUS"; fi
+          TEXT="$ICON FitTrack Pro Android build $WORD
+          Branch: $BRANCH (${SHA:0:7})
+          ${COMMIT_MSG%%$'\n'*}
+          $RUN_URL"
+          API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
+          # Bot API accepts uploads up to 50 MB; larger APKs get a download link instead.
+          if [[ "$JOB_STATUS" == "success" && -f "$APK" && $(stat -c%s "$APK") -lt 52428800 ]]; then
+            curl -sS --fail -o /dev/null "$API/sendDocument" \
+              -F chat_id="$TELEGRAM_CHAT_ID" -F document=@"$APK" -F caption="$TEXT" \
+              || echo "::warning::Telegram upload failed"
+          else
+            [[ "$JOB_STATUS" == "success" ]] && TEXT="$TEXT
+          (APK over 50 MB: download it from the Artifacts section of the run page)"
+            curl -sS --fail -o /dev/null "$API/sendMessage" \
+              --data-urlencode chat_id="$TELEGRAM_CHAT_ID" --data-urlencode text="$TEXT" \
+              || echo "::warning::Telegram message failed"
+          fi
