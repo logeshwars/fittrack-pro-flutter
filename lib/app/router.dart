@@ -123,6 +123,10 @@ final appRouter = GoRouter(
         path: '/workout/preset-new',
         builder: (context, state) => const PresetEditorScreen()),
     GoRoute(
+        path: '/workout/preset-edit/:id',
+        builder: (context, state) =>
+            PresetEditorScreen(presetId: state.pathParameters['id']!)),
+    GoRoute(
         path: '/workout/preset/:id',
         builder: (context, state) =>
             WorkoutPresetScreen(presetId: state.pathParameters['id']!)),
