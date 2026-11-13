@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/data/service_providers.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
+import '../data/preset_service.dart';
 import '../domain/workout_models.dart';
-import 'workout_screen.dart' show workoutHistoryProvider;
+import 'workout_screen.dart' show allExercisesProvider, workoutHistoryProvider;
+import 'workout_template_screens.dart' show startSessionFor;
 
 final _workoutDetailProvider =
     FutureProvider.autoDispose.family<Workout?, String>((ref, id) async {
@@ -42,30 +49,80 @@ class WorkoutHistoryDetailScreen extends ConsumerWidget {
   }
 }
 
+/// Bottom-sheet body that renames a workout; owns its text controller.
+class _RenameSheet extends StatefulWidget {
+  const _RenameSheet({required this.initial});
+  final String initial;
+
+  @override
+  State<_RenameSheet> createState() => _RenameSheetState();
+}
+
+class _RenameSheetState extends State<_RenameSheet> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              context.t('workout:sdRenameTitle'),
+              style: FitTrackText.titleLg.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: FitTrackSpacing.md),
+          FitTrackTextField(
+            label: context.t('workout:sdNameLabel'),
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+          ),
+          const SizedBox(height: FitTrackSpacing.lg),
+          FitTrackButton(
+            label: context.t('common:save'),
+            fullWidth: true,
+            onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          ),
+          const SizedBox(height: FitTrackSpacing.sm),
+          FitTrackButton(
+            label: context.t('common:cancel'),
+            variant: FitTrackButtonVariant.ghost,
+            fullWidth: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WorkoutDetail extends ConsumerWidget {
   const _WorkoutDetail({required this.workout});
   final Workout workout;
 
   Future<void> _rename(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController(text: workout.name);
-    final name = await showDialog<String>(
+    final name = await showFitTrackSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Rename workout'),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (_) => _RenameSheet(initial: workout.name),
     );
-    controller.dispose();
     if (name == null || name.isEmpty) {
       return;
     }
@@ -76,24 +133,16 @@ class _WorkoutDetail extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final router = GoRouter.of(context);
-    final ok = await showDialog<bool>(
+    final ok = await showFitTrackConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete workout?'),
-        content: const Text('This removes the workout and all its sets.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: context.t('workout:sdDeleteTitle'),
+      message: context.t('workout:sdDeleteMsg'),
+      confirmLabel: context.t('common:delete'),
+      cancelLabel: context.t('common:cancel'),
+      icon: Icons.delete_outline,
+      destructive: true,
     );
-    if (ok != true) {
+    if (!ok) {
       return;
     }
     await ref.read(workoutServiceProvider)?.deleteWorkout(workout.id);
@@ -101,68 +150,201 @@ class _WorkoutDetail extends ConsumerWidget {
     router.pop();
   }
 
+  Future<void> _repeat(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final noMatch = context.t('workout:sdRepeatNoMatch');
+    final all = await ref.read(allExercisesProvider.future);
+    if (!context.mounted) {
+      return;
+    }
+    final known = {for (final e in all) e.id};
+    final order = <String>[];
+    final counts = <String, int>{};
+    final names = <String, String>{};
+    final groups = <String, String>{};
+    for (final s in workout.sets) {
+      if (!known.contains(s.exerciseId)) {
+        continue;
+      }
+      if (!counts.containsKey(s.exerciseId)) {
+        order.add(s.exerciseId);
+      }
+      counts[s.exerciseId] = (counts[s.exerciseId] ?? 0) + 1;
+      names[s.exerciseId] = s.exerciseName ?? '';
+      groups[s.exerciseId] = s.muscleGroup ?? '';
+    }
+    if (order.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(noMatch)));
+      return;
+    }
+    final preset = [
+      for (final id in order)
+        PresetExercise(
+          exerciseId: id,
+          exerciseName: names[id]!,
+          muscleGroup: groups[id]!,
+          defaultSets: counts[id]!,
+        ),
+    ];
+    await startSessionFor(
+      context,
+      ref,
+      workout.name,
+      preset,
+      [
+        for (final e in all)
+          if (counts.containsKey(e.id)) e,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final duration = workout.finishedAt == null
-        ? 0
-        : workout.finishedAt!.difference(workout.startedAt).inMinutes;
+    final c = AppPalette.of(context);
+    final minutes = workout.finishedAt?.difference(workout.startedAt).inMinutes;
     final exercises = <String, List<WorkoutSet>>{};
     for (final set in workout.sets) {
-      exercises.putIfAbsent(set.exerciseName ?? 'Exercise', () => []).add(set);
+      exercises
+          .putIfAbsent(
+            set.exerciseName ?? context.t('workout:sdExerciseFallback'),
+            () => [],
+          )
+          .add(set);
     }
+    final prCount = workout.sets.where((s) => s.isPersonalRecord).length;
+    final allRpe =
+        workout.sets.isNotEmpty && workout.sets.every((s) => s.rpe != null);
+    const xpComplete = 50;
+    final xpRpe = allRpe ? 10 : 0;
+    final xpPr = prCount * 100;
+    final xp = xpComplete + xpRpe + xpPr;
+    final kg = context.t('workout:kgUnit');
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 44),
+      padding: const EdgeInsets.only(bottom: FitTrackSpacing.xxl),
       children: [
         DetailHeader(
           title: workout.name,
-          subtitle: DateFormat('EEEE, MMM d').format(workout.startedAt),
+          subtitle:
+              DateFormat("EEE d MMM '·' h:mm a").format(workout.startedAt),
           onBack: () => context.pop(),
           trailing: PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
+            tooltip: context.t('workout:sdMore'),
+            icon: Icon(Icons.more_vert, color: c.ink),
+            color: c.surface,
             onSelected: (value) {
               if (value == 'rename') {
-                _rename(context, ref);
+                unawaited(_rename(context, ref));
               } else {
-                _delete(context, ref);
+                unawaited(_delete(context, ref));
               }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'rename', child: Text('Rename')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'rename',
+                child: Text(context.t('workout:sdRename')),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(
+                  context.t('common:delete'),
+                  style: TextStyle(color: c.textBad),
+                ),
+              ),
             ],
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(
+            FitTrackSpacing.lg,
+            FitTrackSpacing.md,
+            FitTrackSpacing.lg,
+            0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: _Metric(
-                  value: '${workout.sets.length}',
-                  label: 'SETS',
+              if (workout.isFinished) ...[
+                _CompleteCard(xp: xp),
+                const SizedBox(height: FitTrackSpacing.md),
+              ],
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 2.3,
+                children: [
+                  _Metric(
+                    label: context.t('workout:sdDuration'),
+                    value: minutes == null ? '—' : '$minutes',
+                    unit: context.t('workout:minUnit'),
+                  ),
+                  _Metric(
+                    label: context.t('workout:volumeLabel'),
+                    value: NumberFormat('#,##0')
+                        .format(workout.totalVolumeKg.round()),
+                    unit: kg,
+                  ),
+                  _Metric(
+                    label: context.t('workout:sdSets'),
+                    value: '${workout.sets.length}',
+                  ),
+                  _Metric(
+                    label: context.t('workout:sdRecords'),
+                    value: '$prCount',
+                    unit: context.t('workout:prBadge'),
+                  ),
+                ],
+              ),
+              if (workout.isFinished) ...[
+                const SizedBox(height: FitTrackSpacing.md),
+                _XpCard(
+                  complete: xpComplete,
+                  rpe: xpRpe,
+                  pr: xpPr,
+                  prCount: prCount,
+                ),
+              ],
+              const SizedBox(height: FitTrackSpacing.md),
+              FitTrackCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _CardTitle(
+                      title: context.t('workout:exercisesLabel'),
+                      trailing: '${exercises.length}',
+                    ),
+                    for (final entry in exercises.entries)
+                      _ExerciseHistory(name: entry.key, sets: entry.value),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _Metric(
-                  value: '$duration',
-                  label: 'MIN',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _Metric(
-                  value: '${workout.totalVolumeKg.round()}',
-                  label: 'KG VOL',
-                  color: AppColors.workout,
-                ),
+              const SizedBox(height: FitTrackSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: FitTrackButton(
+                      label: context.t('workout:sdRepeat'),
+                      variant: FitTrackButtonVariant.secondary,
+                      fullWidth: true,
+                      onPressed: () => unawaited(_repeat(context, ref)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FitTrackButton(
+                      label: context.t('workout:sdDone'),
+                      fullWidth: true,
+                      onPressed: () => context.pop(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        for (final entry in exercises.entries)
-          _ExerciseHistory(name: entry.key, sets: entry.value),
       ],
     );
   }
@@ -185,43 +367,45 @@ class DetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 20, 14),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: colors.header,
-        border: Border(bottom: BorderSide(color: colors.border)),
+        color: c.header,
+        border: Border(bottom: BorderSide(color: c.line)),
       ),
       child: Row(
         children: [
-          InkWell(
-            onTap: onBack,
-            borderRadius: BorderRadius.circular(18),
-            child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Icon(Icons.arrow_back, color: colors.text, size: 19),
-            ),
+          FitTrackIconButton(
+            icon: Icons.arrow_back,
+            color: c.ink,
+            semanticLabel: context.t('settings:backLabel'),
+            onPressed: onBack,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: colors.text,
+                Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    style: FitTrackText.titleLg.copyWith(
+                      color: c.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 10, color: colors.muted),
+                  style: FitTrackText.label.copyWith(color: c.muted),
                 ),
               ],
             ),
@@ -233,47 +417,213 @@ class DetailHeader extends StatelessWidget {
   }
 }
 
-class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.value,
-    required this.label,
-    this.color,
-  });
-
-  final String value;
-  final String label;
-  final Color? color;
+class _CompleteCard extends StatelessWidget {
+  const _CompleteCard({required this.xp});
+  final int xp;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(10),
+    final c = AppPalette.of(context);
+    return Semantics(
+      container: true,
+      label: '${context.t('workout:sdComplete')}, '
+          '+$xp ${context.t('workout:sdXpEarned')}',
+      child: ExcludeSemantics(
+        child: Container(
+          padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
+          decoration: BoxDecoration(
+            color: c.ok,
+            borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+            border: Border.all(color: c.ok),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.t('workout:sdComplete'),
+                style: FitTrackText.caption.copyWith(
+                  color: c.bg,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: FitTrackSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    '+$xp',
+                    style: FitTrackText.hero.copyWith(
+                      color: c.bg,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: FitTrackSpacing.sm),
+                  Text(
+                    context.t('workout:sdXpEarned'),
+                    style: FitTrackText.body.copyWith(color: c.bg),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _XpCard extends StatelessWidget {
+  const _XpCard({
+    required this.complete,
+    required this.rpe,
+    required this.pr,
+    required this.prCount,
+  });
+  final int complete;
+  final int rpe;
+  final int pr;
+  final int prCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+
+    Widget row(String label, int value) => Container(
+          constraints: const BoxConstraints(minHeight: FitTrackSpacing.touchMin),
+          padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.md + 2),
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: c.line)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: FitTrackText.body.copyWith(color: c.ink),
+                ),
+              ),
+              Text(
+                '+$value',
+                style: FitTrackText.body.copyWith(
+                  color: c.ink,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    return FitTrackCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: color ?? colors.text,
+          _CardTitle(title: context.t('workout:sdXpBreakdown')),
+          row(context.t('workout:sdXpComplete'), complete),
+          if (rpe > 0) row(context.t('workout:sdXpRpe'), rpe),
+          if (pr > 0)
+            row(
+              prCount > 1
+                  ? context.t('workout:sdXpPrMany', args: {'count': prCount})
+                  : context.t('workout:sdXpPr'),
+              pr,
             ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-              color: colors.faint,
-              letterSpacing: 1,
-            ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _CardTitle extends StatelessWidget {
+  const _CardTitle({required this.title, this.trailing});
+  final String title;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return SizedBox(
+      height: FitTrackSpacing.touchMin,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.md + 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: FitTrackText.title.copyWith(
+                  color: c.ink,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (trailing != null)
+              Text(
+                trailing!,
+                style: FitTrackText.caption.copyWith(color: c.muted),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value, this.unit});
+
+  final String label;
+  final String value;
+  final String? unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Semantics(
+      container: true,
+      label: '$label, $value${unit == null ? '' : ' $unit'}',
+      child: ExcludeSemantics(
+        child: Container(
+          padding: const EdgeInsets.all(FitTrackSpacing.md),
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BorderRadius.circular(FitTrackRadius.md),
+            border: Border.all(color: c.line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: FitTrackText.caption.copyWith(
+                  color: c.muted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: FitTrackSpacing.xs),
+              Text.rich(
+                TextSpan(
+                  text: value,
+                  style: FitTrackText.stat.copyWith(
+                    color: c.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  children: [
+                    if (unit != null)
+                      TextSpan(
+                        text: ' $unit',
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -284,106 +634,64 @@ class _ExerciseHistory extends StatelessWidget {
   final String name;
   final List<WorkoutSet> sets;
 
+  String _setText(WorkoutSet s) {
+    if (s.reps == null && s.durationSeconds != null) {
+      return '${s.durationSeconds}s';
+    }
+    final w = s.weightKg;
+    final weight = w == null
+        ? '—'
+        : (w == w.roundToDouble() ? w.round().toString() : w.toStringAsFixed(1));
+    return '$weight × ${s.reps ?? '—'}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
+    final kg = context.t('workout:kgUnit');
+    final hasPr = sets.any((s) => s.isPersonalRecord);
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: FitTrackSpacing.md + 2,
+        vertical: 10,
       ),
-      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.line)),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Align(
-              alignment: Alignment.centerLeft,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: FitTrackText.body.copyWith(
+                    color: c.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (hasPr)
+                FitTrackBadge(
+                  label: context.t('workout:prBadge'),
+                  tone: FitTrackBadgeTone.ok,
+                  icon: Icons.emoji_events_outlined,
+                ),
+            ],
+          ),
+          const SizedBox(height: FitTrackSpacing.xs),
+          Semantics(
+            label: [
+              for (final s in sets) '${_setText(s)} $kg',
+            ].join(', '),
+            child: ExcludeSemantics(
               child: Text(
-                name,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: colors.text,
-                ),
+                [for (final s in sets) _setText(s)].join(' · '),
+                style: FitTrackText.caption.copyWith(color: c.muted),
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            color: colors.cardAlt,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 42,
-                  child: Text(
-                    'SET',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9, color: colors.faint),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'WEIGHT',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9, color: colors.faint),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'REPS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 9, color: colors.faint),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          for (var i = 0; i < sets.length; i++)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                border: i == 0
-                    ? null
-                    : Border(top: BorderSide(color: colors.border)),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 42,
-                    child: Text(
-                      '${i + 1}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.muted,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      '${sets[i].weightKg?.toStringAsFixed(1) ?? '—'} kg',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.text,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      '${sets[i].reps ?? '—'}${sets[i].isPersonalRecord ? '  PR' : ''}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: colors.text,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -396,24 +704,28 @@ class _Missing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(FitTrackSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.fitness_center, size: 48, color: colors.border2),
-            const SizedBox(height: 12),
+            Icon(Icons.fitness_center, size: 48, color: c.lineStrong),
+            const SizedBox(height: FitTrackSpacing.md),
             Text(
-              'Workout not found',
-              style: TextStyle(
-                color: colors.muted,
-                fontWeight: FontWeight.w800,
+              context.t('workout:sdNotFound'),
+              style: FitTrackText.body.copyWith(
+                color: c.muted,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 16),
-            TextButton(onPressed: onBack, child: const Text('Go back')),
+            const SizedBox(height: FitTrackSpacing.lg),
+            FitTrackButton(
+              label: context.t('workout:sdGoBack'),
+              variant: FitTrackButtonVariant.secondary,
+              onPressed: onBack,
+            ),
           ],
         ),
       ),
