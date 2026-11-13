@@ -31,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             _TopBar(
               onBack: () => context.pop(),
-              onSettings: () => context.push('/settings/app-settings'),
+              onSettings: () => context.push('/settings'),
             ),
             Expanded(
               child: dashboard.when(

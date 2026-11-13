@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/auth/auth_providers.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
@@ -12,10 +13,13 @@ import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../../../core/theme/theme_controller.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
 import '../../reminders/application/reminders_controller.dart';
 import '../../reminders/domain/reminder_catalog.dart';
 import '../../reminders/domain/reminder_schedule.dart';
+import '../../subscription/application/subscription_controller.dart';
 import '../../workouts/domain/workout_metrics.dart';
+import '../data/goal_targets.dart';
 import '../../../core/l10n/language_controller.dart';
 import '../../../core/l10n/translations.dart';
 
@@ -1575,6 +1579,320 @@ class _LanguageRow extends StatelessWidget {
   }
 }
 
+/// Device-held values the settings hub shows next to its rows.
+final _hubPrefsProvider = FutureProvider.autoDispose<
+    ({String goal, String units, int rest})>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return (
+    goal: prefs.getString('fittrack_personal_goal') ?? 'maintain',
+    units: prefs.getString('fittrack_units') ?? 'metric',
+    rest: prefs.getInt('fittrack_default_rest') ?? 90,
+  );
+});
+
+/// App version shown at the foot of the hub. Pass `--dart-define=APP_VERSION=`
+/// from CI so it follows pubspec.yaml.
+const _appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '1.0.0');
+
+class SettingsScreen extends ConsumerWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = AppPalette.of(context);
+    final prefs = ref.watch(_hubPrefsProvider).valueOrNull;
+    final name = ref.watch(dashboardProvider).valueOrNull?.displayName;
+    final goals = ref.watch(goalTargetsProvider).valueOrNull;
+    final sub = ref.watch(subscriptionProvider);
+    final reminders = ref.watch(remindersProvider).valueOrNull;
+    final themeMode = ref.watch(themeModeProvider);
+    final language = ref.watch(languageProvider);
+
+    String goalName(String goal) => switch (goal) {
+          'bulk' => context.t('settings:goalBulk'),
+          'cut' => context.t('settings:goalCut'),
+          _ => context.t('settings:goalMaintain'),
+        };
+    final languageName = supportedLanguages
+        .where((l) => l.code == language)
+        .map((l) => l.nativeLabel)
+        .firstOrNull;
+    final themeName = switch (themeMode) {
+      ThemeMode.light => context.t('settings:light'),
+      ThemeMode.system => context.t('settings:system'),
+      ThemeMode.dark => context.t('settings:dark'),
+    };
+
+    Future<void> open(String route) async {
+      await context.push(route);
+      ref.invalidate(_hubPrefsProvider);
+      ref.invalidate(goalTargetsProvider);
+    }
+
+    return Scaffold(
+      backgroundColor: c.bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _Header(title: context.t('settings:hubTitle')),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.sm,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.xxl,
+                ),
+                children: [
+                  _HubGroup(
+                    title: context.t('settings:hubAccount'),
+                    rows: [
+                      _HubRow(
+                        title: context.t('profile:personalInfoTitle'),
+                        value: name,
+                        onTap: () => open('/settings/personal'),
+                      ),
+                      _HubRow(
+                        title: context.t('settings:goalsTitle'),
+                        value: goals == null || prefs == null
+                            ? null
+                            : context.t(
+                                'settings:hubGoalValue',
+                                args: {
+                                  'goal': goalName(prefs.goal),
+                                  'g': goals.protein.round(),
+                                },
+                              ),
+                        onTap: () => open('/settings/goals'),
+                      ),
+                      _HubRow(
+                        title: context.t('settings:hubSubscription'),
+                        value: sub.isTrial
+                            ? context.t(
+                                'settings:hubTrial',
+                                args: {
+                                  'days': sub.trialDaysLeft(DateTime.now()),
+                                },
+                              )
+                            : sub.isPro
+                                ? context.t('common:subPlanPro')
+                                : context.t('common:subPlanFree'),
+                        onTap: () => open('/subscription'),
+                      ),
+                    ],
+                  ),
+                  _HubGroup(
+                    title: context.t('settings:hubPreferences'),
+                    rows: [
+                      _HubRow(
+                        title: context.t('settings:appearanceAndLanguage'),
+                        value: [themeName, if (languageName != null) languageName]
+                            .join(' · '),
+                        onTap: () => open('/settings/theme'),
+                      ),
+                      _HubRow(
+                        title: context.t('settings:unitsTitle'),
+                        value: prefs == null
+                            ? null
+                            : context.t(
+                                prefs.units == 'imperial'
+                                    ? 'settings:imperial'
+                                    : 'settings:metric',
+                              ),
+                        onTap: () => open('/settings/app-settings'),
+                      ),
+                      _HubRow(
+                        title: context.t('settings:workoutRestTimer'),
+                        value: prefs == null
+                            ? null
+                            : _restLabel(prefs.rest),
+                        onTap: () => open('/settings/app-settings'),
+                      ),
+                      _HubRow(
+                        title: context.t('settings:hubReminders'),
+                        value: reminders == null
+                            ? null
+                            : reminders.enabledCount == 0
+                                ? context.t('settings:allRemindersOff')
+                                : context.t(
+                                    'settings:hubRemindersOn',
+                                    args: {'count': reminders.enabledCount},
+                                  ),
+                        onTap: () => open('/settings/alerts'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: FitTrackSpacing.lg),
+                  FitTrackCard(
+                    padding: EdgeInsets.zero,
+                    child: _HubRow(
+                      title: context.t('common:signOut'),
+                      danger: true,
+                      showChevron: false,
+                      first: true,
+                      onTap: () async {
+                        final auth = ref.read(authRepositoryProvider);
+                        if (auth != null) {
+                          await auth.signOut();
+                          if (context.mounted) context.go('/account');
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.md),
+                  Text(
+                    context.t(
+                      'settings:hubVersion',
+                      args: {'version': _appVersion},
+                    ),
+                    textAlign: TextAlign.center,
+                    style: FitTrackText.caption.copyWith(
+                      color: c.muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _restLabel(int seconds) {
+  final m = seconds ~/ 60;
+  final s = seconds % 60;
+  if (m == 0) return '${s}s';
+  return s == 0 ? '${m}m' : '${m}m ${s}s';
+}
+
+class _HubGroup extends StatelessWidget {
+  const _HubGroup({required this.title, required this.rows});
+
+  final String title;
+  final List<_HubRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: FitTrackSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(2, FitTrackSpacing.sm, 2, 6),
+            child: Semantics(
+              header: true,
+              child: Text(
+                title.toUpperCase(),
+                style: FitTrackText.caption.copyWith(
+                  color: c.muted,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+          FitTrackCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < rows.length; i++)
+                  rows[i].copyWith(first: i == 0),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HubRow extends StatelessWidget {
+  const _HubRow({
+    required this.title,
+    required this.onTap,
+    this.value,
+    this.danger = false,
+    this.showChevron = true,
+    this.first = false,
+  });
+
+  final String title;
+  final String? value;
+  final VoidCallback onTap;
+  final bool danger;
+  final bool showChevron;
+  final bool first;
+
+  _HubRow copyWith({bool? first}) => _HubRow(
+        title: title,
+        value: value,
+        onTap: onTap,
+        danger: danger,
+        showChevron: showChevron,
+        first: first ?? this.first,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Semantics(
+      button: true,
+      label: [title, if (value != null) value!].join(', '),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FitTrackSpacing.lg - 2,
+            ),
+            decoration: BoxDecoration(
+              border: first ? null : Border(top: BorderSide(color: c.line)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: FitTrackText.body.copyWith(
+                      color: danger ? c.textBad : c.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (value != null) ...[
+                  const SizedBox(width: FitTrackSpacing.md),
+                  Flexible(
+                    child: Text(
+                      value!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: FitTrackText.label.copyWith(
+                        color: c.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+                if (showChevron) ...[
+                  const SizedBox(width: FitTrackSpacing.sm),
+                  Icon(Icons.chevron_right, size: 20, color: c.faint),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
 
@@ -1813,14 +2131,12 @@ class _ChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
+    return FitTrackCard(
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(FitTrackRadius.lg - 1),
+        child: Column(children: children),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: children),
     );
   }
 }
@@ -1843,52 +2159,56 @@ class _ChoiceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-        decoration: BoxDecoration(
-          color: active ? colors.accentTint : Colors.transparent,
-          border:
-              last ? null : Border(bottom: BorderSide(color: colors.border2)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: active ? colors.accent : colors.text,
-                    ),
-                  ),
-                  if (subtitle != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        subtitle!,
-                        style: TextStyle(fontSize: 11, color: colors.faint),
-                      ),
-                    ),
-                ],
-              ),
+    return Semantics(
+      button: true,
+      selected: active,
+      inMutuallyExclusiveGroup: true,
+      label: [title, if (subtitle != null) subtitle!].join(', '),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FitTrackSpacing.lg - 2,
+              vertical: FitTrackSpacing.sm,
             ),
-            if (active)
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: colors.accent,
-                  shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              color: active ? colors.accentTint : Colors.transparent,
+              border: last ? null : Border(bottom: BorderSide(color: colors.line)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: FitTrackText.body.copyWith(
+                          color: colors.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            subtitle!,
+                            style: FitTrackText.caption.copyWith(
+                              color: colors.muted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Icon(Icons.check, size: 11, color: colors.accentText),
-              ),
-          ],
+                if (active)
+                  Icon(Icons.check, size: 20, color: colors.accentText),
+              ],
+            ),
+          ),
         ),
       ),
     );

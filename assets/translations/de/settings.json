@@ -140,5 +140,14 @@
   "goalInvalidValue": "Gib eine positive Zahl ein.",
   "goalSavedDevice": "Ziele auf diesem Gerät gespeichert.",
   "goalSavedSynced": "Ziele gespeichert. Dein Proteinziel wird automatisch synchronisiert.",
-  "goalSavedRetry": "Ziele auf diesem Gerät gespeichert. Die Synchronisierung wird wiederholt."
+  "goalSavedRetry": "Ziele auf diesem Gerät gespeichert. Die Synchronisierung wird wiederholt.",
+  "hubTitle": "Einstellungen",
+  "hubAccount": "Konto",
+  "hubPreferences": "Präferenzen",
+  "hubGoalValue": "{{goal}} · {{g}} g Protein",
+  "hubSubscription": "Abonnement",
+  "hubTrial": "Test · noch {{days}} Tage",
+  "hubReminders": "Erinnerungen",
+  "hubRemindersOn": "{{count}} an",
+  "hubVersion": "FitTrack Pro {{version}}"
 }

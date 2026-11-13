@@ -140,5 +140,14 @@
   "goalInvalidValue": "أدخل رقمًا موجبًا.",
   "goalSavedDevice": "تم حفظ الأهداف على هذا الجهاز.",
   "goalSavedSynced": "تم حفظ الأهداف. تتم مزامنة هدف البروتين تلقائيًا.",
-  "goalSavedRetry": "تم حفظ الأهداف على هذا الجهاز. ستُعاد المزامنة."
+  "goalSavedRetry": "تم حفظ الأهداف على هذا الجهاز. ستُعاد المزامنة.",
+  "hubTitle": "الإعدادات",
+  "hubAccount": "الحساب",
+  "hubPreferences": "التفضيلات",
+  "hubGoalValue": "{{goal}} · {{g}} غ بروتين",
+  "hubSubscription": "الاشتراك",
+  "hubTrial": "تجربة · متبقي {{days}} يومًا",
+  "hubReminders": "التذكيرات",
+  "hubRemindersOn": "{{count}} مفعّل",
+  "hubVersion": "FitTrack Pro {{version}}"
 }

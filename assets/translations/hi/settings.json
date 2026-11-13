@@ -140,5 +140,14 @@
   "goalInvalidValue": "एक धनात्मक संख्या दर्ज करें।",
   "goalSavedDevice": "लक्ष्य इस डिवाइस पर सेव हुए।",
   "goalSavedSynced": "लक्ष्य सेव हुए। आपका प्रोटीन लक्ष्य अपने आप सिंक होता है।",
-  "goalSavedRetry": "लक्ष्य इस डिवाइस पर सेव हुए। सिंक दोबारा कोशिश करेगा।"
+  "goalSavedRetry": "लक्ष्य इस डिवाइस पर सेव हुए। सिंक दोबारा कोशिश करेगा।",
+  "hubTitle": "सेटिंग्स",
+  "hubAccount": "खाता",
+  "hubPreferences": "पसंद",
+  "hubGoalValue": "{{goal}} · {{g}} ग्राम प्रोटीन",
+  "hubSubscription": "सदस्यता",
+  "hubTrial": "ट्रायल · {{days}} दिन बाकी",
+  "hubReminders": "रिमाइंडर",
+  "hubRemindersOn": "{{count}} चालू",
+  "hubVersion": "FitTrack Pro {{version}}"
 }

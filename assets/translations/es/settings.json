@@ -140,5 +140,14 @@
   "goalInvalidValue": "Introduce un número positivo.",
   "goalSavedDevice": "Metas guardadas en este dispositivo.",
   "goalSavedSynced": "Metas guardadas. Tu meta de proteína se sincroniza automáticamente.",
-  "goalSavedRetry": "Metas guardadas en este dispositivo. La sincronización se reintentará."
+  "goalSavedRetry": "Metas guardadas en este dispositivo. La sincronización se reintentará.",
+  "hubTitle": "Ajustes",
+  "hubAccount": "Cuenta",
+  "hubPreferences": "Preferencias",
+  "hubGoalValue": "{{goal}} · {{g}} g de proteína",
+  "hubSubscription": "Suscripción",
+  "hubTrial": "Prueba · quedan {{days}} días",
+  "hubReminders": "Recordatorios",
+  "hubRemindersOn": "{{count}} activos",
+  "hubVersion": "FitTrack Pro {{version}}"
 }

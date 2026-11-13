@@ -92,6 +92,8 @@ final appRouter = GoRouter(
         path: '/progress/weight',
         builder: (context, state) => const WeightScreen()),
     GoRoute(
+        path: '/settings', builder: (context, state) => const SettingsScreen()),
+    GoRoute(
         path: '/settings/personal',
         builder: (context, state) => const PersonalSettingsScreen()),
     GoRoute(

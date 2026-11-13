@@ -140,5 +140,14 @@
   "goalInvalidValue": "நேர்மறை எண்ணை உள்ளிடவும்.",
   "goalSavedDevice": "இலக்குகள் இந்த சாதனத்தில் சேமிக்கப்பட்டன.",
   "goalSavedSynced": "இலக்குகள் சேமிக்கப்பட்டன. உங்கள் புரத இலக்கு தானாக ஒத்திசைக்கப்படும்.",
-  "goalSavedRetry": "இலக்குகள் இந்த சாதனத்தில் சேமிக்கப்பட்டன. ஒத்திசைவு மீண்டும் முயற்சிக்கும்."
+  "goalSavedRetry": "இலக்குகள் இந்த சாதனத்தில் சேமிக்கப்பட்டன. ஒத்திசைவு மீண்டும் முயற்சிக்கும்.",
+  "hubTitle": "அமைப்புகள்",
+  "hubAccount": "கணக்கு",
+  "hubPreferences": "விருப்பங்கள்",
+  "hubGoalValue": "{{goal}} · {{g}} கி புரதம்",
+  "hubSubscription": "சந்தா",
+  "hubTrial": "சோதனை · {{days}} நாட்கள் மீதம்",
+  "hubReminders": "நினைவூட்டல்கள்",
+  "hubRemindersOn": "{{count}} இயக்கத்தில்",
+  "hubVersion": "FitTrack Pro {{version}}"
 }

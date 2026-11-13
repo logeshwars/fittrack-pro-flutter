@@ -140,5 +140,14 @@
   "goalInvalidValue": "正の数を入力してください。",
   "goalSavedDevice": "目標をこのデバイスに保存しました。",
   "goalSavedSynced": "目標を保存しました。たんぱく質の目標は自動的に同期されます。",
-  "goalSavedRetry": "目標をこのデバイスに保存しました。同期は再試行されます。"
+  "goalSavedRetry": "目標をこのデバイスに保存しました。同期は再試行されます。",
+  "hubTitle": "設定",
+  "hubAccount": "アカウント",
+  "hubPreferences": "設定項目",
+  "hubGoalValue": "{{goal}} · たんぱく質{{g}} g",
+  "hubSubscription": "サブスクリプション",
+  "hubTrial": "トライアル · 残り{{days}}日",
+  "hubReminders": "リマインダー",
+  "hubRemindersOn": "{{count}}件オン",
+  "hubVersion": "FitTrack Pro {{version}}"
 }
