@@ -4,16 +4,19 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 import '../application/subscription_controller.dart';
 import '../data/purchase_gateway.dart';
 import '../domain/subscription_state.dart';
 
-const _benefits = <(IconData, String)>[
-  (Icons.photo_camera_outlined, 'Unlimited AI food photo scans'),
-  (Icons.insights_outlined, 'Full analytics and consistency tracking'),
-  (Icons.emoji_events_outlined, 'Leaderboards and achievements'),
-  (Icons.lock_open_outlined, 'Everything you already logged stays free'),
+const _benefits = <String>[
+  'common:payBenefitScans',
+  'common:payBenefitAnalytics',
+  'common:payBenefitLeaderboards',
+  'common:payBenefitFree',
 ];
 
 class PaywallScreen extends ConsumerStatefulWidget {
@@ -28,9 +31,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _busy = false;
 
   Future<void> _run(
-      Future<void> Function() action, String successMessage) async {
+    Future<void> Function() action,
+    String successMessage,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final noActive = context.t('common:payNoActive');
     setState(() => _busy = true);
     try {
       await action();
@@ -41,9 +47,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         messenger.showSnackBar(SnackBar(content: Text(successMessage)));
         router.pop();
       } else {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('No active subscription was found.')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(noActive)));
       }
     } on PurchaseCancelled {
       // The user closed the store sheet.
@@ -61,75 +65,116 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final colors = AppPalette.of(context);
     final plans = ref.watch(planOffersProvider);
     final isPro = ref.watch(isProProvider);
+    final offers = plans.valueOrNull ?? const <PlanOffer>[];
+    final selected = offers.isEmpty
+        ? null
+        : offers.firstWhere(
+            (o) => o.id == _selectedId,
+            orElse: () => offers.first,
+          );
+    final trialDays = selected?.trialDays ?? 0;
 
     return Scaffold(
-      backgroundColor: colors.bg,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: Column(
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: IconButton(
-                onPressed: () => context.pop(),
-                icon: Icon(Icons.close, color: colors.muted),
-                tooltip: 'Close',
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: FitTrackSpacing.sm,
+                  right: FitTrackSpacing.sm,
+                ),
+                child: FitTrackIconButton(
+                  icon: Icons.close,
+                  semanticLabel: context.t('common:close'),
+                  onPressed: () => context.pop(),
+                ),
               ),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.xxl,
+                  0,
+                  FitTrackSpacing.xxl,
+                  FitTrackSpacing.xxl,
+                ),
                 children: [
-                  Icon(Icons.workspace_premium_outlined,
-                      size: 52, color: AppColors.xp),
-                  const SizedBox(height: 14),
                   Text(
-                    'FitTrack Pro',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: colors.text),
+                    context.t('common:payEyebrow'),
+                    style: FitTrackText.caption.copyWith(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: FitTrackSpacing.sm),
                   Text(
-                    'Train smarter with everything unlocked.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: colors.muted),
+                    trialDays > 0
+                        ? context.t(
+                            'common:payTitleTrial',
+                            args: {'days': trialDays},
+                          )
+                        : context.t('common:payTitle'),
+                    style: FitTrackText.screenTitle.copyWith(
+                      color: colors.ink,
+                      fontWeight: FontWeight.w600,
+                      height: 1.15,
+                    ),
                   ),
-                  const SizedBox(height: 22),
-                  for (final (icon, text) in _benefits)
+                  const SizedBox(height: FitTrackSpacing.sm),
+                  Text(
+                    context.t('common:paySubtitle'),
+                    style: FitTrackText.body.copyWith(color: colors.muted),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.lg),
+                  for (final key in _benefits)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: FitTrackSpacing.sm,
+                      ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(icon, size: 20, color: colors.accent),
-                          const SizedBox(width: 12),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: Icon(
+                              Icons.check,
+                              size: 18,
+                              color: colors.ok,
+                            ),
+                          ),
+                          const SizedBox(width: FitTrackSpacing.md),
                           Expanded(
-                            child: Text(text,
-                                style: TextStyle(
-                                    fontSize: 14, color: colors.text)),
+                            child: Text(
+                              context.t(key),
+                              style: FitTrackText.body
+                                  .copyWith(color: colors.ink),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: FitTrackSpacing.lg),
                   if (isPro)
-                    _Notice(text: "You're already on FitTrack Pro.")
+                    _Notice(text: context.t('common:payAlreadyPro'))
                   else
                     plans.when(
                       loading: () => Padding(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(FitTrackSpacing.xxl),
                         child: Center(
-                            child: CircularProgressIndicator(
-                                color: colors.accent)),
+                          child: CircularProgressIndicator(
+                            color: colors.accent,
+                          ),
+                        ),
                       ),
                       error: (_, __) => _Retry(
-                          onRetry: () => ref.invalidate(planOffersProvider)),
+                        onRetry: () => ref.invalidate(planOffersProvider),
+                      ),
                       data: (offers) => offers.isEmpty
-                          ? const _Notice(
-                              text:
-                                  'Subscriptions are not available in this build yet.',
-                            )
+                          ? _Notice(text: context.t('common:payUnavailable'))
                           : _Plans(
                               offers: offers,
                               selectedId: _selectedId ?? offers.first.id,
@@ -140,37 +185,35 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                                 () => ref
                                     .read(subscriptionProvider.notifier)
                                     .purchase(plan),
-                                'Welcome to FitTrack Pro!',
+                                context.t('common:payWelcome'),
                               ),
                             ),
                     ),
-                  const SizedBox(height: 8),
-                  Center(
-                    child: TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _run(
-                                () => ref
-                                    .read(subscriptionProvider.notifier)
-                                    .restore(),
-                                'Purchases restored.',
-                              ),
-                      child: Text('Restore purchases',
-                          style: TextStyle(color: colors.muted)),
-                    ),
-                  ),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => context.pop(),
-                      child: Text(
-                        'NOT NOW',
-                        style: TextStyle(
-                          color: colors.accent,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
+                  const SizedBox(height: FitTrackSpacing.xs),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FitTrackButton(
+                        label: context.t('common:payRestore'),
+                        variant: FitTrackButtonVariant.ghost,
+                        size: FitTrackButtonSize.sm,
+                        onPressed: _busy
+                            ? null
+                            : () => _run(
+                                  () => ref
+                                      .read(subscriptionProvider.notifier)
+                                      .restore(),
+                                  context.t('common:payRestored'),
+                                ),
                       ),
-                    ),
+                      const SizedBox(width: FitTrackSpacing.lg),
+                      FitTrackButton(
+                        label: context.t('common:payNotNow'),
+                        variant: FitTrackButtonVariant.ghost,
+                        size: FitTrackButtonSize.sm,
+                        onPressed: () => context.pop(),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -200,114 +243,149 @@ class _Plans extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    final selected = offers.firstWhere((o) => o.id == selectedId,
-        orElse: () => offers.first);
+    final selected = offers.firstWhere(
+      (o) => o.id == selectedId,
+      orElse: () => offers.first,
+    );
     final monthly =
         offers.where((o) => o.period == PlanPeriod.monthly).firstOrNull;
+    final radius = BorderRadius.circular(FitTrackRadius.md);
+
+    String? caption(PlanOffer offer) {
+      switch (offer.period) {
+        case PlanPeriod.yearly:
+          final pct = monthly == null
+              ? 0
+              : yearlySavingsPercent(
+                  monthly: monthly.price,
+                  yearly: offer.price,
+                );
+          return pct > 0
+              ? context.t('common:paySaveBilled', args: {'pct': pct})
+              : context.t('common:payBilledYearly');
+        case PlanPeriod.monthly:
+          return context.t('common:payCancelAny');
+        case PlanPeriod.other:
+          return null;
+      }
+    }
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final offer in offers)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: InkWell(
-              onTap: busy ? null : () => onSelect(offer.id),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: offer.id == selected.id
-                        ? colors.accent
-                        : colors.border2,
-                    width: offer.id == selected.id ? 2 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      offer.id == selected.id
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color: offer.id == selected.id
-                          ? colors.accent
-                          : colors.faint,
+            child: Semantics(
+              button: true,
+              selected: offer.id == selected.id,
+              inMutuallyExclusiveGroup: true,
+              label: '${offer.title}, ${offer.priceString}',
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: busy ? null : () => onSelect(offer.id),
+                  borderRadius: radius,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 72),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: offer.id == selected.id ? 13 : 14,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            offer.title,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: colors.text),
-                          ),
-                          if (offer.period == PlanPeriod.yearly &&
-                              monthly != null)
-                            Builder(builder: (_) {
-                              final pct = yearlySavingsPercent(
-                                monthly: monthly.price,
-                                yearly: offer.price,
-                              );
-                              return pct > 0
-                                  ? Text(
-                                      'Save $pct%',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.recovery,
-                                      ),
-                                    )
-                                  : const SizedBox.shrink();
-                            }),
-                        ],
+                    decoration: BoxDecoration(
+                      color: offer.id == selected.id
+                          ? colors.accentTint
+                          : colors.surface,
+                      borderRadius: radius,
+                      border: Border.all(
+                        color: offer.id == selected.id
+                            ? colors.accent
+                            : colors.lineStrong,
+                        width: offer.id == selected.id ? 2 : 1,
                       ),
                     ),
-                    Text(
-                      offer.priceString,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w900, color: colors.text),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: offer.id == selected.id
+                                  ? colors.accent
+                                  : colors.faint,
+                              width: offer.id == selected.id ? 6 : 2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: FitTrackSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                offer.title,
+                                style: FitTrackText.title.copyWith(
+                                  color: colors.ink,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (caption(offer) != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    caption(offer)!,
+                                    style: FitTrackText.caption.copyWith(
+                                      color: colors.muted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          offer.priceString,
+                          style: FitTrackText.titleLg.copyWith(
+                            color: colors.ink,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: busy ? null : () => onBuy(selected),
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.accent,
-              foregroundColor: colors.accentText,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: busy
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    selected.trialDays > 0
-                        ? 'START ${selected.trialDays}-DAY FREE TRIAL'
-                        : 'SUBSCRIBE',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900, letterSpacing: 1),
-                  ),
-          ),
+        const SizedBox(height: FitTrackSpacing.sm),
+        FitTrackButton(
+          label: selected.trialDays > 0
+              ? context.t(
+                  'common:payStartTrial',
+                  args: {'days': selected.trialDays},
+                )
+              : context.t('common:paySubscribe'),
+          size: FitTrackButtonSize.lg,
+          fullWidth: true,
+          loading: busy,
+          onPressed: busy ? null : () => onBuy(selected),
         ),
         if (selected.trialDays > 0)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 10),
             child: Text(
-              'Then ${selected.priceString} per ${selected.period == PlanPeriod.yearly ? 'year' : 'month'}. Cancel anytime in your store settings.',
+              context.t(
+                selected.period == PlanPeriod.yearly
+                    ? 'common:payThenYear'
+                    : 'common:payThenMonth',
+                args: {'price': selected.priceString},
+              ),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: colors.muted),
+              style: FitTrackText.caption.copyWith(
+                color: colors.muted,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
             ),
           ),
       ],
@@ -327,16 +405,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _restore() async {
     final messenger = ScaffoldMessenger.of(context);
+    final restored = context.t('common:payRestored');
+    final noActive = context.t('common:payNoActive');
     setState(() => _busy = true);
     try {
       await ref.read(subscriptionProvider.notifier).restore();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            ref.read(isProProvider)
-                ? 'Purchases restored.'
-                : 'No active subscription was found.',
-          ),
+          content: Text(ref.read(isProProvider) ? restored : noActive),
         ),
       );
     } on PurchaseFailure catch (e) {
@@ -352,12 +428,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _manage(String url) async {
     final messenger = ScaffoldMessenger.of(context);
+    final failed = context.t('common:subStoreFail');
     final ok =
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     if (!ok) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Could not open the store.')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
     }
   }
 
@@ -365,81 +440,288 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final sub = ref.watch(subscriptionProvider);
+    final offers = ref.watch(planOffersProvider).valueOrNull ?? const [];
     final date = DateFormat.yMMMd();
     final now = DateTime.now();
 
-    final status = !sub.isPro
-        ? 'Free plan'
-        : sub.isTrial
-            ? 'Free trial · ${sub.trialDaysLeft(now)} days left'
-            : 'FitTrack Pro';
+    final product = (sub.productId ?? '').toLowerCase();
+    final period = product.contains('year') || product.contains('annual')
+        ? PlanPeriod.yearly
+        : product.contains('month')
+            ? PlanPeriod.monthly
+            : PlanPeriod.other;
+    final offer = offers.where((o) => o.period == period).firstOrNull;
+
+    final planName = !sub.isPro
+        ? context.t('common:subPlanFree')
+        : switch (period) {
+            PlanPeriod.yearly => context.t('common:subPlanYearly'),
+            PlanPeriod.monthly => context.t('common:subPlanMonthly'),
+            PlanPeriod.other => context.t('common:subPlanPro'),
+          };
+    final priceLine = offer == null || period == PlanPeriod.other
+        ? null
+        : context.t(
+            period == PlanPeriod.yearly
+                ? 'common:subPriceYear'
+                : 'common:subPriceMonth',
+            args: {'price': offer.priceString},
+          );
     final detail = !sub.isPro
-        ? 'Upgrade to unlock every Pro feature. Everything you have logged stays available.'
+        ? context.t('common:subFreeDetail')
         : sub.expiresAt == null
-            ? 'Your membership is active.'
+            ? context.t('common:subActive')
             : sub.willRenew
-                ? 'Renews on ${date.format(sub.expiresAt!.toLocal())}.'
-                : 'Ends on ${date.format(sub.expiresAt!.toLocal())}. It will not renew.';
+                ? context.t(
+                    'common:subRenews',
+                    args: {'date': date.format(sub.expiresAt!.toLocal())},
+                  )
+                : context.t(
+                    'common:subEnds',
+                    args: {'date': date.format(sub.expiresAt!.toLocal())},
+                  );
+    final subtitle = [
+      if (priceLine != null) priceLine,
+      if (sub.isTrial) context.t('common:subTrialActive') else detail,
+    ].join(' · ');
+    final trialLeft = sub.trialDaysLeft(now);
+    final trialTotal = [
+      offer?.trialDays ?? 0,
+      14,
+    ].firstWhere((d) => d > 0);
 
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.workspace_premium_outlined,
-                  size: 48, color: sub.isPro ? AppColors.xp : colors.accent),
-              const SizedBox(height: 18),
-              Text(
-                status,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: colors.text),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: FitTrackSpacing.xxl),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.xl,
+                FitTrackSpacing.sm,
+                FitTrackSpacing.sm,
+                FitTrackSpacing.sm,
               ),
-              const SizedBox(height: 8),
-              Text(
-                detail,
-                textAlign: TextAlign.center,
-                style:
-                    TextStyle(fontSize: 14, height: 1.5, color: colors.muted),
-              ),
-              const SizedBox(height: 26),
-              if (!sub.isPro)
-                FilledButton(
-                  onPressed: () => context.push('/paywall'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.accent,
-                    foregroundColor: colors.accentText,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.t('common:subTitle'),
+                      style: FitTrackText.screenTitle.copyWith(
+                        color: colors.ink,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  child: const Text('SEE PLANS',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w900, letterSpacing: 1)),
-                ),
-              if (sub.isPro && sub.managementUrl != null)
-                OutlinedButton(
-                  onPressed: () => _manage(sub.managementUrl!),
-                  child: const Text('MANAGE IN STORE'),
-                ),
-              TextButton(
-                onPressed: _busy ? null : _restore,
-                child: Text('Restore purchases',
-                    style: TextStyle(color: colors.muted)),
+                  FitTrackIconButton(
+                    icon: Icons.close,
+                    semanticLabel: context.t('common:close'),
+                    onPressed: () => context.pop(),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => context.pop(),
-                child: Text(
-                  'CLOSE',
-                  style: TextStyle(
-                      color: colors.accent,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1),
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.lg,
+                FitTrackSpacing.sm,
+                FitTrackSpacing.lg,
+                0,
               ),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FitTrackCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              context.t('common:subCurrentPlan').toUpperCase(),
+                              style: FitTrackText.caption.copyWith(
+                                color: colors.muted,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            FitTrackBadge(
+                              label: context.t(
+                                sub.isPro
+                                    ? 'common:subBadgePro'
+                                    : 'common:subBadgeFree',
+                              ),
+                              tone: sub.isPro
+                                  ? FitTrackBadgeTone.ok
+                                  : FitTrackBadgeTone.neutral,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          planName,
+                          style: FitTrackText.stat.copyWith(
+                            color: colors.ink,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: FitTrackText.caption.copyWith(
+                            color: colors.muted,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                          ),
+                        ),
+                        if (sub.isTrial) ...[
+                          const SizedBox(height: 14),
+                          FitTrackProgressBar(
+                            progress: (trialLeft / trialTotal).clamp(0.0, 1.0),
+                            color: colors.accent,
+                            semanticLabel: context.t(
+                              'common:subTrialLeft',
+                              args: {'left': trialLeft, 'total': trialTotal},
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            context.t(
+                              'common:subTrialLeft',
+                              args: {'left': trialLeft, 'total': trialTotal},
+                            ),
+                            style: FitTrackText.caption.copyWith(
+                              color: colors.muted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.md),
+                  FitTrackCard(
+                    padding: EdgeInsets.zero,
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(FitTrackRadius.lg - 1),
+                      child: Column(
+                        children: [
+                          if (!sub.isPro)
+                            _ActionRow(
+                              first: true,
+                              title: context.t('common:subSeePlans'),
+                              caption: context.t('common:subSeePlansDesc'),
+                              onTap: () => context.push('/paywall'),
+                            ),
+                          _ActionRow(
+                            first: sub.isPro,
+                            title: context.t('common:payRestore'),
+                            caption: context.t('common:subRestoreDesc'),
+                            onTap: _busy ? null : _restore,
+                          ),
+                          if (sub.isPro && sub.managementUrl != null)
+                            _ActionRow(
+                              first: false,
+                              title: context.t('common:subManage'),
+                              caption: context.t('common:subManageDesc'),
+                              onTap: () => _manage(sub.managementUrl!),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FitTrackSpacing.lg,
+                      vertical: FitTrackSpacing.md,
+                    ),
+                    child: Text(
+                      context.t('common:paySubtitle'),
+                      textAlign: TextAlign.center,
+                      style: FitTrackText.caption.copyWith(
+                        color: colors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  FitTrackButton(
+                    label: context.t('common:close'),
+                    variant: FitTrackButtonVariant.secondary,
+                    size: FitTrackButtonSize.lg,
+                    fullWidth: true,
+                    onPressed: () => context.pop(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({
+    required this.first,
+    required this.title,
+    required this.caption,
+    required this.onTap,
+  });
+
+  final bool first;
+  final String title;
+  final String caption;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: '$title, $caption',
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FitTrackSpacing.lg,
+              vertical: FitTrackSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              border: first ? null : Border(top: BorderSide(color: colors.line)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: FitTrackText.title.copyWith(
+                          color: onTap == null ? colors.muted : colors.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        caption,
+                        style: FitTrackText.caption.copyWith(
+                          color: colors.muted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: colors.muted),
+              ],
+            ),
           ),
         ),
       ),
@@ -454,12 +736,12 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: colors.card, borderRadius: BorderRadius.circular(12)),
-      child: Text(text,
-          textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
+    return FitTrackCard(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: FitTrackText.body.copyWith(color: colors.muted),
+      ),
     );
   }
 }
@@ -473,8 +755,17 @@ class _Retry extends StatelessWidget {
     final colors = AppPalette.of(context);
     return Column(
       children: [
-        Text('Could not load plans.', style: TextStyle(color: colors.muted)),
-        TextButton(onPressed: onRetry, child: const Text('Retry')),
+        Text(
+          context.t('common:payLoadFailed'),
+          style: FitTrackText.body.copyWith(color: colors.muted),
+        ),
+        const SizedBox(height: FitTrackSpacing.sm),
+        FitTrackButton(
+          label: context.t('common:retry'),
+          icon: Icons.refresh,
+          variant: FitTrackButtonVariant.secondary,
+          onPressed: onRetry,
+        ),
       ],
     );
   }

@@ -5,7 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 import '../../../core/widgets/fittrack_ui.dart';
+import '../../gamification/data/gamification_service.dart'
+    show calculateRankScore;
 import '../../settings/data/goal_targets.dart';
 import '../../workouts/domain/workout_models.dart';
 import '../domain/progress_aggregates.dart';
@@ -65,19 +69,28 @@ class ProgressScreen extends ConsumerStatefulWidget {
   ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
 }
 
+FitTrackTier _tierOf(String tier) => switch (tier) {
+      'silver' => FitTrackTier.silver,
+      'gold' => FitTrackTier.gold,
+      'elite' => FitTrackTier.elite,
+      'legend' => FitTrackTier.legend,
+      _ => FitTrackTier.bronze,
+    };
+
 class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   int tab = 0;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final data = ref.watch(progressDataProvider);
     final goals =
         ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
+    final tier = '${data.valueOrNull?.stats?['rank_tier'] ?? ''}';
 
     return RefreshIndicator(
-      color: colors.accent,
-      backgroundColor: colors.card,
+      color: c.accent,
+      backgroundColor: c.surface,
       onRefresh: () async {
         ref.invalidate(progressDataProvider);
         ref.invalidate(weightHistoryProvider);
@@ -90,14 +103,38 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           FitTrackScreenHeader(
             title: context.t('progress:title'),
             subtitle: context.t('progress:analytics'),
-            icon: Icons.insights,
+            trailing: tier.isEmpty
+                ? null
+                : InkWell(
+                    onTap: () => context.push('/leaderboard'),
+                    borderRadius: BorderRadius.circular(FitTrackRadius.pill),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: FitTrackSpacing.touchMin,
+                      ),
+                      child: Center(
+                        child: FitTrackRankBadge(
+                          tier: _tierOf(tier),
+                          label: context.t(
+                            'progress:rankBadge',
+                            args: {'tier': context.t('progress:tier_$tier')},
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              FitTrackSpacing.lg,
+              FitTrackSpacing.md,
+              FitTrackSpacing.lg,
+              0,
+            ),
             child: FitTrackSegmentedTabs(
               labels: [
                 context.t('progress:analytics'),
-                context.t('progress:leaderboard')
+                context.t('progress:leaderboard'),
               ],
               selectedIndex: tab,
               onSelected: (value) {
@@ -112,10 +149,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           data.when(
             loading: () => Padding(
               padding: const EdgeInsets.all(32),
-              child: Center(
-                  child: CircularProgressIndicator(color: colors.accent)),
+              child: Center(child: CircularProgressIndicator(color: c.accent)),
             ),
-            error: (_, __) => const _Info(text: 'Unable to load progress.'),
+            error: (_, __) => _Info(text: context.t('progress:unableLoad')),
             data: (d) => _Analytics(data: d, goals: goals),
           ),
         ],
@@ -140,10 +176,11 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final d = widget.data;
     final g = widget.goals;
     final now = DateTime.now();
+    final today = startOfDay(now);
     final week = weekDays(now);
 
     final volumeByDay =
@@ -168,152 +205,258 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
     final totalWorkouts =
         (stats?['total_workouts'] as num?)?.toInt() ?? d.workouts.length;
     final streak = (stats?['current_streak'] as num?)?.toInt() ?? 0;
+    final bestStreak = (stats?['longest_streak'] as num?)?.toInt() ?? streak;
     final prs = (stats?['total_prs'] as num?)?.toInt() ?? 0;
+
+    // Rank score for this month, same formula as the leaderboard.
+    final monthWorkouts = d.workouts
+        .where((w) =>
+            w.startedAt.year == now.year && w.startedAt.month == now.month)
+        .toList();
+    final rankScore = calculateRankScore(
+      trainingDays: {
+        for (final w in monthWorkouts) dateKey(w.startedAt),
+      }.length,
+      volumeKg: monthWorkouts.fold<double>(0, (s, w) => s + w.totalVolumeKg),
+      streakLength: streak,
+      prCount: monthWorkouts.fold<int>(
+        0,
+        (s, w) => s + w.sets.where((x) => x.isPersonalRecord).length,
+      ),
+    );
+
+    // Last 8 weeks of volume in tonnes, oldest first.
+    final thisMonday = week.first;
+    final weeklyTonnes = [
+      for (var i = 7; i >= 0; i--)
+        () {
+          final start = thisMonday.subtract(Duration(days: 7 * i));
+          var sum = 0.0;
+          for (var k = 0; k < 7; k++) {
+            sum += volumeByDay[dateKey(start.add(Duration(days: k)))] ?? 0;
+          }
+          return sum / 1000;
+        }(),
+    ];
+
+    final last7 = [
+      for (var i = 6; i >= 0; i--) today.subtract(Duration(days: i)),
+    ];
+    final proteinTrend = [for (final x in last7) proteinByDay[dateKey(x)] ?? 0];
 
     final heatData = switch (_heat) {
       _HeatType.workout => (
           map: workoutsByDay,
           max: 2.0,
-          color: AppColors.workout,
-          unit: 'sessions'
+          color: c.workoutColor,
+          label: context.t('progress:heatWorkout'),
         ),
       _HeatType.protein => (
           map: proteinByDay,
           max: g.protein,
-          color: AppColors.nutrition,
-          unit: 'g'
+          color: c.nutritionColor,
+          label: context.t('progress:heatProtein'),
         ),
       _HeatType.calories => (
           map: caloriesByDay,
           max: g.calories,
-          color: AppColors.cardio,
-          unit: 'kcal'
+          color: c.cardioColor,
+          label: context.t('progress:heatCalories'),
         ),
       _HeatType.sleep => (
           map: sleepByDay,
           max: 8 * 60.0,
-          color: AppColors.sleep,
-          unit: 'min'
+          color: c.sleepColor,
+          label: context.t('progress:heatSleep'),
         ),
     };
 
-    Widget card({required Widget child}) => Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-              color: colors.card, borderRadius: BorderRadius.circular(14)),
-          child: child,
+    String days(int n) => context.t('progress:daysValue', args: {'n': n});
+    final kpis = [
+      (context.t('progress:kpiCurrentStreak'), days(streak)),
+      (context.t('progress:kpiBestStreak'), days(bestStreak)),
+      (context.t('progress:kpiWorkouts'), '$totalWorkouts'),
+      (
+        context.t('progress:kpiTotalVolume'),
+        '${(totalVolume / 1000).round()} ${context.t('progress:unitTonnes')}'
+      ),
+      (
+        context.t('progress:kpiRecords'),
+        '$prs ${context.t('progress:unitPrs')}'
+      ),
+      (context.t('progress:rankScore'), '$rankScore'),
+    ];
+
+    Widget titled(String title, String? sub, Widget child) => FitTrackCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: FitTrackText.body.copyWith(
+                      color: c.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (sub != null)
+                    Flexible(
+                      child: Text(
+                        sub,
+                        textAlign: TextAlign.end,
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: FitTrackSpacing.md),
+              child,
+            ],
+          ),
         );
 
+    const gap = SizedBox(height: FitTrackSpacing.md);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.lg,
+        FitTrackSpacing.md,
+        FitTrackSpacing.lg,
+        0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          card(
-            child: Row(
-              children: [
-                _StatCell(label: 'WORKOUTS', value: '$totalWorkouts'),
-                _StatCell(
-                    label: 'VOLUME', value: '${(totalVolume / 1000).round()}t'),
-                _StatCell(
-                    label: 'STREAK', value: streak > 0 ? '${streak}d' : '—'),
-                _StatCell(label: 'PRS', value: '$prs'),
-              ],
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.45,
+            children: [
+              for (final (label, value) in kpis)
+                FitTrackStatTile(label: label, value: value),
+            ],
+          ),
+          gap,
+          titled(
+            context.t('progress:weeklyVolumeTitle'),
+            context.t('progress:last8Weeks'),
+            _VolumeWeeks(values: weeklyTonnes),
+          ),
+          gap,
+          titled(
+            context.t('progress:thisWeekVolume'),
+            null,
+            _WeekBars(
+              week: week,
+              values: [for (final day in week) volumeByDay[dateKey(day)] ?? 0],
+              color: c.workoutColor,
             ),
           ),
-          card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          gap,
+          titled(
+            context.t('progress:proteinTrend'),
+            context.t(
+              'progress:proteinTrendSub',
+              args: {'goal': g.protein.round()},
+            ),
+            _ProteinLine(values: proteinTrend, goal: g.protein),
+          ),
+          gap,
+          titled(
+            context.t('progress:thisWeekProtein'),
+            null,
+            _WeekBars(
+              week: week,
+              values: [for (final day in week) proteinByDay[dateKey(day)] ?? 0],
+              color: c.nutritionColor,
+              goal: g.protein,
+            ),
+          ),
+          gap,
+          titled(
+            context.t('progress:goalCompletionTitle'),
+            '$rate% · ${context.t('progress:last7Days')}',
+            Column(
               children: [
-                FitTrackSectionLabel(
-                    title: '${context.t('progress:weeklyVolume')} (kg)'),
-                const SizedBox(height: 8),
-                _WeekBars(
+                _GoalRow(
+                  label: '',
+                  hits: const [false, false, false, false, false, false, false],
                   week: week,
-                  values: [
-                    for (final day in week) volumeByDay[dateKey(day)] ?? 0
-                  ],
-                  color: AppColors.workout,
+                  header: true,
+                ),
+                _GoalRow(
+                  label: context.t('progress:goalCalories'),
+                  hits: calorieHits,
+                  week: week,
+                ),
+                _GoalRow(
+                  label: context.t('progress:goalProtein'),
+                  hits: proteinHits,
+                  week: week,
+                ),
+                _GoalRow(
+                  label: context.t('progress:goalSleep'),
+                  hits: sleepHits,
+                  week: week,
                 ),
               ],
             ),
           ),
-          card(
-            child: Column(
+          gap,
+          titled(
+            context.t('progress:activityTitle'),
+            context.t('progress:last26Weeks'),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const FitTrackSectionLabel(title: 'Weekly Protein (g)'),
-                const SizedBox(height: 8),
-                _WeekBars(
-                  week: week,
-                  values: [
-                    for (final day in week) proteinByDay[dateKey(day)] ?? 0
-                  ],
-                  color: AppColors.nutrition,
-                  goal: g.protein,
-                ),
-              ],
-            ),
-          ),
-          card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const FitTrackSectionLabel(title: 'Consistency'),
-                const SizedBox(height: 10),
                 SizedBox(
-                  height: 38,
+                  height: FitTrackSpacing.touchMin,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
                       for (final t in _HeatType.values)
                         Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(
-                                t.name[0].toUpperCase() + t.name.substring(1)),
+                          padding:
+                              const EdgeInsets.only(right: FitTrackSpacing.sm),
+                          child: FitTrackChip(
+                            label: switch (t) {
+                              _HeatType.workout =>
+                                context.t('progress:heatWorkout'),
+                              _HeatType.protein =>
+                                context.t('progress:heatProtein'),
+                              _HeatType.calories =>
+                                context.t('progress:heatCalories'),
+                              _HeatType.sleep =>
+                                context.t('progress:heatSleep'),
+                            },
                             selected: _heat == t,
-                            onSelected: (_) => setState(() => _heat = t),
+                            onTap: () => setState(() => _heat = t),
                           ),
                         ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                _HeatMap(
-                  byDay: heatData.map,
-                  max: heatData.max,
-                  color: heatData.color,
-                  days: 182,
+                const SizedBox(height: FitTrackSpacing.sm),
+                Semantics(
+                  label: heatData.label,
+                  child: _HeatMap(
+                    byDay: heatData.map,
+                    max: heatData.max,
+                    color: heatData.color,
+                    days: 182,
+                  ),
                 ),
               ],
             ),
           ),
-          card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: FitTrackSectionLabel(
-                            title: context.t('progress:goalCompletion'))),
-                    Text(
-                      '$rate%',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w900, color: colors.accent),
-                    ),
-                  ],
-                ),
-                _GoalRow(label: 'Protein', hits: proteinHits, week: week),
-                _GoalRow(label: 'Calories', hits: calorieHits, week: week),
-                _GoalRow(label: 'Sleep 7h', hits: sleepHits, week: week),
-              ],
-            ),
-          ),
-          _BodyMetrics(),
+          gap,
+          const _BodyMetrics(),
         ],
       ),
     );
@@ -321,84 +464,213 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
 }
 
 class _BodyMetrics extends ConsumerWidget {
+  const _BodyMetrics();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final weights =
         ref.watch(weightHistoryProvider).valueOrNull ?? const <WeightLog>[];
     final summary = ProgressSummary.fromLogs(weights: weights, sleep: const []);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: colors.card, borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const FitTrackSectionLabel(title: 'Body Metrics'),
-          Row(
+    final latest = summary.latestWeightKg;
+    final change = summary.weightChangeKg;
+    final caption = latest == null
+        ? context.t('progress:notLogged')
+        : [
+            '${latest.toStringAsFixed(1)} ${context.t('progress:unitKg')}',
+            if (change != null)
+              '${change >= 0 ? '+' : '−'}${change.abs().toStringAsFixed(1)} ${context.t('progress:unitKg')}',
+          ].join(' · ');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FitTrackCard(
+          onTap: () => context.push('/progress/weight'),
+          child: Row(
             children: [
-              _StatCell(
-                label: 'LATEST',
-                value: summary.latestWeightKg == null
-                    ? '—'
-                    : '${summary.latestWeightKg!.toStringAsFixed(1)} kg',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.t('progress:weightTrackingTitle'),
+                      style: FitTrackText.body.copyWith(
+                        color: c.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      caption,
+                      style: FitTrackText.caption.copyWith(color: c.muted),
+                    ),
+                  ],
+                ),
               ),
-              _StatCell(
-                label: 'CHANGE',
-                value: summary.weightChangeKg == null
-                    ? '—'
-                    : '${summary.weightChangeKg! >= 0 ? '+' : ''}${summary.weightChangeKg!.toStringAsFixed(1)} kg',
+              Text(
+                context.t('progress:open'),
+                style: FitTrackText.label.copyWith(
+                  color: c.ink,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => context.push('/progress/weight'),
-                  icon: const Icon(Icons.monitor_weight_outlined, size: 16),
-                  label: const Text('Weight'),
-                ),
+        ),
+        const SizedBox(height: FitTrackSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: FitTrackButton(
+                label: context.t('progress:weightTitle'),
+                icon: Icons.monitor_weight_outlined,
+                variant: FitTrackButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => context.push('/progress/weight'),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => context.push('/sleep'),
-                  icon: const Icon(Icons.bedtime_outlined, size: 16),
-                  label: const Text('Sleep'),
-                ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FitTrackButton(
+                label: context.t('progress:sleepTitle'),
+                icon: Icons.bedtime_outlined,
+                variant: FitTrackButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => context.push('/sleep'),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Eight weekly bars (tonnes), the current week filled.
+class _VolumeWeeks extends StatelessWidget {
+  const _VolumeWeeks({required this.values});
+  final List<double> values;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    final peak = values.fold<double>(1, (a, b) => b > a ? b : a);
+    return Semantics(
+      label: context.t('progress:weeklyVolumeTitle'),
+      child: ExcludeSemantics(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 110,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < values.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    Expanded(
+                      child: FractionallySizedBox(
+                        heightFactor:
+                            (values[i] / peak).clamp(0.04, 1).toDouble(),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: i == values.length - 1
+                                ? c.workoutColor
+                                : c.workoutColor.withValues(alpha: .35),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                for (var i = 0; i < values.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      i == values.length - 1
+                          ? context.t('progress:now')
+                          : context.t('progress:weekShort', args: {'n': i + 1}),
+                      textAlign: TextAlign.center,
+                      style: FitTrackText.caption.copyWith(
+                        color: i == values.length - 1 ? c.ink : c.muted,
+                        fontWeight: i == values.length - 1
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StatCell extends StatelessWidget {
-  const _StatCell({required this.label, required this.value});
-  final String label;
-  final String value;
+/// Seven-day protein line against the goal.
+class _ProteinLine extends StatelessWidget {
+  const _ProteinLine({required this.values, required this.goal});
+  final List<double> values;
+  final double goal;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.w900, color: colors.text),
+    final c = AppPalette.of(context);
+    final peak = [...values, goal, 1.0].reduce((a, b) => a > b ? a : b);
+    return Semantics(
+      label: context.t(
+        'progress:proteinTrendLabel',
+        args: {'goal': goal.round()},
+      ),
+      child: ExcludeSemantics(
+        child: SizedBox(
+          height: 110,
+          child: LineChart(
+            LineChartData(
+              minY: 0,
+              maxY: peak * 1.15,
+              minX: 0,
+              maxX: 6,
+              gridData: const FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              titlesData: const FlTitlesData(show: false),
+              lineTouchData: const LineTouchData(enabled: false),
+              extraLinesData: ExtraLinesData(horizontalLines: [
+                HorizontalLine(
+                  y: goal,
+                  color: c.muted,
+                  strokeWidth: 1,
+                  dashArray: [4, 4],
+                ),
+              ]),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: [
+                    for (var i = 0; i < values.length; i++)
+                      FlSpot(i.toDouble(), values[i]),
+                  ],
+                  color: c.nutritionColor,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: FlDotData(
+                    checkToShowDot: (spot, _) => spot.x == 6,
+                    getDotPainter: (a, b, d, e) =>
+                        FlDotCirclePainter(radius: 4.5, color: c.nutritionColor),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 2),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 9, letterSpacing: 1, color: colors.faint)),
-        ],
+        ),
       ),
     );
   }
@@ -418,7 +690,7 @@ class _WeekBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final today = startOfDay(DateTime.now());
     final peak = [...values, goal ?? 0, 1.0].reduce((a, b) => a > b ? a : b);
     return SizedBox(
@@ -445,12 +717,11 @@ class _WeekBars extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       DateFormat('E').format(week[i]).substring(0, 1),
-                      style: TextStyle(
-                        fontSize: 10,
+                      style: FitTrackText.caption.copyWith(
                         fontWeight: week[i] == today
-                            ? FontWeight.w900
+                            ? FontWeight.w800
                             : FontWeight.w500,
-                        color: week[i] == today ? colors.text : colors.muted,
+                        color: week[i] == today ? c.ink : c.muted,
                       ),
                     ),
                   );
@@ -463,7 +734,7 @@ class _WeekBars extends StatelessWidget {
               : ExtraLinesData(horizontalLines: [
                   HorizontalLine(
                     y: goal!,
-                    color: colors.faint,
+                    color: c.muted,
                     strokeWidth: 1,
                     dashArray: [4, 4],
                   ),
@@ -477,7 +748,7 @@ class _WeekBars extends StatelessWidget {
                     toY: values[i],
                     width: 16,
                     borderRadius: BorderRadius.circular(4),
-                    color: week[i].isAfter(today) ? colors.border2 : color,
+                    color: week[i].isAfter(today) ? c.line : color,
                   ),
                 ],
               ),
@@ -488,48 +759,67 @@ class _WeekBars extends StatelessWidget {
   }
 }
 
+/// One goal row: seven day cells, filled with a check when the goal was met.
 class _GoalRow extends StatelessWidget {
-  const _GoalRow({required this.label, required this.hits, required this.week});
+  const _GoalRow({
+    required this.label,
+    required this.hits,
+    required this.week,
+    this.header = false,
+  });
   final String label;
   final List<bool> hits;
   final List<DateTime> week;
+  final bool header;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final today = startOfDay(DateTime.now());
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
+    return SizedBox(
+      height: 36,
       child: Row(
         children: [
           SizedBox(
-            width: 70,
-            child: Text(label,
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: colors.text)),
-          ),
-          for (var i = 0; i < hits.length; i++)
-            Expanded(
-              child: Column(
-                children: [
-                  Icon(
-                    hits[i]
-                        ? Icons.check_circle
-                        : (week[i].isAfter(today)
-                            ? Icons.circle_outlined
-                            : Icons.cancel_outlined),
-                    size: 18,
-                    color: hits[i] ? AppColors.recovery : colors.faint,
-                  ),
-                  Text(
-                    DateFormat('E').format(week[i]).substring(0, 1),
-                    style: TextStyle(fontSize: 9, color: colors.faint),
-                  ),
-                ],
+            width: 72,
+            child: Text(
+              label,
+              style: FitTrackText.label.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w500,
               ),
             ),
+          ),
+          for (var i = 0; i < hits.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            Expanded(
+              child: header
+                  ? Text(
+                      DateFormat('E').format(week[i]).substring(0, 1),
+                      textAlign: TextAlign.center,
+                      style: FitTrackText.caption.copyWith(color: c.muted),
+                    )
+                  : Semantics(
+                      label:
+                          '$label, ${DateFormat('EEEE').format(week[i])}: ${hits[i] ? context.t('progress:goalMet') : (week[i].isAfter(today) ? context.t('progress:goalUpcoming') : context.t('progress:goalMissed'))}',
+                      child: ExcludeSemantics(
+                        child: Container(
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: hits[i] ? c.ok : c.line,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          alignment: Alignment.center,
+                          child: hits[i]
+                              ? Icon(Icons.check, size: 14, color: c.bg)
+                              : (week[i].isAfter(today)
+                                  ? null
+                                  : Icon(Icons.remove, size: 12, color: c.muted)),
+                        ),
+                      ),
+                    ),
+            ),
+          ],
         ],
       ),
     );
@@ -550,9 +840,9 @@ class _HeatMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final weeks = heatGrid(DateTime.now(), days);
-    const alphas = [0.0, .2, .4, .65, 1.0];
+    const alphas = [0.0, .25, .45, .7, 1.0];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       reverse: true,
@@ -576,7 +866,7 @@ class _HeatMap extends StatelessWidget {
                                 final level =
                                     heatLevel(byDay[dateKey(day)] ?? 0, max);
                                 return level == 0
-                                    ? colors.border2.withValues(alpha: .5)
+                                    ? c.line
                                     : color.withValues(alpha: alphas[level]);
                               }(),
                       ),
@@ -596,14 +886,17 @@ class _Info extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-          color: colors.card, borderRadius: BorderRadius.circular(12)),
-      child: Text(text,
-          textAlign: TextAlign.center, style: TextStyle(color: colors.muted)),
+    final c = AppPalette.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: FitTrackCard(
+        padding: const EdgeInsets.all(FitTrackSpacing.xl),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: FitTrackText.body.copyWith(color: c.muted),
+        ),
+      ),
     );
   }
 }

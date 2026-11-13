@@ -18,6 +18,24 @@ int calculateRankScore({
   return (consistency + volume + streak + prs + 0.5).floor();
 }
 
+/// Points each rank-score component contributes (max 30 / 35 / 20 / 15).
+/// Mirrors [calculateRankScore] so the Leaderboard can show the breakdown.
+({double consistency, double volume, double streak, double prs})
+    rankScoreBreakdown({
+  required int trainingDays,
+  required double volumeKg,
+  required int streakLength,
+  required int prCount,
+}) {
+  double cap(double v) => v > 100 ? 100 : v;
+  return (
+    consistency: cap(trainingDays / 31 * 100) * 0.30,
+    volume: cap(volumeKg / 50000 * 100) * 0.35,
+    streak: cap(streakLength / 90 * 100) * 0.20,
+    prs: cap(prCount / 20 * 100) * 0.15,
+  );
+}
+
 String rankTierFromScore(int score) {
   if (score >= 85) return 'legend';
   if (score >= 65) return 'elite';

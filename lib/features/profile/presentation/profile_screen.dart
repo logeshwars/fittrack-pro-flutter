@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/auth/auth_providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/fittrack_ui.dart';
-import '../../dashboard/providers/dashboard_provider.dart';
 import '../../../core/l10n/language_controller.dart';
-import '../../../core/widgets/custom_icons.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
+import '../../dashboard/providers/dashboard_provider.dart';
+import '../../gamification/data/badges_data.dart';
+import '../../gamification/domain/badge_definition.dart';
+import '../../gamification/presentation/gamification_screen.dart';
+import '../../gamification/presentation/leaderboard_screen.dart';
+import '../../subscription/application/subscription_controller.dart';
+
+const _knownTiers = {'bronze', 'silver', 'gold', 'elite', 'legend'};
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -19,319 +27,76 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
-        child: dashboard.when(
-          loading: () =>
-              Center(child: CircularProgressIndicator(color: colors.accent)),
-          error: (_, __) =>
-              _ProfileError(onRetry: () => ref.invalidate(dashboardProvider)),
-          data: (data) => ListView(
-            padding: const EdgeInsets.only(bottom: 40),
-            children: [
-              FitTrackScreenHeader(
-                title: context.t('profile:title'),
-                subtitle: 'Your stats & settings',
-                trailing: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Icon(Icons.close, color: colors.muted),
+        child: Column(
+          children: [
+            _TopBar(
+              onBack: () => context.pop(),
+              onSettings: () => context.push('/settings/app-settings'),
+            ),
+            Expanded(
+              child: dashboard.when(
+                loading: () => Center(
+                  child: CircularProgressIndicator(color: colors.accent),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: colors.card,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.accent, width: 3),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _initials(data.displayName),
-                        style: TextStyle(
-                          color: colors.text,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 30,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      data.displayName,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: colors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: colors.accent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'LEVEL ${data.level}',
-                        style: TextStyle(
-                          color: colors.accentText,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 11,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
+                error: (_, __) => _ProfileError(
+                  onRetry: () => ref.invalidate(dashboardProvider),
                 ),
+                data: (data) => _ProfileBody(data: data),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: const FlameStreakIcon(size: 28),
-                        value: '${data.currentStreak}',
-                        label: context.t('profile:dayStreak').toUpperCase(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: XPIcon(size: 28, color: colors.accent),
-                        value: _compact(data.totalXp),
-                        label: context.t('profile:totalXP').toUpperCase(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        icon: TrophyIcon(size: 28, color: colors.accent),
-                        value: data.latestWeightKg == null
-                            ? '—'
-                            : data.latestWeightKg!.toStringAsFixed(1),
-                        label: context.t('profile:bodyKg').toUpperCase(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _XpCard(level: data.level, totalXp: data.totalXp),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: InkWell(
-                  onTap: () => context.push('/subscription'),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.xp.withValues(alpha: .08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.xp.withValues(alpha: .22),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.xp.withValues(alpha: .12),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.workspace_premium_outlined,
-                            color: AppColors.xp,
-                            size: 21,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'FitTrack Pro',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: colors.text,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Manage subscription',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: colors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 13,
-                          color: colors.faint,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    context.t('profile:settings'),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: colors.muted,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: [
-                      _SettingsRow(
-                        icon: Icons.monitor_heart_outlined,
-                        label: 'Personal Settings',
-                        onTap: () => context.push('/settings/personal'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.notifications_none,
-                        label: 'Supplement Alerts',
-                        onTap: () => context.push('/settings/alerts'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.local_fire_department_outlined,
-                        label: 'Daily Goals',
-                        onTap: () => context.push('/settings/goals'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.palette_outlined,
-                        label: 'Appearance',
-                        onTap: () => context.push('/settings/theme'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.settings_outlined,
-                        label: 'App Settings',
-                        onTap: () => context.push('/settings/app-settings'),
-                      ),
-                      _SettingsRow(
-                        icon: Icons.emoji_events_outlined,
-                        label: 'Achievements',
-                        onTap: () => context.push('/achievements'),
-                        last: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                child: OutlinedButton(
-                  onPressed: () async {
-                    final auth = ref.read(authRepositoryProvider);
-                    if (auth != null) {
-                      await auth.signOut();
-                      if (context.mounted) context.go('/account');
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colors.muted,
-                    side: BorderSide(color: colors.border2),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'SIGN OUT',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  static String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-    final result = parts.take(2).map((p) => p[0].toUpperCase()).join();
-    return result.isEmpty ? 'U' : result;
-  }
-
-  static String _compact(int value) {
-    if (value >= 1000) return '${(value / 1000).round()}K';
-    return '$value';
-  }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.onBack, required this.onSettings});
 
-  final Widget icon;
-  final String value;
-  final String label;
+  final VoidCallback onBack;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
       ),
-      child: Column(
+      decoration: BoxDecoration(
+        color: c.header,
+        border: Border(bottom: BorderSide(color: c.line)),
+      ),
+      child: Row(
         children: [
-          icon,
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: colors.text,
+          FitTrackIconButton(
+            icon: Icons.arrow_back,
+            color: c.ink,
+            semanticLabel: context.t('settings:backLabel'),
+            onPressed: onBack,
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                context.t('profile:title'),
+                style: FitTrackText.titleLg.copyWith(
+                  color: c.ink,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 8,
-              color: colors.muted,
-              letterSpacing: 1.2,
-            ),
+          FitTrackIconButton(
+            icon: Icons.settings_outlined,
+            color: c.ink,
+            semanticLabel: context.t('profile:settingsLabel'),
+            onPressed: onSettings,
           ),
         ],
       ),
@@ -339,54 +104,326 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _XpCard extends StatelessWidget {
-  const _XpCard({required this.level, required this.totalXp});
+class _ProfileBody extends ConsumerWidget {
+  const _ProfileBody({required this.data});
+
+  final DashboardData data;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = AppPalette.of(context);
+    final achievementsAsync = ref.watch(achievementsProvider);
+    final achievements = achievementsAsync.valueOrNull;
+    final board = ref.watch(leaderboardProvider).valueOrNull;
+    final sub = ref.watch(subscriptionProvider);
+    final stats = achievements?.stats;
+    final number = NumberFormat.decimalPattern();
+
+    // This month's board entry is the freshest tier; the stored tier is the
+    // fallback when the board is empty or unavailable.
+    final mine = board == null
+        ? null
+        : board.entries
+            .where((e) => e['google_user_id'] == board.myId)
+            .firstOrNull;
+    final rank =
+        board == null || mine == null ? null : board.entries.indexOf(mine) + 1;
+    final tier = '${mine?['rank_tier'] ?? stats?['rank_tier'] ?? ''}'
+        .toLowerCase();
+
+    final earnedIds = achievements?.earnedIds ?? const <String>{};
+    final earnedAt = achievements?.earnedAt ?? const <String, DateTime>{};
+    final earned = [
+      for (final b in badgeDefinitions)
+        if (earnedIds.contains(b.id)) b,
+    ]..sort((a, b) => (earnedAt[b.id] ?? DateTime(0))
+        .compareTo(earnedAt[a.id] ?? DateTime(0)));
+
+    String count(String key) =>
+        stats == null ? '—' : '${(stats[key] as num?)?.toInt() ?? 0}';
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.lg,
+        FitTrackSpacing.md,
+        FitTrackSpacing.lg,
+        FitTrackSpacing.xxl,
+      ),
+      children: [
+        _IdentityCard(
+          name: data.displayName,
+          tier: _knownTiers.contains(tier) ? tier : null,
+          rank: rank,
+          level: data.level,
+          totalXp: data.totalXp,
+        ),
+        const SizedBox(height: FitTrackSpacing.md),
+        _StatGrid(
+          cells: [
+            (context.t('profile:statWorkouts'), count('total_workouts'), null),
+            (
+              context.t('profile:statStreak'),
+              '${data.currentStreak}',
+              context.t('profile:dayUnit'),
+            ),
+            (context.t('profile:statPrs'), count('total_prs'), null),
+          ],
+        ),
+        const SizedBox(height: FitTrackSpacing.md),
+        _StatGrid(
+          cells: [
+            (context.t('profile:totalXP'), number.format(data.totalXp), null),
+            (
+              context.t('profile:bodyKg'),
+              data.latestWeightKg == null
+                  ? '—'
+                  : data.latestWeightKg!.toStringAsFixed(1),
+              data.latestWeightKg == null ? null : context.t('profile:kgUnit'),
+            ),
+          ],
+        ),
+        const SizedBox(height: FitTrackSpacing.md),
+        _BadgesCard(
+          earned: earned.take(4).toList(),
+          earnedCount: earned.length,
+          total: badgeDefinitions.length,
+          loaded: achievements != null,
+          loading: achievementsAsync.isLoading,
+          onSeeAll: () => context.push('/achievements'),
+        ),
+        const SizedBox(height: FitTrackSpacing.md),
+        FitTrackCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _ListRow(
+                title: context.t('profile:proName'),
+                subtitle: sub.isTrial
+                    ? context.t(
+                        'profile:proTrial',
+                        args: {'days': sub.trialDaysLeft(DateTime.now())},
+                      )
+                    : sub.isPro
+                        ? context.t('profile:proActive')
+                        : context.t('profile:proFree'),
+                trailingText: sub.isPro
+                    ? context.t('profile:manageLabel')
+                    : context.t('profile:proUpgrade'),
+                first: true,
+                onTap: () => context.push('/subscription'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: FitTrackSpacing.xl),
+        Padding(
+          padding: const EdgeInsets.only(bottom: FitTrackSpacing.sm),
+          child: Text(
+            context.t('profile:settings'),
+            style: FitTrackText.overline.copyWith(color: c.muted),
+          ),
+        ),
+        FitTrackCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _ListRow(
+                icon: Icons.monitor_heart_outlined,
+                title: context.t('profile:personalSettings'),
+                first: true,
+                onTap: () => context.push('/settings/personal'),
+              ),
+              _ListRow(
+                icon: Icons.notifications_none,
+                title: context.t('profile:supplementAlerts'),
+                onTap: () => context.push('/settings/alerts'),
+              ),
+              _ListRow(
+                icon: Icons.local_fire_department_outlined,
+                title: context.t('profile:dailyGoals'),
+                onTap: () => context.push('/settings/goals'),
+              ),
+              _ListRow(
+                icon: Icons.palette_outlined,
+                title: context.t('profile:appearance'),
+                onTap: () => context.push('/settings/theme'),
+              ),
+              _ListRow(
+                icon: Icons.settings_outlined,
+                title: context.t('profile:appSettings'),
+                onTap: () => context.push('/settings/app-settings'),
+              ),
+              _ListRow(
+                icon: Icons.emoji_events_outlined,
+                title: context.t('profile:achievementsRow'),
+                onTap: () => context.push('/achievements'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: FitTrackSpacing.xl),
+        FitTrackButton(
+          label: context.t('profile:signOut'),
+          variant: FitTrackButtonVariant.secondary,
+          size: FitTrackButtonSize.lg,
+          fullWidth: true,
+          onPressed: () async {
+            final auth = ref.read(authRepositoryProvider);
+            if (auth != null) {
+              await auth.signOut();
+              if (context.mounted) context.go('/account');
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+Color _tierInk(AppPalette c, String tier) => switch (tier) {
+      'silver' => c.tierSilver,
+      'gold' => c.tierGold,
+      'elite' => c.tierElite,
+      'legend' => c.tierLegend,
+      _ => c.tierBronze,
+    };
+
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({
+    required this.name,
+    required this.tier,
+    required this.rank,
+    required this.level,
+    required this.totalXp,
+  });
+
+  final String name;
+  final String? tier;
+  final int? rank;
   final int level;
   final int totalXp;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
+    final trimmed = name.trim();
+    final initial = trimmed.isEmpty ? 'U' : trimmed.characters.first.toUpperCase();
     final base = (level - 1) * 500;
     final cap = level * 500;
     final progress = ((totalXp - base) / 500).clamp(0, 1).toDouble();
+    final number = NumberFormat.decimalPattern();
+    final tierName = tier == null ? null : context.t('progress:tier_$tier');
+    final tierLine = tierName == null
+        ? null
+        : rank == null
+            ? tierName
+            : context.t(
+                'profile:tierRank',
+                args: {'tier': tierName, 'rank': rank!},
+              );
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return FitTrackCard(
+      padding: const EdgeInsets.all(FitTrackSpacing.lg - 2),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(Icons.bolt, size: 16, color: colors.accent),
-              const SizedBox(width: 8),
-              Text(
-                'Level $level Progress',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: colors.text,
+              ExcludeSemantics(
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: c.accentTint,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initial,
+                    style: FitTrackText.stat.copyWith(
+                      color: c.accentText,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                '$totalXp / $cap XP',
-                style: TextStyle(fontSize: 11, color: colors.muted),
+              const SizedBox(width: FitTrackSpacing.lg - 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.titleLg.copyWith(
+                        color: c.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (tierLine != null) ...[
+                      const SizedBox(height: FitTrackSpacing.xs),
+                      Row(
+                        children: [
+                          ExcludeSemantics(
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _tierInk(c, tier!),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              tierLine,
+                              style: FitTrackText.caption.copyWith(
+                                color: _tierInk(c, tier!),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: colors.border2,
-              valueColor: AlwaysStoppedAnimation(colors.accent),
+          const SizedBox(height: FitTrackSpacing.lg - 2),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  context.t('profile:levelProgress', args: {'level': level}),
+                  style: FitTrackText.body.copyWith(
+                    color: c.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                context.t(
+                  'profile:xpProgress',
+                  args: {
+                    'current': number.format(totalXp),
+                    'max': number.format(cap),
+                  },
+                ),
+                style: FitTrackText.caption.copyWith(color: c.muted),
+              ),
+            ],
+          ),
+          const SizedBox(height: FitTrackSpacing.sm),
+          FitTrackProgressBar(
+            progress: progress,
+            semanticLabel: context.t(
+              'profile:levelProgress',
+              args: {'level': level},
             ),
           ),
         ],
@@ -395,55 +432,293 @@ class _XpCard extends StatelessWidget {
   }
 }
 
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.label,
-    this.onTap,
-    this.last = false,
-  });
+/// A row of stat cells sharing one bordered surface, split by 1px lines.
+class _StatGrid extends StatelessWidget {
+  const _StatGrid({required this.cells});
 
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool last;
+  /// (label, value, optional unit) per cell.
+  final List<(String, String, String?)> cells;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          border:
-              last ? null : Border(bottom: BorderSide(color: colors.border2)),
-        ),
+    final c = AppPalette.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border.all(color: c.line),
+        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+      ),
+      child: IntrinsicHeight(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: colors.border2,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 15, color: colors.muted),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.text,
+            for (var i = 0; i < cells.length; i++) ...[
+              if (i > 0) VerticalDivider(width: 1, thickness: 1, color: c.line),
+              Expanded(
+                child: Semantics(
+                  container: true,
+                  label: [
+                    cells[i].$1,
+                    cells[i].$2,
+                    if (cells[i].$3 != null) cells[i].$3!,
+                  ].join(' '),
+                  child: ExcludeSemantics(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FitTrackSpacing.lg - 2,
+                        vertical: FitTrackSpacing.md,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cells[i].$1,
+                            style: FitTrackText.caption.copyWith(
+                              color: c.muted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: FitTrackSpacing.xs),
+                          Text.rich(
+                            TextSpan(
+                              text: cells[i].$2,
+                              children: [
+                                if (cells[i].$3 != null)
+                                  TextSpan(
+                                    text: ' ${cells[i].$3}',
+                                    style: FitTrackText.caption.copyWith(
+                                      color: c.muted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            style: FitTrackText.stat.copyWith(
+                              color: c.ink,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 13, color: colors.faint),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BadgesCard extends StatelessWidget {
+  const _BadgesCard({
+    required this.earned,
+    required this.earnedCount,
+    required this.total,
+    required this.loaded,
+    required this.loading,
+    required this.onSeeAll,
+  });
+
+  final List<BadgeDefinition> earned;
+  final int earnedCount;
+  final int total;
+  final bool loaded;
+  final bool loading;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return FitTrackCard(
+      padding: const EdgeInsets.all(FitTrackSpacing.lg - 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.t(
+                    'profile:badgesSummary',
+                    args: {'earned': earnedCount, 'total': total},
+                  ),
+                  style: FitTrackText.body.copyWith(
+                    color: c.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: onSeeAll,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(
+                    FitTrackSpacing.touchMin,
+                    FitTrackSpacing.touchMin,
+                  ),
+                  foregroundColor: c.accentText,
+                ),
+                child: Text(
+                  context.t('profile:seeAll'),
+                  style: FitTrackText.label.copyWith(color: c.accentText),
+                ),
+              ),
+            ],
+          ),
+          if (earned.isEmpty && loading)
+            const SizedBox(height: FitTrackSpacing.sm)
+          else if (earned.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: FitTrackSpacing.xs),
+              child: Text(
+                loaded
+                    ? context.t('profile:noEarned')
+                    : context.t('profile:loadAchievementsFailed'),
+                style: FitTrackText.caption.copyWith(
+                  color: c.muted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < 4; i++) ...[
+                  if (i > 0) const SizedBox(width: FitTrackSpacing.sm),
+                  Expanded(
+                    child: i < earned.length
+                        ? _BadgeGlyph(badge: earned[i])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BadgeGlyph extends StatelessWidget {
+  const _BadgeGlyph({required this.badge});
+
+  final BadgeDefinition badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Semantics(
+      container: true,
+      label: badge.name,
+      child: ExcludeSemantics(
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: c.xpColor.withValues(alpha: .18),
+                borderRadius: BorderRadius.circular(FitTrackRadius.md),
+              ),
+              alignment: Alignment.center,
+              child: Text(badge.emoji, style: FitTrackText.titleLg),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              badge.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: FitTrackText.caption.copyWith(
+                color: c.muted,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ListRow extends StatelessWidget {
+  const _ListRow({
+    required this.title,
+    required this.onTap,
+    this.icon,
+    this.subtitle,
+    this.trailingText,
+    this.first = false,
+  });
+
+  final String title;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final String? subtitle;
+  final String? trailingText;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Semantics(
+      button: true,
+      label: [title, if (subtitle != null) subtitle!].join(', '),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FitTrackSpacing.lg - 2,
+            ),
+            decoration: BoxDecoration(
+              border: first ? null : Border(top: BorderSide(color: c.line)),
+            ),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: c.muted),
+                  const SizedBox(width: FitTrackSpacing.md),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: FitTrackText.body.copyWith(
+                          color: c.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: FitTrackText.caption.copyWith(
+                            color: c.muted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (trailingText != null)
+                  Text(
+                    trailingText!,
+                    style: FitTrackText.label.copyWith(color: c.accentText),
+                  )
+                else
+                  Icon(Icons.chevron_right, size: 20, color: c.faint),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -452,14 +727,31 @@ class _SettingsRow extends StatelessWidget {
 
 class _ProfileError extends StatelessWidget {
   const _ProfileError({required this.onRetry});
+
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
     return Center(
-      child: FilledButton(
-        onPressed: onRetry,
-        child: const Text('Retry profile'),
+      child: Padding(
+        padding: const EdgeInsets.all(FitTrackSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.t('profile:loadProfileFailed'),
+              textAlign: TextAlign.center,
+              style: FitTrackText.body.copyWith(color: c.muted),
+            ),
+            const SizedBox(height: FitTrackSpacing.lg),
+            FitTrackButton(
+              label: context.t('common:retry'),
+              variant: FitTrackButtonVariant.secondary,
+              onPressed: onRetry,
+            ),
+          ],
+        ),
       ),
     );
   }

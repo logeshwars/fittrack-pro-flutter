@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/auth/auth_providers.dart';
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 
 enum _AuthTab { login, signup }
 
@@ -17,7 +21,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _name = TextEditingController();
@@ -25,6 +28,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   bool _showPassword = false;
   String? _error;
+  String? _notice;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
@@ -35,8 +41,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    setState(() => _error = null);
-    if (!_formKey.currentState!.validate()) return;
+    final emailInvalid = context.t('common:emailError');
+    final passwordInvalid = context.t('common:passwordError');
+    final checkInbox = context.t('common:signupCheckInbox');
+    final signInFailed = context.t('common:signInFailed');
+    final emailBad = !_email.text.contains('@');
+    final passwordBad = _password.text.length < 6;
+    setState(() {
+      _error = null;
+      _notice = null;
+      _emailError = emailBad ? emailInvalid : null;
+      _passwordError = passwordBad ? passwordInvalid : null;
+    });
+    if (emailBad || passwordBad) return;
 
     final repository = ref.read(authRepositoryProvider);
     if (repository == null) return;
@@ -53,8 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (outcome.requiresVerification) {
           setState(() {
             _tab = _AuthTab.login;
-            _error =
-                'Account created. Check your inbox to verify your email, then log in.';
+            _notice = checkInbox;
           });
           return;
         }
@@ -84,7 +100,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = 'Sign-in failed. Check your credentials and try again.';
+          _error = signInFailed;
         });
       }
     } finally {
@@ -93,11 +109,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _google() async {
+    final googleFailed = context.t('common:googleFailed');
     final repository = ref.read(authRepositoryProvider);
     if (repository == null) return;
     setState(() {
       _busy = true;
       _error = null;
+      _notice = null;
     });
     try {
       final outcome = await repository.signInWithGoogle();
@@ -107,98 +125,103 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthFailure catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Google sign-in failed. Try again.');
+      if (mounted) setState(() => _error = googleFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  void _switchTab(_AuthTab tab) => setState(() {
+        _tab = tab;
+        _error = null;
+        _notice = null;
+        _emailError = null;
+        _passwordError = null;
+      });
 
   @override
   Widget build(BuildContext context) {
     ref.watch(authStateProvider);
     final repository = ref.watch(authRepositoryProvider);
     final signedIn = repository?.currentUser != null;
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final colors = AppPalette.of(context);
-    final bg = dark ? const Color(0xFF080E00) : const Color(0xFFF5F5EE);
-    final cardBg = dark ? const Color(0xFF0F1A00) : Colors.white;
-    final inputBg = dark ? const Color(0xFF161F00) : const Color(0xFFF8F8F3);
-    final inputBorder =
-        dark ? const Color(0xFF2A3800) : const Color(0xFFE0E0D8);
-    final placeholder =
-        dark ? const Color(0xFF4A5A30) : const Color(0xFFAAAAAA);
 
     if (signedIn) {
       return Scaffold(
-        backgroundColor: bg,
+        backgroundColor: colors.surface,
         body: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(
+              FitTrackSpacing.xs,
+              FitTrackSpacing.sm,
+              FitTrackSpacing.xxl,
+              FitTrackSpacing.xxl,
+            ),
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () =>
-                        context.canPop() ? context.pop() : context.go('/today'),
-                    icon: Icon(Icons.arrow_back, color: colors.text),
-                  ),
-                  const Spacer(),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FitTrackIconButton(
+                  icon: Icons.arrow_back,
+                  semanticLabel: context.t('settings:backLabel'),
+                  onPressed: () =>
+                      context.canPop() ? context.pop() : context.go('/today'),
+                ),
               ),
-              const SizedBox(height: 48),
-              _Brand(colors: colors),
-              const SizedBox(height: 28),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: dark
-                        ? const Color(0xFF1E2C00)
-                        : const Color(0xFFE8E8E0),
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: FitTrackSpacing.xxl - FitTrackSpacing.xs,
+                  top: FitTrackSpacing.xxl,
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.verified_user, size: 38, color: colors.accent),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Signed in',
-                      style: TextStyle(
-                        color: colors.text,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      repository!.currentUser!.email ?? 'FitTrack Pro account',
-                      style: TextStyle(color: colors.muted, fontSize: 13),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _busy
-                            ? null
-                            : () async {
-                                setState(() => _busy = true);
-                                try {
-                                  await repository.signOut();
-                                } finally {
-                                  if (mounted) setState(() => _busy = false);
-                                }
-                              },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.accent,
-                          foregroundColor: colors.accentText,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    const _BrandMark(),
+                    const SizedBox(height: FitTrackSpacing.xl),
+                    FitTrackCard(
+                      padding: const EdgeInsets.all(FitTrackSpacing.xl),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.verified_user,
+                            size: 38,
+                            color: colors.accent,
                           ),
-                        ),
-                        child: Text(_busy ? 'Signing out…' : 'Sign out'),
+                          const SizedBox(height: FitTrackSpacing.md),
+                          Text(
+                            context.t('common:signedInTitle'),
+                            style: FitTrackText.titleLg.copyWith(
+                              color: colors.ink,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            repository!.currentUser!.email ??
+                                context.t('common:accountFallback'),
+                            style: FitTrackText.label
+                                .copyWith(color: colors.muted),
+                          ),
+                          const SizedBox(height: FitTrackSpacing.xl),
+                          FitTrackButton(
+                            label: context.t('common:signOut'),
+                            size: FitTrackButtonSize.lg,
+                            fullWidth: true,
+                            loading: _busy,
+                            loadingLabel: context.t('common:signingOut'),
+                            onPressed: _busy
+                                ? null
+                                : () async {
+                                    setState(() => _busy = true);
+                                    try {
+                                      await repository.signOut();
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _busy = false);
+                                      }
+                                    }
+                                  },
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -210,290 +233,190 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     }
 
+    final signup = _tab == _AuthTab.signup;
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(20, 52, 20, 40),
+          padding: const EdgeInsets.fromLTRB(
+            FitTrackSpacing.xxl,
+            FitTrackSpacing.xxl * 2,
+            FitTrackSpacing.xxl,
+            FitTrackSpacing.xxl,
+          ),
           children: [
-            _Brand(colors: colors),
-            const SizedBox(height: 28),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color:
-                      dark ? const Color(0xFF1E2C00) : const Color(0xFFE8E8E0),
-                ),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: _BrandMark(),
+            ),
+            const SizedBox(height: FitTrackSpacing.xl),
+            Text(
+              context.t(signup ? 'common:signupTitle' : 'common:loginTitle'),
+              style: FitTrackText.screenTitle.copyWith(
+                color: colors.ink,
+                fontWeight: FontWeight.w600,
               ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: dark
-                            ? const Color(0xFF0C1200)
-                            : const Color(0xFFEFEFEA),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Login',
-                              active: _tab == _AuthTab.login,
-                              onTap: () => setState(() {
-                                _tab = _AuthTab.login;
-                                _error = null;
-                              }),
-                            ),
-                          ),
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Sign Up',
-                              active: _tab == _AuthTab.signup,
-                              onTap: () => setState(() {
-                                _tab = _AuthTab.signup;
-                                _error = null;
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    if (_tab == _AuthTab.signup) ...[
-                      _FieldLabel(text: 'FULL NAME', dark: dark),
-                      const SizedBox(height: 6),
-                      _InputShell(
-                        background: inputBg,
-                        border: inputBorder,
-                        child: TextFormField(
-                          controller: _name,
-                          style: TextStyle(color: colors.text),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            filled: false,
-                            hintText: 'Your name',
-                            hintStyle: TextStyle(color: placeholder),
-                            prefixIcon: Icon(Icons.person_outline,
-                                size: 18, color: placeholder),
-                            prefixIconConstraints:
-                                const BoxConstraints(minWidth: 34),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    _FieldLabel(text: 'EMAIL', dark: dark),
-                    const SizedBox(height: 6),
-                    _InputShell(
-                      background: inputBg,
-                      border: inputBorder,
-                      child: TextFormField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        autocorrect: false,
-                        style: TextStyle(color: colors.text),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          hintText: 'you@example.com',
-                          hintStyle: TextStyle(color: placeholder),
-                          prefixIcon: Icon(Icons.mail_outline,
-                              size: 18, color: placeholder),
-                          prefixIconConstraints:
-                              const BoxConstraints(minWidth: 34),
-                        ),
-                        validator: (value) =>
-                            value == null || !value.contains('@')
-                                ? 'Enter a valid email'
-                                : null,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _FieldLabel(text: 'PASSWORD', dark: dark),
-                    const SizedBox(height: 6),
-                    _InputShell(
-                      background: inputBg,
-                      border: inputBorder,
-                      child: TextFormField(
-                        controller: _password,
-                        obscureText: !_showPassword,
-                        style: TextStyle(color: colors.text),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          hintText: 'Minimum 6 characters',
-                          hintStyle: TextStyle(color: placeholder),
-                          prefixIcon: Icon(Icons.lock_outline,
-                              size: 18, color: placeholder),
-                          prefixIconConstraints:
-                              const BoxConstraints(minWidth: 34),
-                          suffixIcon: IconButton(
-                            onPressed: () =>
-                                setState(() => _showPassword = !_showPassword),
-                            icon: Icon(
-                              _showPassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              size: 18,
-                              color: placeholder,
-                            ),
-                          ),
-                        ),
-                        validator: (value) => value == null || value.length < 6
-                            ? 'Password must be at least 6 characters'
-                            : null,
-                      ),
-                    ),
-                    if (_tab == _AuthTab.login)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: InkWell(
-                            onTap: () => context.push('/auth/forgot-password'),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                'Forgot password?',
-                                style: TextStyle(
-                                  color: colors.accent,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (_error != null)
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 14),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE24B4A).withValues(alpha: .10),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color:
-                                const Color(0xFFE24B4A).withValues(alpha: .25),
-                          ),
-                        ),
-                        child: Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFFE24B4A),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed:
-                            _busy || !AppConfig.hasSupabase ? null : _submit,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.accent,
-                          foregroundColor: colors.accentText,
-                          disabledBackgroundColor:
-                              colors.accent.withValues(alpha: .35),
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _busy
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colors.accentText,
-                                ),
-                              )
-                            : Text(
-                                _tab == _AuthTab.login
-                                    ? 'Login'
-                                    : 'Create Account',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Divider(
-                                color: dark
-                                    ? const Color(0xFF1E2C00)
-                                    : const Color(0xFFE0E0D8))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'OR',
-                            style: TextStyle(
-                              color: dark
-                                  ? const Color(0xFF3A4A20)
-                                  : const Color(0xFFAAAAAA),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                            child: Divider(
-                                color: dark
-                                    ? const Color(0xFF1E2C00)
-                                    : const Color(0xFFE0E0D8))),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _busy ? null : _google,
-                      icon: const Icon(Icons.g_mobiledata, size: 28),
-                      label: const Text('Continue with Google'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52),
-                        side: BorderSide(color: inputBorder),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.t('common:loginSubtitle'),
+              style: FitTrackText.body.copyWith(color: colors.muted),
+            ),
+            const SizedBox(height: 28),
+            if (signup) ...[
+              FitTrackTextField(
+                label: context.t('common:nameFieldLabel'),
+                controller: _name,
+                hint: context.t('common:yourName'),
+                textInputAction: TextInputAction.next,
+                enabled: !_busy,
+              ),
+              const SizedBox(height: 14),
+            ],
+            FitTrackTextField(
+              label: context.t('common:emailFieldLabel'),
+              controller: _email,
+              hint: context.t('common:emailPlaceholder'),
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              enabled: !_busy,
+              errorText: _emailError,
+            ),
+            const SizedBox(height: 14),
+            FitTrackTextField(
+              label: context.t('common:passwordFieldLabel'),
+              controller: _password,
+              hint: context.t('common:minPasswordPlaceholder'),
+              obscureText: !_showPassword,
+              textInputAction: TextInputAction.done,
+              enabled: !_busy,
+              errorText: _passwordError,
+              onSubmitted: (_) {
+                if (!_busy && AppConfig.hasSupabase) {
+                  unawaited(_submit());
+                }
+              },
+              suffix: IconButton(
+                tooltip: context.t(
+                  _showPassword
+                      ? 'common:hidePassword'
+                      : 'common:showPassword',
+                ),
+                onPressed: () =>
+                    setState(() => _showPassword = !_showPassword),
+                icon: Icon(
+                  _showPassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 18,
+                  color: colors.muted,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            if (!signup)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, FitTrackSpacing.touchMin),
+                    foregroundColor: colors.accent,
+                  ),
+                  onPressed: () => context.push('/auth/forgot-password'),
+                  child: Text(
+                    context.t('common:forgotPassword'),
+                    style: FitTrackText.body.copyWith(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: FitTrackSpacing.md),
+            if (_error != null)
+              _Banner(text: _error!, bg: colors.badSoft, fg: colors.textBad),
+            if (_notice != null)
+              _Banner(text: _notice!, bg: colors.okSoft, fg: colors.ok),
+            const SizedBox(height: FitTrackSpacing.xs),
+            FitTrackButton(
+              label: context.t(
+                signup ? 'common:createAccount' : 'common:signInButton',
+              ),
+              size: FitTrackButtonSize.lg,
+              fullWidth: true,
+              loading: _busy,
+              onPressed: _busy || !AppConfig.hasSupabase ? null : _submit,
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: FitTrackSpacing.xl),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(height: 1, color: colors.line)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FitTrackSpacing.md,
+                    ),
+                    child: Text(
+                      context.t('common:or'),
+                      style: FitTrackText.caption.copyWith(
+                        color: colors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(height: 1, color: colors.line)),
+                ],
+              ),
+            ),
+            FitTrackButton(
+              label: context.t('common:continueGoogle'),
+              icon: Icons.g_mobiledata,
+              variant: FitTrackButtonVariant.secondary,
+              size: FitTrackButtonSize.lg,
+              fullWidth: true,
+              onPressed: _busy ? null : _google,
+            ),
+            const SizedBox(height: FitTrackSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    context.t(signup ? 'common:haveAccount' : 'common:newHere'),
+                    style: FitTrackText.body.copyWith(color: colors.muted),
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, FitTrackSpacing.touchMin),
+                    foregroundColor: colors.accent,
+                  ),
+                  onPressed: _busy
+                      ? null
+                      : () => _switchTab(
+                            signup ? _AuthTab.login : _AuthTab.signup,
+                          ),
+                  child: Text(
+                    context.t(
+                      signup ? 'common:signInLink' : 'common:createAccountLink',
+                    ),
+                    style: FitTrackText.body.copyWith(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: FitTrackSpacing.lg),
             Text(
-              'By continuing, you agree to FitTrack Pro terms and privacy policy.',
+              context.t('common:legalText'),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
+              style: FitTrackText.overline.copyWith(
+                color: colors.muted,
                 height: 1.5,
-                color: dark ? const Color(0xFF2E3D18) : const Color(0xFFBBBBBB),
               ),
             ),
           ],
@@ -503,131 +426,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand({required this.colors});
-  final AppPalette colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0C1200),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: .18)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: .10),
-                    blurRadius: 16,
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: const Icon(Icons.fitness_center,
-                  size: 28, color: Colors.white),
-            ),
-            Positioned(
-              right: -4,
-              bottom: -4,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child:
-                    const Icon(Icons.bolt, size: 12, color: Color(0xFF0C1200)),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              'FitTrack',
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -.5,
-                color: colors.text,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              margin: const EdgeInsets.only(bottom: 3),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: colors.accent,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'PRO',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  color: colors.accentText,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Train smarter. Progress further.',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            letterSpacing: .3,
-            color: colors.muted,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  const _TabButton({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
+class _BrandMark extends StatelessWidget {
+  const _BrandMark();
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: active ? colors.accent : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: active ? colors.accentText : colors.muted,
+    return Semantics(
+      label: 'FitTrack Pro',
+      child: ExcludeSemantics(
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: colors.accent,
+            borderRadius: BorderRadius.circular(FitTrackRadius.md),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            'FT',
+            style: FitTrackText.titleLg.copyWith(
+              color: colors.accentText,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ),
@@ -635,49 +456,29 @@ class _TabButton extends StatelessWidget {
   }
 }
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel({required this.text, required this.dark});
+class _Banner extends StatelessWidget {
+  const _Banner({required this.text, required this.bg, required this.fg});
   final String text;
-  final bool dark;
+  final Color bg;
+  final Color fg;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: dark ? const Color(0xFF5A6E3A) : const Color(0xFF888880),
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: FitTrackSpacing.sm),
+        padding: const EdgeInsets.all(FitTrackSpacing.md),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(FitTrackRadius.sm),
+        ),
+        child: Text(
+          text,
+          style: FitTrackText.label.copyWith(color: fg, height: 1.45),
         ),
       ),
-    );
-  }
-}
-
-class _InputShell extends StatelessWidget {
-  const _InputShell({
-    required this.background,
-    required this.border,
-    required this.child,
-  });
-
-  final Color background;
-  final Color border;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: border),
-      ),
-      child: child,
     );
   }
 }

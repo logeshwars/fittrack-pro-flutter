@@ -11,6 +11,10 @@ class GoalTargets {
     this.carbs = 250,
     this.fat = 65,
     this.fiber = 25,
+    this.targetWeight = 70,
+    this.water = 2.5,
+    this.sleepMinutes = 480,
+    this.workoutsPerWeek = 4,
   });
 
   final double steps;
@@ -19,6 +23,18 @@ class GoalTargets {
   final double carbs;
   final double fat;
   final double fiber;
+
+  /// Target body weight in kg.
+  final double targetWeight;
+
+  /// Daily water goal in litres.
+  final double water;
+
+  /// Nightly sleep goal in minutes.
+  final double sleepMinutes;
+
+  /// Training sessions per week.
+  final double workoutsPerWeek;
 }
 
 double _parse(SharedPreferences prefs, String key, double fallback) {
@@ -54,5 +70,9 @@ final goalTargetsProvider =
     carbs: _parse(prefs, 'carbs', d.carbs),
     fat: _parse(prefs, 'fat', d.fat),
     fiber: _parse(prefs, 'fiber', d.fiber),
+    targetWeight: _parse(prefs, 'target_weight', d.targetWeight),
+    water: _parse(prefs, 'water', d.water),
+    sleepMinutes: _parse(prefs, 'sleep', d.sleepMinutes),
+    workoutsPerWeek: _parse(prefs, 'workouts', d.workoutsPerWeek),
   );
 });

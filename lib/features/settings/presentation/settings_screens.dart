@@ -1,9 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/data/service_providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../reminders/application/reminders_controller.dart';
 import '../../reminders/domain/reminder_catalog.dart';
@@ -23,23 +30,35 @@ class PersonalSettingsScreen extends ConsumerStatefulWidget {
 class _PersonalSettingsScreenState
     extends ConsumerState<PersonalSettingsScreen> {
   final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _age = TextEditingController();
   final _weight = TextEditingController();
   final _height = TextEditingController();
   String _goal = 'maintain';
   bool _loading = true;
+  bool _saving = false;
   String? _message;
+  String? _nameError;
+  String? _ageError;
+  String? _weightError;
+  String? _heightError;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+    final email = AppConfig.hasSupabase
+        ? Supabase.instance.client.auth.currentUser?.email
+        : null;
     setState(() {
+      _email.text = email ?? context.t('profile:emailLinked');
       _name.text = prefs.getString('fittrack_personal_name') ?? '';
+      _age.text = prefs.getString('fittrack_personal_age') ?? '';
       _weight.text = prefs.getString('fittrack_personal_weight') ?? '';
       _height.text = prefs.getString('fittrack_personal_height') ?? '';
       _goal = prefs.getString('fittrack_personal_goal') ?? 'maintain';
@@ -71,23 +90,33 @@ class _PersonalSettingsScreenState
     final weight = double.tryParse(_weight.text);
     final height =
         _height.text.trim().isEmpty ? null : double.tryParse(_height.text);
-    if (_name.text.trim().isEmpty ||
-        weight == null ||
-        weight < 30 ||
-        weight > 300 ||
-        (height != null && (height < 50 || height > 250))) {
-      setState(() => _message = 'Enter a valid name, weight and height.');
-      return;
-    }
+    final ageText = _age.text.trim();
+    final age = ageText.isEmpty ? null : int.tryParse(ageText);
+    final nameBad = _name.text.trim().isEmpty;
+    final weightBad = weight == null || weight < 30 || weight > 300;
+    final heightBad = _height.text.trim().isNotEmpty &&
+        (height == null || height < 50 || height > 250);
+    final ageBad =
+        ageText.isNotEmpty && (age == null || age < 10 || age > 100);
+    setState(() {
+      _message = null;
+      _nameError = nameBad ? context.t('profile:errName') : null;
+      _weightError = weightBad ? context.t('profile:errWeight') : null;
+      _heightError = heightBad ? context.t('profile:errHeight') : null;
+      _ageError = ageBad ? context.t('profile:errAge') : null;
+    });
+    if (nameBad || weightBad || heightBad || ageBad) return;
 
+    setState(() => _saving = true);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('fittrack_personal_name', _name.text.trim());
+    await prefs.setString('fittrack_personal_age', ageText);
     await prefs.setString('fittrack_personal_weight', _weight.text.trim());
     await prefs.setString('fittrack_personal_height', _height.text.trim());
     await prefs.setString('fittrack_personal_goal', _goal);
 
     final service = ref.read(profileServiceProvider);
-    String message = 'Saved on this device. Sign in to sync your profile.';
+    var message = 'profile:personalSavedDevice';
     if (service != null) {
       try {
         await service.updateProfile({
@@ -96,23 +125,28 @@ class _PersonalSettingsScreenState
           if (height != null) 'height_cm': height,
           'goal': _goal,
           'protein_goal_g': calculateProteinGoal(
-            bodyweightKg: weight,
+            bodyweightKg: weight!,
             goal: _goal,
             heightCm: height,
           ),
         });
-        message = 'Saved. Your profile syncs automatically.';
+        message = 'profile:personalSavedSynced';
       } catch (_) {
-        message = 'Saved on this device. Profile sync will retry.';
+        message = 'profile:personalSavedRetry';
       }
     }
     if (!mounted) return;
-    setState(() => _message = message);
+    setState(() {
+      _saving = false;
+      _message = context.t(message);
+    });
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _email.dispose();
+    _age.dispose();
     _weight.dispose();
     _height.dispose();
     super.dispose();
@@ -121,83 +155,265 @@ class _PersonalSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    if (_loading) {
-      return _LoadingScreen(title: 'Personal Settings', colors: colors);
-    }
+    final title = context.t('profile:personalInfoTitle');
+    if (_loading) return _LoadingScreen(title: title, colors: colors);
+
+    final weight = double.tryParse(_weight.text);
+    final height = double.tryParse(_height.text);
+    final protein = weight == null || weight < 30 || weight > 300
+        ? null
+        : calculateProteinGoal(
+            bodyweightKg: weight,
+            goal: _goal,
+            heightCm: height != null && height >= 50 && height <= 250
+                ? height
+                : null,
+          );
+    const goals = [
+      ('bulk', 'common:bulkLabel', 'common:onbDescBulk'),
+      ('maintain', 'common:maintainLabel', 'common:onbDescMaintain'),
+      ('cut', 'common:cutLabel', 'common:onbDescCut'),
+    ];
 
     return Scaffold(
       backgroundColor: colors.bg,
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.fromLTRB(
+          FitTrackSpacing.lg,
+          FitTrackSpacing.md,
+          FitTrackSpacing.lg,
+          FitTrackSpacing.xxl,
+        ),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(top: BorderSide(color: colors.line)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: FitTrackButton(
+            label: context.t('profile:saveChanges'),
+            size: FitTrackButtonSize.lg,
+            fullWidth: true,
+            loading: _saving,
+            onPressed: _saving ? null : () => unawaited(_save()),
+          ),
+        ),
+      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 44),
+        bottom: false,
+        child: Column(
           children: [
-            const _Header(
-              title: 'Personal Settings',
-              subtitle: 'Profile, body metrics & goal',
-            ),
-            const _SectionTitle('PROFILE'),
-            _Surface(
-              children: [
-                _TextFieldRow(
-                  controller: _name,
-                  icon: Icons.person_outline,
-                  label: 'DISPLAY NAME',
-                  hint: 'Your name',
+            _Header(title: title),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.xl,
                 ),
-                _TextFieldRow(
-                  controller: _weight,
-                  icon: Icons.monitor_weight_outlined,
-                  label: 'BODY WEIGHT',
-                  hint: 'kg',
-                  numeric: true,
-                ),
-                _TextFieldRow(
-                  controller: _height,
-                  icon: Icons.height,
-                  label: 'HEIGHT',
-                  hint: 'cm',
-                  numeric: true,
-                  last: true,
-                ),
-              ],
-            ),
-            const _SectionTitle('FITNESS GOAL'),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
                 children: [
-                  _GoalChoice(
-                    label: 'Build Muscle',
-                    description: 'Gain size and strength',
-                    icon: Icons.fitness_center,
-                    color: AppColors.workout,
-                    selected: _goal == 'bulk',
-                    onTap: () => setState(() => _goal = 'bulk'),
+                  FitTrackTextField(
+                    label: context.t('profile:displayName'),
+                    controller: _name,
+                    hint: context.t('profile:displayNamePlaceholder'),
+                    errorText: _nameError,
+                    textInputAction: TextInputAction.next,
                   ),
-                  const SizedBox(height: 8),
-                  _GoalChoice(
-                    label: 'Maintain',
-                    description: 'Stay strong and consistent',
-                    icon: Icons.balance,
-                    color: AppColors.water,
-                    selected: _goal == 'maintain',
-                    onTap: () => setState(() => _goal = 'maintain'),
+                  const SizedBox(height: 14),
+                  FitTrackTextField(
+                    label: context.t('profile:emailLabel'),
+                    controller: _email,
+                    enabled: false,
                   ),
-                  const SizedBox(height: 8),
-                  _GoalChoice(
-                    label: 'Lose Fat',
-                    description: 'Reduce fat while preserving muscle',
-                    icon: Icons.local_fire_department,
-                    color: AppColors.cardio,
-                    selected: _goal == 'cut',
-                    onTap: () => setState(() => _goal = 'cut'),
+                  const SizedBox(height: 14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: FitTrackTextField(
+                          label: context.t('profile:ageLabel'),
+                          controller: _age,
+                          errorText: _ageError,
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FitTrackTextField(
+                          label: context.t('profile:heightCmLabel'),
+                          controller: _height,
+                          errorText: _heightError,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          textInputAction: TextInputAction.next,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 14),
+                  FitTrackTextField(
+                    label: context.t('profile:weightKgLabel'),
+                    controller: _weight,
+                    errorText: _weightError,
+                    helper: context.t('profile:weightHelper'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textInputAction: TextInputAction.done,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  if (protein != null) ...[
+                    const SizedBox(height: FitTrackSpacing.sm),
+                    Text(
+                      '${context.t('profile:suggestedProtein')}: '
+                      '${context.t('profile:perDay', args: {
+                            'amount': protein
+                          })}',
+                      style: FitTrackText.caption.copyWith(
+                        color: colors.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: FitTrackSpacing.xl),
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      context.t('profile:fitnessGoal'),
+                      style: FitTrackText.caption.copyWith(
+                        color: colors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  for (final g in goals) ...[
+                    _GoalOption(
+                      label: context.t(g.$2),
+                      description: context.t(g.$3),
+                      selected: _goal == g.$1,
+                      onTap: () => setState(() {
+                        _goal = g.$1;
+                        _message = null;
+                      }),
+                    ),
+                    const SizedBox(height: FitTrackSpacing.sm),
+                  ],
+                  if (_message != null) ...[
+                    const SizedBox(height: FitTrackSpacing.xs),
+                    Semantics(
+                      liveRegion: true,
+                      child: Container(
+                        padding: const EdgeInsets.all(FitTrackSpacing.md),
+                        decoration: BoxDecoration(
+                          color: colors.accentTint,
+                          borderRadius:
+                              BorderRadius.circular(FitTrackRadius.sm),
+                        ),
+                        child: Text(
+                          _message!,
+                          style: FitTrackText.label
+                              .copyWith(color: colors.ink, height: 1.45),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            if (_message != null) _Message(text: _message!),
-            _SaveButton(label: 'SAVE PERSONAL SETTINGS', onTap: _save),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A radio-style goal card used by the personal info form.
+class _GoalOption extends StatelessWidget {
+  const _GoalOption({
+    required this.label,
+    required this.description,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String description;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    final radius = BorderRadius.circular(FitTrackRadius.md);
+    return Semantics(
+      button: true,
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      label: '$label, $description',
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: EdgeInsets.symmetric(horizontal: selected ? 13 : 14),
+            decoration: BoxDecoration(
+              color: selected ? colors.accentTint : colors.surface,
+              borderRadius: radius,
+              border: Border.all(
+                color: selected ? colors.accent : colors.line,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: selected ? colors.accent : colors.faint,
+                      width: selected ? 6 : 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: FitTrackSpacing.md),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: FitTrackSpacing.md,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: FitTrackText.title.copyWith(
+                            color: colors.ink,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          description,
+                          style: FitTrackText.caption.copyWith(
+                            color: colors.muted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -212,166 +428,654 @@ class GoalsSettingsScreen extends ConsumerStatefulWidget {
       _GoalsSettingsScreenState();
 }
 
+/// One stepper row on the Goals screen.
+class _GoalSpec {
+  const _GoalSpec({
+    required this.key,
+    required this.label,
+    required this.initial,
+    required this.step,
+    required this.min,
+    required this.max,
+    this.decimals = 0,
+    this.unit = '',
+    this.editScale = 1,
+    this.subtitle,
+  });
+
+  /// Preference key suffix (`fittrack_goal_<key>`).
+  final String key;
+
+  /// Translation key of the row title.
+  final String label;
+  final double initial;
+  final double step;
+  final double min;
+  final double max;
+  final int decimals;
+  final String unit;
+
+  /// Divides the stored value for the edit sheet (sleep is stored in minutes
+  /// and edited in hours).
+  final double editScale;
+
+  /// Translation key of the optional caption under the title.
+  final String? subtitle;
+}
+
+const _goalSpecs = <_GoalSpec>[
+  _GoalSpec(
+    key: 'protein',
+    label: 'settings:protein',
+    subtitle: 'settings:goalOwnTarget',
+    initial: 150,
+    step: 5,
+    min: 20,
+    max: 500,
+    unit: 'g',
+  ),
+  _GoalSpec(
+    key: 'calories',
+    label: 'settings:calories',
+    initial: 2000,
+    step: 50,
+    min: 800,
+    max: 8000,
+  ),
+  _GoalSpec(
+    key: 'carbs',
+    label: 'settings:carbs',
+    initial: 250,
+    step: 5,
+    min: 10,
+    max: 1000,
+    unit: 'g',
+  ),
+  _GoalSpec(
+    key: 'fat',
+    label: 'nutrition:fat',
+    initial: 65,
+    step: 5,
+    min: 10,
+    max: 500,
+    unit: 'g',
+  ),
+  _GoalSpec(
+    key: 'fiber',
+    label: 'settings:fiber',
+    initial: 25,
+    step: 1,
+    min: 5,
+    max: 150,
+    unit: 'g',
+  ),
+  _GoalSpec(
+    key: 'target_weight',
+    label: 'settings:goalTargetWeight',
+    initial: 70,
+    step: 0.5,
+    min: 30,
+    max: 300,
+    decimals: 1,
+    unit: 'kg',
+  ),
+  _GoalSpec(
+    key: 'water',
+    label: 'settings:goalWater',
+    initial: 2.5,
+    step: 0.25,
+    min: 0.5,
+    max: 10,
+    decimals: 1,
+    unit: 'L',
+  ),
+  _GoalSpec(
+    key: 'sleep',
+    label: 'settings:goalSleep',
+    initial: 480,
+    step: 15,
+    min: 180,
+    max: 840,
+    unit: 'h',
+    editScale: 60,
+  ),
+  _GoalSpec(
+    key: 'steps',
+    label: 'settings:goalSteps',
+    initial: 10000,
+    step: 500,
+    min: 500,
+    max: 100000,
+  ),
+  _GoalSpec(
+    key: 'workouts',
+    label: 'settings:goalWorkouts',
+    initial: 4,
+    step: 1,
+    min: 1,
+    max: 14,
+  ),
+];
+
 class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
-  final _steps = TextEditingController(text: '10000');
-  final _protein = TextEditingController(text: '150');
-  final _calories = TextEditingController(text: '2000');
-  final _carbs = TextEditingController(text: '250');
-  final _fat = TextEditingController(text: '65');
-  final _fiber = TextEditingController(text: '25');
+  final _values = <String, double>{
+    for (final g in _goalSpecs) g.key: g.initial,
+  };
+  String _goal = 'maintain';
+  double? _bodyweightKg;
+  double? _heightCm;
   bool _loading = true;
+  bool _saving = false;
   String? _message;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    unawaited(_load());
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final pairs = <String, TextEditingController>{
-      'steps': _steps,
-      'protein': _protein,
-      'calories': _calories,
-      'carbs': _carbs,
-      'fat': _fat,
-      'fiber': _fiber,
-    };
-    for (final entry in pairs.entries) {
-      entry.value.text =
-          prefs.getString('fittrack_goal_${entry.key}') ?? entry.value.text;
-    }
-    if (mounted) setState(() => _loading = false);
+    if (!mounted) return;
+    setState(() {
+      for (final g in _goalSpecs) {
+        final saved = double.tryParse(
+          prefs.getString('fittrack_goal_${g.key}') ?? '',
+        );
+        if (saved != null && saved.isFinite && saved > 0) {
+          _values[g.key] = saved;
+        }
+      }
+      _goal = prefs.getString('fittrack_personal_goal') ?? 'maintain';
+      _bodyweightKg =
+          double.tryParse(prefs.getString('fittrack_personal_weight') ?? '');
+      _heightCm =
+          double.tryParse(prefs.getString('fittrack_personal_height') ?? '');
+      _loading = false;
+    });
     final service = ref.read(profileServiceProvider);
     if (service == null) return;
     try {
       final profile = await service.profile();
-      final protein = profile?['protein_goal_g'] as num?;
-      if (protein != null && mounted) {
-        setState(() => _protein.text = protein.round().toString());
-      }
+      if (profile == null || !mounted) return;
+      setState(() {
+        final protein = profile['protein_goal_g'] as num?;
+        if (protein != null) _values['protein'] = protein.round().toDouble();
+        final goal = profile['goal'] as String?;
+        if (goal != null && goal.isNotEmpty) _goal = goal;
+        final weight = profile['bodyweight_kg'] as num?;
+        if (weight != null) _bodyweightKg = weight.toDouble();
+        final height = profile['height_cm'] as num?;
+        if (height != null) _heightCm = height.toDouble();
+      });
     } catch (_) {
       // Offline with no cached profile: keep the device value.
     }
   }
 
+  String _raw(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toString();
+
   Future<void> _save() async {
-    final pairs = <String, TextEditingController>{
-      'steps': _steps,
-      'protein': _protein,
-      'calories': _calories,
-      'carbs': _carbs,
-      'fat': _fat,
-      'fiber': _fiber,
-    };
-    final values = pairs.values.map((c) => double.tryParse(c.text)).toList();
-    if (values.any((v) => v == null || !v.isFinite || v <= 0)) {
-      setState(() => _message = 'All goals must be positive numbers.');
+    final invalid = context.t('settings:goalsError');
+    final savedDevice = context.t('settings:goalSavedDevice');
+    final savedSynced = context.t('settings:goalSavedSynced');
+    final savedRetry = context.t('settings:goalSavedRetry');
+    if (_values.values.any((v) => !v.isFinite || v <= 0)) {
+      setState(() => _message = invalid);
       return;
     }
+    setState(() => _saving = true);
     final prefs = await SharedPreferences.getInstance();
-    for (final entry in pairs.entries) {
-      await prefs.setString(
-        'fittrack_goal_${entry.key}',
-        entry.value.text.trim(),
-      );
+    for (final entry in _values.entries) {
+      await prefs.setString('fittrack_goal_${entry.key}', _raw(entry.value));
     }
-    var message = 'Daily goals saved on this device.';
+    await prefs.setString('fittrack_personal_goal', _goal);
+    var message = savedDevice;
     final service = ref.read(profileServiceProvider);
-    final protein = double.tryParse(_protein.text);
+    final protein = _values['protein'];
     if (service != null && protein != null) {
       try {
-        await service.updateProfile({'protein_goal_g': protein.round()});
-        message = 'Daily goals saved. Your protein goal syncs automatically.';
+        await service.updateProfile({
+          'protein_goal_g': protein.round(),
+          'goal': _goal,
+        });
+        message = savedSynced;
       } catch (_) {
-        message = 'Daily goals saved on this device. Sync will retry.';
+        message = savedRetry;
       }
     }
-    if (mounted) setState(() => _message = message);
+    if (mounted) {
+      setState(() {
+        _message = message;
+        _saving = false;
+      });
+    }
   }
 
-  @override
-  void dispose() {
-    for (final c in [_steps, _protein, _calories, _carbs, _fat, _fiber]) {
-      c.dispose();
+  void _set(_GoalSpec g, double value) {
+    setState(() {
+      _values[g.key] = value.clamp(g.min, g.max).toDouble();
+      _message = null;
+    });
+  }
+
+  String _format(_GoalSpec g, double v) {
+    final nf = NumberFormat.decimalPattern()
+      ..minimumFractionDigits = g.decimals
+      ..maximumFractionDigits = g.decimals;
+    if (g.key == 'sleep') {
+      final m = v.round();
+      return context.t(
+        'settings:goalSleepValue',
+        args: {'h': m ~/ 60, 'm': m % 60},
+      );
     }
-    super.dispose();
+    final number = nf.format(v);
+    return g.unit.isEmpty || g.unit == 'h' ? number : '$number ${g.unit}';
+  }
+
+  Future<void> _edit(_GoalSpec g) async {
+    final name = context.t(g.label);
+    final current = _values[g.key] ?? g.initial;
+    final result = await showFitTrackSheet<double>(
+      context: context,
+      builder: (ctx) => _GoalEditSheet(
+        title: context.t('settings:goalEditTitle', args: {'name': name}),
+        label: context.t('settings:goalValueLabel'),
+        applyLabel: context.t('common:save'),
+        invalidText: context.t('settings:goalInvalidValue'),
+        unit: g.unit,
+        initial: current / g.editScale,
+      ),
+    );
+    if (result != null) _set(g, result * g.editScale);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    if (_loading) return _LoadingScreen(title: 'Daily Goals', colors: colors);
+    final title = context.t('settings:goalsTitle');
+    if (_loading) return _LoadingScreen(title: title, colors: colors);
+
+    final weight = _bodyweightKg;
+    final calculated = weight == null || weight < 30
+        ? null
+        : calculateProteinGoal(
+            bodyweightKg: weight,
+            goal: _goal,
+            heightCm: _heightCm,
+          );
+    const goals = ['bulk', 'cut', 'maintain'];
 
     return Scaffold(
       backgroundColor: colors.bg,
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          FitTrackSpacing.lg,
+          FitTrackSpacing.md,
+          FitTrackSpacing.lg,
+          FitTrackSpacing.xxl,
+        ),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(top: BorderSide(color: colors.line)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: FitTrackButton(
+            label: context.t('settings:saveGoals'),
+            size: FitTrackButtonSize.lg,
+            fullWidth: true,
+            loading: _saving,
+            onPressed: _saving ? null : _save,
+          ),
+        ),
+      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 44),
+        bottom: false,
+        child: Column(
           children: [
-            const _Header(
-              title: 'Daily Goals',
-              subtitle: 'Targets used across your dashboard',
+            _Header(title: title),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.md,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.xl,
+                ),
+                children: [
+                  Semantics(
+                    label: context.t('settings:goalTraining'),
+                    child: FitTrackSegmentedTabs(
+                      labels: [
+                        context.t('settings:goalBulk'),
+                        context.t('settings:goalCut'),
+                        context.t('settings:goalMaintain'),
+                      ],
+                      selectedIndex: goals.indexOf(_goal).clamp(0, 2),
+                      onSelected: (i) => setState(() {
+                        _goal = goals[i];
+                        _message = null;
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.md),
+                  FitTrackCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t('settings:goalCalcLabel'),
+                          style: FitTrackText.caption.copyWith(
+                            color: colors.muted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: FitTrackSpacing.xs),
+                        if (calculated == null)
+                          Text(
+                            context.t('settings:goalCalcMissing'),
+                            style: FitTrackText.label
+                                .copyWith(color: colors.muted),
+                          )
+                        else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '$calculated',
+                                style: FitTrackText.stat.copyWith(
+                                  color: colors.ink,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  context.t(
+                                    'settings:goalCalcUnit',
+                                    args: {
+                                      'kg': weight!.toStringAsFixed(1),
+                                    },
+                                  ),
+                                  style: FitTrackText.label
+                                      .copyWith(color: colors.muted),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.md),
+                  if (_message != null) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Container(
+                        padding: const EdgeInsets.all(FitTrackSpacing.md),
+                        decoration: BoxDecoration(
+                          color: colors.accentTint,
+                          borderRadius:
+                              BorderRadius.circular(FitTrackRadius.sm),
+                        ),
+                        child: Text(
+                          _message!,
+                          style: FitTrackText.label
+                              .copyWith(color: colors.ink, height: 1.45),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: FitTrackSpacing.md),
+                  ],
+                  FitTrackCard(
+                    padding: EdgeInsets.zero,
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(FitTrackRadius.lg - 1),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < _goalSpecs.length; i++)
+                            _GoalStepper(
+                              first: i == 0,
+                              name: context.t(_goalSpecs[i].label),
+                              subtitle: _goalSpecs[i].subtitle == null
+                                  ? null
+                                  : context.t(_goalSpecs[i].subtitle!),
+                              value: _format(
+                                _goalSpecs[i],
+                                _values[_goalSpecs[i].key] ??
+                                    _goalSpecs[i].initial,
+                              ),
+                              decreaseLabel: context.t(
+                                'settings:goalDecrease',
+                                args: {'name': context.t(_goalSpecs[i].label)},
+                              ),
+                              increaseLabel: context.t(
+                                'settings:goalIncrease',
+                                args: {'name': context.t(_goalSpecs[i].label)},
+                              ),
+                              onDecrease: () => _set(
+                                _goalSpecs[i],
+                                (_values[_goalSpecs[i].key] ??
+                                        _goalSpecs[i].initial) -
+                                    _goalSpecs[i].step,
+                              ),
+                              onIncrease: () => _set(
+                                _goalSpecs[i],
+                                (_values[_goalSpecs[i].key] ??
+                                        _goalSpecs[i].initial) +
+                                    _goalSpecs[i].step,
+                              ),
+                              onEdit: () => _edit(_goalSpecs[i]),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const _SectionTitle('ACTIVITY'),
-            _Surface(
-              children: [
-                _GoalField(
-                  icon: Icons.directions_walk,
-                  color: AppColors.water,
-                  label: 'Daily steps',
-                  controller: _steps,
-                  suffix: 'steps',
-                ),
-                _GoalField(
-                  icon: Icons.local_fire_department,
-                  color: AppColors.workout,
-                  label: 'Daily calories',
-                  controller: _calories,
-                  suffix: 'kcal',
-                  last: true,
-                ),
-              ],
-            ),
-            const _SectionTitle('NUTRITION'),
-            _Surface(
-              children: [
-                _GoalField(
-                  icon: Icons.water_drop_outlined,
-                  color: AppColors.nutrition,
-                  label: 'Protein',
-                  controller: _protein,
-                  suffix: 'g',
-                ),
-                _GoalField(
-                  icon: Icons.grain,
-                  color: AppColors.water,
-                  label: 'Carbohydrates',
-                  controller: _carbs,
-                  suffix: 'g',
-                ),
-                _GoalField(
-                  icon: Icons.opacity,
-                  color: AppColors.xp,
-                  label: 'Fat',
-                  controller: _fat,
-                  suffix: 'g',
-                ),
-                _GoalField(
-                  icon: Icons.eco_outlined,
-                  color: AppColors.recovery,
-                  label: 'Fiber',
-                  controller: _fiber,
-                  suffix: 'g',
-                  last: true,
-                ),
-              ],
-            ),
-            if (_message != null) _Message(text: _message!),
-            _SaveButton(label: 'SAVE DAILY GOALS', onTap: _save),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GoalStepper extends StatelessWidget {
+  const _GoalStepper({
+    required this.first,
+    required this.name,
+    required this.value,
+    required this.decreaseLabel,
+    required this.increaseLabel,
+    required this.onDecrease,
+    required this.onIncrease,
+    required this.onEdit,
+    this.subtitle,
+  });
+
+  final bool first;
+  final String name;
+  final String? subtitle;
+  final String value;
+  final String decreaseLabel;
+  final String increaseLabel;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Container(
+      constraints: const BoxConstraints(minHeight: 60),
+      padding: const EdgeInsets.fromLTRB(14, 0, 10, 0),
+      decoration: BoxDecoration(
+        border: first ? null : Border(top: BorderSide(color: colors.line)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: FitTrackText.body.copyWith(
+                    color: colors.ink,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      subtitle!,
+                      style: FitTrackText.caption.copyWith(
+                        color: colors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          FitTrackIconButton(
+            icon: Icons.remove,
+            semanticLabel: decreaseLabel,
+            style: FitTrackIconButtonStyle.outlined,
+            onPressed: onDecrease,
+          ),
+          Semantics(
+            button: true,
+            label: '$name $value',
+            child: ExcludeSemantics(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(FitTrackRadius.sm),
+                onTap: onEdit,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 76,
+                    minHeight: FitTrackSpacing.touchMin,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    value,
+                    textAlign: TextAlign.center,
+                    style: FitTrackText.body.copyWith(
+                      color: colors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          FitTrackIconButton(
+            icon: Icons.add,
+            semanticLabel: increaseLabel,
+            style: FitTrackIconButtonStyle.outlined,
+            onPressed: onIncrease,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for typing an exact goal value instead of stepping.
+class _GoalEditSheet extends StatefulWidget {
+  const _GoalEditSheet({
+    required this.title,
+    required this.label,
+    required this.applyLabel,
+    required this.invalidText,
+    required this.unit,
+    required this.initial,
+  });
+
+  final String title;
+  final String label;
+  final String applyLabel;
+  final String invalidText;
+  final String unit;
+  final double initial;
+
+  @override
+  State<_GoalEditSheet> createState() => _GoalEditSheetState();
+}
+
+class _GoalEditSheetState extends State<_GoalEditSheet> {
+  late final _controller = TextEditingController(
+    text: widget.initial == widget.initial.roundToDouble()
+        ? widget.initial.round().toString()
+        : widget.initial.toString(),
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _apply() {
+    final v = double.tryParse(_controller.text.trim().replaceAll(',', '.'));
+    if (v == null || !v.isFinite || v <= 0) {
+      setState(() => _error = widget.invalidText);
+      return;
+    }
+    Navigator.of(context).pop(v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.title,
+            style: FitTrackText.titleLg.copyWith(
+              color: colors.ink,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: FitTrackSpacing.lg),
+          FitTrackTextField(
+            label: widget.label,
+            controller: _controller,
+            autofocus: true,
+            errorText: _error,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _apply(),
+            suffix: widget.unit.isEmpty
+                ? null
+                : Padding(
+                    padding: const EdgeInsets.all(FitTrackSpacing.md),
+                    child: Text(
+                      widget.unit,
+                      style: FitTrackText.body.copyWith(color: colors.muted),
+                    ),
+                  ),
+          ),
+          const SizedBox(height: FitTrackSpacing.lg),
+          FitTrackButton(
+            label: widget.applyLabel,
+            size: FitTrackButtonSize.lg,
+            fullWidth: true,
+            onPressed: _apply,
+          ),
+        ],
       ),
     );
   }
@@ -380,13 +1084,14 @@ class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
 class AlertsSettingsScreen extends ConsumerWidget {
   const AlertsSettingsScreen({super.key});
 
-  static Color _color(ReminderCategory c) => switch (c) {
-        ReminderCategory.morning => AppColors.xp,
-        ReminderCategory.nutrition => AppColors.nutrition,
-        ReminderCategory.hydration => AppColors.water,
-        ReminderCategory.fitness => AppColors.workout,
-        ReminderCategory.sleep => AppColors.sleep,
-        ReminderCategory.supplement => AppColors.recovery,
+  static Color _color(AppPalette c, ReminderCategory category) =>
+      switch (category) {
+        ReminderCategory.morning => c.xpColor,
+        ReminderCategory.nutrition => c.nutritionColor,
+        ReminderCategory.hydration => c.waterColor,
+        ReminderCategory.fitness => c.workoutColor,
+        ReminderCategory.sleep => c.sleepColor,
+        ReminderCategory.supplement => c.cardioColor,
       };
 
   static IconData _icon(ReminderCategory c) => switch (c) {
@@ -397,6 +1102,9 @@ class AlertsSettingsScreen extends ConsumerWidget {
         ReminderCategory.sleep => Icons.bedtime_outlined,
         ReminderCategory.supplement => Icons.medication_outlined,
       };
+
+  static String _categoryLabel(BuildContext context, ReminderCategory c) =>
+      context.t('settings:cat_${c.name}');
 
   Future<void> _toggle(
     BuildContext context,
@@ -449,9 +1157,25 @@ class AlertsSettingsScreen extends ConsumerWidget {
               _Header(title: context.t('settings:notifications')),
               Expanded(
                 child: Center(
-                  child: TextButton(
-                    onPressed: () => ref.invalidate(remindersProvider),
-                    child: const Text('Could not load reminders. Retry'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(FitTrackSpacing.xxl),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          context.t('settings:loadRemindersFailed'),
+                          textAlign: TextAlign.center,
+                          style: FitTrackText.body.copyWith(color: colors.muted),
+                        ),
+                        const SizedBox(height: FitTrackSpacing.lg),
+                        FitTrackButton(
+                          label: context.t('settings:retry'),
+                          icon: Icons.refresh,
+                          variant: FitTrackButtonVariant.secondary,
+                          onPressed: () => ref.invalidate(remindersProvider),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -477,7 +1201,7 @@ class AlertsSettingsScreen extends ConsumerWidget {
                       ),
               ),
               for (final category in ReminderCategory.values) ...[
-                _SectionTitle(category.label.toUpperCase()),
+                _SectionTitle(_categoryLabel(context, category).toUpperCase()),
                 _Surface(
                   children: [
                     for (final def
@@ -485,12 +1209,12 @@ class AlertsSettingsScreen extends ConsumerWidget {
                       _ReminderRow(
                         def: def,
                         pref: value.of(def),
-                        color: _color(category),
+                        color: _color(colors, category),
                         icon: _icon(category),
-                        last: def ==
+                        first: def ==
                             reminderCatalog
                                 .where((d) => d.category == category)
-                                .last,
+                                .first,
                         onToggle: (on) => _toggle(context, ref, def, on),
                         onTime: () =>
                             _pickTime(context, ref, def, value.of(def).time),
@@ -499,11 +1223,15 @@ class AlertsSettingsScreen extends ConsumerWidget {
                 ),
               ],
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.lg + 2,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.lg,
+                  0,
+                ),
                 child: Text(
-                  'Reminders repeat daily at the time you choose and work offline.',
-                  style:
-                      TextStyle(fontSize: 11, height: 1.5, color: colors.faint),
+                  context.t('settings:remindersNote'),
+                  style: FitTrackText.caption.copyWith(color: colors.muted),
                 ),
               ),
             ],
@@ -522,7 +1250,7 @@ class _ReminderRow extends StatelessWidget {
     required this.icon,
     required this.onToggle,
     required this.onTime,
-    required this.last,
+    required this.first,
   });
 
   final ReminderDef def;
@@ -531,58 +1259,128 @@ class _ReminderRow extends StatelessWidget {
   final IconData icon;
   final ValueChanged<bool> onToggle;
   final VoidCallback onTime;
-  final bool last;
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
+    final time = formatTime12(pref.time);
+    final schedule = context.t('settings:everyDayAt', args: {'time': time});
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      constraints: const BoxConstraints(minHeight: 64),
+      padding: const EdgeInsets.only(left: 14, right: 6),
       decoration: BoxDecoration(
-        border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
+        border: first ? null : Border(top: BorderSide(color: colors.line)),
       ),
       child: Row(
         children: [
           Icon(icon, size: 18, color: color),
-          const SizedBox(width: 12),
+          const SizedBox(width: FitTrackSpacing.md),
           Expanded(
-            child: Text(
-              def.label,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: colors.text),
-            ),
-          ),
-          InkWell(
-            onTap: onTime,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Text(
-                formatTime12(pref.time),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: pref.enabled ? colors.accent : colors.faint,
+            child: Semantics(
+              button: true,
+              label: '${def.label}, $schedule',
+              hint: context.t('settings:changeTime'),
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: onTime,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          def.label,
+                          style: FitTrackText.title.copyWith(
+                            color: colors.ink,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text.rich(
+                          TextSpan(
+                            text: context.t('settings:everyDay'),
+                            children: [
+                              TextSpan(
+                                text: ' · $time',
+                                style: TextStyle(
+                                  color: pref.enabled
+                                      ? colors.ink
+                                      : colors.muted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: FitTrackText.caption
+                              .copyWith(color: colors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          Switch(value: pref.enabled, onChanged: onToggle),
+          Semantics(
+            label: def.label,
+            child: Switch(value: pref.enabled, onChanged: onToggle),
+          ),
         ],
       ),
     );
   }
 }
 
-class ThemeSettingsScreen extends ConsumerWidget {
+class ThemeSettingsScreen extends ConsumerStatefulWidget {
   const ThemeSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ThemeSettingsScreen> createState() =>
+      _ThemeSettingsScreenState();
+}
+
+class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
+  static const _modes = [ThemeMode.system, ThemeMode.light, ThemeMode.dark];
+  String _units = 'metric';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnits();
+  }
+
+  Future<void> _loadUnits() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() => _units = prefs.getString('fittrack_units') ?? 'metric');
+  }
+
+  Future<void> _setUnits(String value) async {
+    setState(() => _units = value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fittrack_units', value);
+  }
+
+  String _modeName(ThemeMode mode) => switch (mode) {
+        ThemeMode.dark => context.t('settings:dark'),
+        ThemeMode.light => context.t('settings:light'),
+        ThemeMode.system => context.t('settings:system'),
+      };
+
+  String _modeDesc(ThemeMode mode) => switch (mode) {
+        ThemeMode.dark => context.t('settings:darkDesc'),
+        ThemeMode.light => context.t('settings:lightDesc'),
+        ThemeMode.system => context.t('settings:systemDesc'),
+      };
+
+  @override
+  Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     final selected = ref.watch(themeModeProvider);
+    final language = ref.watch(languageProvider);
+    final caption = FitTrackText.caption.copyWith(color: colors.muted);
+    const pad = EdgeInsets.symmetric(horizontal: FitTrackSpacing.lg);
 
     return Scaffold(
       backgroundColor: colors.bg,
@@ -591,107 +1389,105 @@ class ThemeSettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 44),
           children: [
             _Header(
-              title: 'Appearance',
-              subtitle: 'Currently: ${_themeName(selected)}',
-            ),
-            const _SectionTitle('THEME'),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    _ThemeChoice(
-                      icon: Icons.bedtime,
-                      title: 'Dark',
-                      subtitle: 'Always dark interface',
-                      active: selected == ThemeMode.dark,
-                      onTap: () => _setTheme(ref, ThemeMode.dark),
-                    ),
-                    _ThemeChoice(
-                      icon: Icons.wb_sunny_outlined,
-                      title: 'Light',
-                      subtitle: 'Always light interface',
-                      active: selected == ThemeMode.light,
-                      onTap: () => _setTheme(ref, ThemeMode.light),
-                    ),
-                    _ThemeChoice(
-                      icon: Icons.phone_android,
-                      title: 'System',
-                      subtitle: 'Follows your device theme setting',
-                      active: selected == ThemeMode.system,
-                      last: true,
-                      onTap: () => _setTheme(ref, ThemeMode.system),
-                    ),
-                  ],
-                ),
+              title: context.t('settings:appearanceAndLanguage'),
+              subtitle: context.t(
+                'settings:currentTheme',
+                args: {'theme': _modeName(selected)},
               ),
             ),
-            const _SectionTitle('PREVIEW'),
+            _SectionTitle(context.t('settings:theme').toUpperCase()),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(4),
+              padding: pad,
+              child: FitTrackSegmentedTabs(
+                labels: [for (final m in _modes) _modeName(m)],
+                selectedIndex: _modes.indexOf(selected),
+                onSelected: (i) => _setTheme(ref, _modes[i]),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.lg + 2,
+                6,
+                FitTrackSpacing.lg,
+                0,
+              ),
+              child: Text(_modeDesc(selected), style: caption),
+            ),
+            _SectionTitle(context.t('settings:unitsTitle').toUpperCase()),
+            Padding(
+              padding: pad,
+              child: FitTrackSegmentedTabs(
+                labels: [
+                  context.t('settings:metric'),
+                  context.t('settings:imperial'),
+                ],
+                selectedIndex: _units == 'imperial' ? 1 : 0,
+                onSelected: (i) => _setUnits(i == 1 ? 'imperial' : 'metric'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.lg + 2,
+                6,
+                FitTrackSpacing.lg,
+                0,
+              ),
+              child: Text(
+                context.t(
+                  _units == 'imperial'
+                      ? 'settings:imperialDesc'
+                      : 'settings:metricDesc',
                 ),
+                style: caption,
+              ),
+            ),
+            _SectionTitle(context.t('settings:language').toUpperCase()),
+            _Surface(
+              children: [
+                for (var i = 0; i < supportedLanguages.length; i++)
+                  _LanguageRow(
+                    native: supportedLanguages[i].nativeLabel,
+                    english: supportedLanguages[i].label,
+                    active: language == supportedLanguages[i].code,
+                    first: i == 0,
+                    onTap: () => ref
+                        .read(languageProvider.notifier)
+                        .select(supportedLanguages[i].code),
+                  ),
+              ],
+            ),
+            _SectionTitle(context.t('settings:preview').toUpperCase()),
+            Padding(
+              padding: pad,
+              child: FitTrackCard(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            'Sample Card',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: colors.text,
+                            context.t('settings:sampleCard'),
+                            style: FitTrackText.title.copyWith(
+                              color: colors.ink,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.accent,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'ACTIVE',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              color: colors.accentText,
-                            ),
-                          ),
+                        FitTrackBadge(
+                          label: context.t('settings:previewActive'),
+                          tone: FitTrackBadgeTone.ok,
+                          icon: Icons.check,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Luminous Dark keeps chrome neutral and reserves color for data.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        height: 1.5,
-                        color: colors.muted,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: .65,
-                        minHeight: 6,
-                        backgroundColor: colors.border2,
-                        valueColor: AlwaysStoppedAnimation(colors.accent),
-                      ),
+                    const SizedBox(height: FitTrackSpacing.md),
+                    Text(context.t('settings:previewNote'), style: caption),
+                    const SizedBox(height: FitTrackSpacing.md),
+                    FitTrackProgressBar(
+                      progress: .65,
+                      color: colors.accent,
+                      semanticLabel: context.t('settings:sampleCard'),
                     ),
                   ],
                 ),
@@ -706,17 +1502,77 @@ class ThemeSettingsScreen extends ConsumerWidget {
   static Future<void> _setTheme(WidgetRef ref, ThemeMode mode) async {
     ref.read(themeModeProvider.notifier).state = mode;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'fittrack_theme_preference',
-      _themeName(mode).toLowerCase(),
+    await prefs.setString('fittrack_theme_preference', mode.name);
+  }
+}
+
+/// Radio row for one language: native name, English name, 20px radio.
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({
+    required this.native,
+    required this.english,
+    required this.active,
+    required this.first,
+    required this.onTap,
+  });
+  final String native;
+  final String english;
+  final bool active;
+  final bool first;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppPalette.of(context);
+    return Semantics(
+      inMutuallyExclusiveGroup: true,
+      checked: active,
+      button: true,
+      label: '$native, $english',
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              border:
+                  first ? null : Border(top: BorderSide(color: colors.line)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active ? colors.accent : colors.lineStrong,
+                      width: active ? 6 : 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: FitTrackSpacing.md),
+                Expanded(
+                  child: Text(
+                    native,
+                    style: FitTrackText.title.copyWith(
+                      color: colors.ink,
+                      fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Text(
+                  english,
+                  style: FitTrackText.caption.copyWith(color: colors.muted),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
-
-  static String _themeName(ThemeMode mode) => switch (mode) {
-        ThemeMode.dark => 'Dark',
-        ThemeMode.light => 'Light',
-        ThemeMode.system => 'System',
-      };
 }
 
 class AppSettingsScreen extends StatefulWidget {
@@ -860,38 +1716,33 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: colors.header,
-        border: Border(bottom: BorderSide(color: colors.border)),
+        color: colors.surface,
+        border: Border(bottom: BorderSide(color: colors.line)),
       ),
       child: Row(
         children: [
-          InkWell(
-            onTap: () => context.pop(),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: colors.card,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(Icons.arrow_back, size: 18, color: colors.text),
-            ),
+          FitTrackIconButton(
+            icon: Icons.arrow_back,
+            semanticLabel: context.t('settings:backLabel'),
+            onPressed: () => context.pop(),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: colors.text,
+                  style: FitTrackText.titleLg.copyWith(
+                    color: colors.ink,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (subtitle != null)
@@ -899,7 +1750,7 @@ class _Header extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       subtitle!,
-                      style: TextStyle(fontSize: 11, color: colors.muted),
+                      style: FitTrackText.caption.copyWith(color: colors.muted),
                     ),
                   ),
               ],
@@ -919,14 +1770,18 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.lg + 2,
+        FitTrackSpacing.lg + FitTrackSpacing.xs,
+        FitTrackSpacing.lg,
+        6,
+      ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
+        style: FitTrackText.caption.copyWith(
           color: colors.muted,
-          letterSpacing: 2,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -939,320 +1794,13 @@ class _Surface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: children),
-    );
-  }
-}
-
-class _TextFieldRow extends StatelessWidget {
-  const _TextFieldRow({
-    required this.controller,
-    required this.icon,
-    required this.label,
-    required this.hint,
-    this.numeric = false,
-    this.last = false,
-  });
-
-  final TextEditingController controller;
-  final IconData icon;
-  final String label;
-  final String hint;
-  final bool numeric;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: colors.muted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: numeric
-                  ? const TextInputType.numberWithOptions(decimal: true)
-                  : TextInputType.text,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: colors.text,
-              ),
-              decoration: InputDecoration(
-                filled: false,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                labelText: label,
-                hintText: hint,
-                labelStyle: TextStyle(
-                  fontSize: 9,
-                  color: colors.faint,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GoalChoice extends StatelessWidget {
-  const _GoalChoice({
-    required this.label,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: .10) : colors.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? color : colors.border2),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: .12),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 20, color: color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: selected ? color : colors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: TextStyle(fontSize: 11, color: colors.muted),
-                  ),
-                ],
-              ),
-            ),
-            if (selected)
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.check,
-                  size: 13,
-                  color: Color(0xFF060609),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoalField extends StatelessWidget {
-  const _GoalField({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.controller,
-    required this.suffix,
-    this.last = false,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String label;
-  final TextEditingController controller;
-  final String suffix;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        border: last ? null : Border(bottom: BorderSide(color: colors.border2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: .10),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 17, color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: colors.text,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 105,
-            child: TextField(
-              controller: controller,
-              textAlign: TextAlign.right,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: colors.text,
-              ),
-              decoration: InputDecoration(
-                filled: false,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                suffixText: ' $suffix',
-                suffixStyle: TextStyle(fontSize: 10, color: colors.faint),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ThemeChoice extends StatelessWidget {
-  const _ThemeChoice({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.active,
-    required this.onTap,
-    this.last = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool active;
-  final VoidCallback onTap;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: active ? colors.accentTint : Colors.transparent,
-          border:
-              last ? null : Border(bottom: BorderSide(color: colors.border)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: active ? colors.accentTint : colors.border2,
-                borderRadius: BorderRadius.circular(4),
-                border: active ? Border.all(color: colors.accent) : null,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                icon,
-                size: 20,
-                color: active ? colors.accent : colors.muted,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: active ? colors.accent : colors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: colors.muted),
-                  ),
-                ],
-              ),
-            ),
-            if (active)
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: colors.accent,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                alignment: Alignment.center,
-                child: Icon(Icons.check, size: 13, color: colors.accentText),
-              ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.lg),
+      child: FitTrackCard(
+        padding: EdgeInsets.zero,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(FitTrackRadius.lg - 1),
+          child: Column(children: children),
         ),
       ),
     );
@@ -1341,65 +1889,6 @@ class _ChoiceRow extends StatelessWidget {
                 child: Icon(Icons.check, size: 11, color: colors.accentText),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.accentTint,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border2),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 11, color: colors.subtext),
-      ),
-    );
-  }
-}
-
-class _SaveButton extends StatelessWidget {
-  const _SaveButton({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: onTap,
-          style: FilledButton.styleFrom(
-            backgroundColor: colors.accent,
-            foregroundColor: colors.accentText,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              letterSpacing: .8,
-            ),
-          ),
         ),
       ),
     );

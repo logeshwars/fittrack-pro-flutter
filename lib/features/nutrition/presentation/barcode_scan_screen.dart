@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/data/service_providers.dart';
+import '../../../core/l10n/language_controller.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
+import 'scan_chrome.dart';
 
 /// Live barcode scanner. A hit is looked up (OpenFoodFacts world, India
 /// mirror, v0, then USDA) and handed to the food log screen.
@@ -55,6 +60,8 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
     setState(() => _busy = true);
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final noData = context.t('nutrition:noNutritionData');
+    final enterManually = context.t('nutrition:enterManually');
     final food = await ref.read(foodSearchServiceProvider).lookupBarcode(code);
     if (!mounted) {
       return;
@@ -66,9 +73,9 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
     setState(() => _busy = false);
     messenger.showSnackBar(
       SnackBar(
-        content: const Text('No nutrition data found for this barcode'),
+        content: Text(noData),
         action: SnackBarAction(
-          label: 'Enter manually',
+          label: enterManually,
           onPressed: () => router.pushReplacement('/nutrition/log'),
         ),
       ),
@@ -79,90 +86,101 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-            errorBuilder: (context, error, child) => _PermissionError(
-              message:
-                  error.errorCode == MobileScannerErrorCode.permissionDenied
-                      ? 'Grant camera permission to scan product barcodes.'
-                      : 'The camera is unavailable.',
-              onManual: () => context.pushReplacement('/nutrition/log'),
-            ),
-          ),
-          const Center(child: _ScannerFrame()),
-          Align(
-            alignment: Alignment.center,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 260),
-              child: Text(
-                _busy ? 'LOOKING UP PRODUCT…' : 'POINT AT A PRODUCT BARCODE',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: .5,
+      backgroundColor: FitTrackCamera.bg(brightness),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const ScanHeader(photoSelected: false),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.lg,
+                  FitTrackSpacing.lg,
+                  0,
                 ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: 'Back',
-                    onPressed: () => context.pop(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: 'Torch',
-                    onPressed: () async {
-                      await _controller.toggleTorch();
-                      if (mounted) {
-                        setState(() => _torch = !_torch);
-                      }
-                    },
-                    icon: Icon(
-                      _torch ? Icons.flash_on : Icons.flash_off,
-                      color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+                  child: ColoredBox(
+                    color: FitTrackCamera.panel,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        MobileScanner(
+                          controller: _controller,
+                          onDetect: _onDetect,
+                          errorBuilder: (context, error, child) =>
+                              _PermissionError(
+                            message: context.t(
+                              error.errorCode ==
+                                      MobileScannerErrorCode.permissionDenied
+                                  ? 'nutrition:cameraPermissionDesc'
+                                  : 'nutrition:cameraUnavailable',
+                            ),
+                            onManual: () =>
+                                context.pushReplacement('/nutrition/log'),
+                          ),
+                        ),
+                        const Center(child: _ScannerFrame()),
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: FitTrackSpacing.lg,
+                            ),
+                            child: Text(
+                              context.t(
+                                _busy
+                                    ? 'nutrition:barcodeLooking'
+                                    : 'nutrition:barcodePoint',
+                              ),
+                              style: FitTrackText.label.copyWith(
+                                color: FitTrackCamera.muted,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.topRight,
+                          child: IconButton(
+                            tooltip: context.t('nutrition:torchLabel'),
+                            onPressed: () async {
+                              await _controller.toggleTorch();
+                              if (mounted) {
+                                setState(() => _torch = !_torch);
+                              }
+                            },
+                            icon: Icon(
+                              _torch ? Icons.flash_on : Icons.flash_off,
+                              color: FitTrackCamera.ink,
+                            ),
+                          ),
+                        ),
+                        if (_busy)
+                          const ColoredBox(
+                            color: AppTheme.scrim,
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: OutlinedButton.icon(
-                  onPressed: () => context.pushReplacement('/nutrition/log'),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Enter manually'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white54),
-                  ),
                 ),
               ),
             ),
-          ),
-          if (_busy)
-            const Positioned.fill(
-              child: ColoredBox(
-                color: Color(0xB3000000),
-                child: Center(child: CircularProgressIndicator()),
+            Padding(
+              padding: const EdgeInsets.all(FitTrackSpacing.lg),
+              child: FitTrackButton(
+                label: context.t('nutrition:enterManually'),
+                icon: Icons.edit_outlined,
+                variant: FitTrackButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => context.pushReplacement('/nutrition/log'),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -176,31 +194,31 @@ class _PermissionError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.all(32),
+      color: FitTrackCamera.panel,
+      padding: const EdgeInsets.all(FitTrackSpacing.xxl),
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Camera Access Required',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
+          Text(
+            context.t('nutrition:cameraAccessRequired'),
+            textAlign: TextAlign.center,
+            style: FitTrackText.titleLg.copyWith(
+              color: FitTrackCamera.ink,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: FitTrackSpacing.md),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70),
+            style: FitTrackText.body.copyWith(color: FitTrackCamera.muted),
           ),
-          const SizedBox(height: 24),
-          OutlinedButton(
+          const SizedBox(height: FitTrackSpacing.xxl),
+          FitTrackButton(
+            label: context.t('nutrition:enterManually'),
+            variant: FitTrackButtonVariant.secondary,
             onPressed: onManual,
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
-            child: const Text('Enter manually'),
           ),
         ],
       ),
@@ -226,7 +244,7 @@ class _ScannerFrame extends StatelessWidget {
             decoration: BoxDecoration(border: border, borderRadius: radius),
           ),
         );
-    const side = BorderSide(color: Colors.white, width: 3);
+    const side = BorderSide(color: FitTrackCamera.ink, width: 3);
     return SizedBox(
       width: 256,
       height: 176,
@@ -255,7 +273,7 @@ class _ScannerFrame extends StatelessWidget {
           const Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Divider(color: Colors.white70, thickness: 2),
+              child: Divider(color: FitTrackCamera.muted, thickness: 2),
             ),
           ),
         ],

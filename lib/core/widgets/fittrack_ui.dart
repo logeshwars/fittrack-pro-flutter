@@ -56,8 +56,8 @@ class FitTrackStatRing extends StatelessWidget {
   const FitTrackStatRing({
     required this.progress,
     required this.color,
-    this.size = 62,
-    this.strokeWidth = 5,
+    this.size = 64,
+    this.strokeWidth = 7,
     this.child,
     super.key,
   });
@@ -71,27 +71,14 @@ class FitTrackStatRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: isDark
-          ? BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.14),
-                  blurRadius: 18,
-                  spreadRadius: 1,
-                ),
-              ],
-            )
-          : null,
       child: CustomPaint(
         painter: _RingPainter(
           progress: progress.clamp(0, 1).toDouble(),
           color: color,
-          track: colors.border2,
+          track: colors.line,
           strokeWidth: strokeWidth,
         ),
         child: Center(child: child),
@@ -170,60 +157,60 @@ class FitTrackMiniRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     return Expanded(
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
+      child: Semantics(
+        container: true,
+        label: '$label, $value, $sublabel${done ? ', done' : ''}',
+        child: ExcludeSemantics(
+          child: Column(
             children: [
-              FitTrackStatRing(
-                progress: progress,
-                color: color,
-                child: Icon(icon, size: 18, color: color),
-              ),
-              if (done)
-                Positioned(
-                  right: -3,
-                  top: -3,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text(
-                      '✓',
-                      style: TextStyle(
-                        color: Color(0xFF04140A),
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  FitTrackStatRing(
+                    progress: progress,
+                    color: done ? colors.ok : color,
+                    child: Icon(icon, size: 18, color: color),
+                  ),
+                  if (done)
+                    Positioned(
+                      right: -3,
+                      top: -3,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: colors.ok,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.bg, width: 2),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.check, size: 10, color: colors.bg),
                       ),
                     ),
-                  ),
+                ],
+              ),
+              const SizedBox(height: FitTrackSpacing.sm),
+              Text(
+                value,
+                style: FitTrackText.title.copyWith(
+                  color: colors.ink,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label.toUpperCase(),
+                style: FitTrackText.overline.copyWith(color: colors.muted),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                sublabel,
+                style: FitTrackText.caption.copyWith(color: colors.muted),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: FitTrackText.title.copyWith(
-              color: done ? color : colors.text,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label.toUpperCase(),
-            style: FitTrackText.micro.copyWith(color: colors.muted),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            sublabel,
-            style: TextStyle(fontSize: 9, color: colors.faint),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -247,9 +234,10 @@ class FitTrackScreenHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.xxl, FitTrackSpacing.md, FitTrackSpacing.xxl, 14),
       decoration: BoxDecoration(
-        color: colors.header,
+        color: colors.bg,
         border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: Row(
@@ -272,7 +260,7 @@ class FitTrackScreenHeader extends StatelessWidget {
                       subtitle!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 10, color: colors.muted),
+                      style: FitTrackText.caption.copyWith(color: colors.muted),
                     ),
                   ),
               ],
@@ -285,6 +273,8 @@ class FitTrackScreenHeader extends StatelessWidget {
   }
 }
 
+/// Segmented control (C2/C7): a `line` track (radius 12, padding 3) with a
+/// `surface` selected segment, ink w800 label and a soft shadow.
 class FitTrackSegmentedTabs extends StatelessWidget {
   const FitTrackSegmentedTabs({
     required this.labels,
@@ -300,44 +290,57 @@ class FitTrackSegmentedTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppPalette.of(context);
-    return Row(
-      children: List.generate(labels.length, (index) {
-        final active = index == selectedIndex;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              left: index == 0 ? 0 : 3,
-              right: index == labels.length - 1 ? 0 : 3,
-            ),
-            child: Material(
-              color: active ? colors.accent : colors.card,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: () => onSelected(index),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: active ? colors.accent : colors.border2),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    labels[index],
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: active ? colors.accentText : colors.subtext,
-                      letterSpacing: 0.4,
+    final segment = BorderRadius.circular(FitTrackRadius.md);
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: colors.line,
+        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+      ),
+      child: Row(
+        children: List.generate(labels.length, (index) {
+          final active = index == selectedIndex;
+          return Expanded(
+            child: Semantics(
+              button: true,
+              selected: active,
+              label: labels[index],
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: () => onSelected(index),
+                  borderRadius: segment,
+                  child: Container(
+                    height: 38,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: active ? colors.surface : Colors.transparent,
+                      borderRadius: segment,
+                      boxShadow: active
+                          ? const [
+                              BoxShadow(
+                                color: Color(0x2E000000),
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Text(
+                      labels[index],
+                      textAlign: TextAlign.center,
+                      style: FitTrackText.label.copyWith(
+                        color: active ? colors.ink : colors.muted,
+                        fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

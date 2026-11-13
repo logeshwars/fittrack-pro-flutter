@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/custom_icons.dart';
+import '../../../core/widgets/fittrack_components.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.child, super.key});
@@ -18,7 +20,6 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    final colors = AppPalette.of(context);
     final index = _paths.indexWhere(
       (path) => location == path || location.startsWith('$path/'),
     );
@@ -26,18 +27,18 @@ class AppShell extends StatelessWidget {
 
     Widget tabIcon(int tab, Color color, {required bool focused}) =>
         switch (tab) {
-          0 => TabTodayIcon(size: 26, color: color, focused: focused),
-          1 => TabWorkoutIcon(size: 26, color: color, focused: focused),
-          2 => TabNutritionIcon(size: 26, color: color, focused: focused),
-          3 => TabCardioIcon(size: 26, color: color, focused: focused),
-          _ => TabProgressIcon(size: 26, color: color, focused: focused),
+          0 => TabTodayIcon(size: 22, color: color, focused: focused),
+          1 => TabWorkoutIcon(size: 22, color: color, focused: focused),
+          2 => TabNutritionIcon(size: 22, color: color, focused: focused),
+          3 => TabCardioIcon(size: 22, color: color, focused: focused),
+          _ => TabProgressIcon(size: 22, color: color, focused: focused),
         };
-    const domains = [
-      AppColors.recovery,
-      AppColors.workout,
-      AppColors.nutrition,
-      AppColors.cardio,
-      AppColors.xp,
+    final labels = [
+      fitTrackLabel(context, 'common:today', 'Today'),
+      fitTrackLabel(context, 'workout:title', 'Workout'),
+      fitTrackLabel(context, 'nutrition:title', 'Nutrition'),
+      fitTrackLabel(context, 'common:cardioTitle', 'Cardio'),
+      fitTrackLabel(context, 'progress:title', 'Progress'),
     ];
 
     return Scaffold(
@@ -45,50 +46,11 @@ class AppShell extends StatelessWidget {
         bottom: false,
         child: child,
       ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.header,
-          border: Border(top: BorderSide(color: colors.border)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 66,
-            child: Row(
-              children: List.generate(_paths.length, (tabIndex) {
-                final selected = selectedIndex == tabIndex;
-                final color = selected ? domains[tabIndex] : colors.faint;
-                return Expanded(
-                  child: InkResponse(
-                    key: Key('fittrack-tab-$tabIndex'),
-                    onTap: () => context.go(_paths[tabIndex]),
-                    radius: 30,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedScale(
-                          duration: const Duration(milliseconds: 150),
-                          scale: selected ? 1.08 : 1,
-                          child: tabIcon(tabIndex, color, focused: selected),
-                        ),
-                        const SizedBox(height: 5),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: selected ? 16 : 4,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: selected ? color : Colors.transparent,
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ),
+      bottomNavigationBar: FitTrackTabBar(
+        selectedIndex: selectedIndex,
+        labels: labels,
+        iconBuilder: tabIcon,
+        onSelected: (tab) => context.go(_paths[tab]),
       ),
     );
   }
@@ -121,8 +83,9 @@ class FeaturePlaceholder extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: colors.card,
-            borderRadius: BorderRadius.circular(12),
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+            border: Border.all(color: colors.line),
           ),
           child: Column(
             children: [

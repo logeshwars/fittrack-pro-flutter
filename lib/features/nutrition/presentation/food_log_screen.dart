@@ -4,9 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/data/service_providers.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 import '../data/food_search_service.dart';
 import '../domain/food_result.dart';
+import '../domain/nutrition_models.dart';
 import 'nutrition_screen.dart';
 
 /// Favorites as [FoodResult]s.
@@ -30,6 +34,41 @@ final favoriteFoodsProvider =
   ];
 });
 
+/// Foods logged over the last three days, newest first, one row per food.
+final recentFoodsProvider = Provider.autoDispose<List<NutritionLog>>((ref) {
+  final today = dayOnly(DateTime.now());
+  final logs = <NutritionLog>[
+    for (var i = 0; i < 3; i++)
+      ...ref
+              .watch(
+                nutritionDayProvider(
+                  DateTime(today.year, today.month, today.day - i),
+                ),
+              )
+              .valueOrNull ??
+          const <NutritionLog>[],
+  ]..sort((a, b) => b.loggedAt.compareTo(a.loggedAt));
+  final seen = <String>{};
+  return [
+    for (final l in logs)
+      if (l.quantityG > 0 && seen.add(l.foodName)) l,
+  ].take(5).toList();
+});
+
+/// A logged entry as a per-100 g [FoodResult], for "add again".
+FoodResult foodFromLog(NutritionLog l) {
+  final k = 100 / l.quantityG;
+  double? s(double? v) => v == null ? null : v * k;
+  return FoodResult(
+    name: l.foodName,
+    proteinPer100g: l.proteinG * k,
+    caloriesPer100g: s(l.calories),
+    carbsPer100g: s(l.carbsG),
+    fatPer100g: s(l.fatG),
+    source: FoodSource.local,
+  );
+}
+
 String defaultMealForNow(DateTime now) {
   final h = now.hour;
   if (h < 11) {
@@ -52,7 +91,8 @@ DateTime logTimestamp(DateTime day, DateTime now) {
   return DateTime(day.year, day.month, day.day, 12);
 }
 
-/// Add food: search (Indian list, OpenFoodFacts, USDA), favorites or manual.
+/// Add food: search (Indian list, OpenFoodFacts, USDA), favorites, recent
+/// foods, barcode, photo scan or quick (manual) add.
 class FoodLogScreen extends ConsumerStatefulWidget {
   const FoodLogScreen({this.meal, this.date, this.initialFood, super.key});
   final String? meal;
@@ -66,7 +106,6 @@ class FoodLogScreen extends ConsumerStatefulWidget {
 class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
   late String _meal;
   late final DateTime _day;
-  int _tab = 0;
   String _query = '';
   Timer? _debounce;
   List<FoodResult> _results = const [];
@@ -121,17 +160,27 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     });
   }
 
-  Future<void> _select(FoodResult food) async {
+  Future<void> _select(FoodResult food, {double grams = 100}) async {
     final favorites = ref.read(favoriteFoodsProvider).valueOrNull ?? const [];
-    final result = await showModalBottomSheet<_LogRequest>(
+    final result = await showFitTrackSheet<_LogRequest>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppPalette.of(context).card,
       builder: (_) => _QuantitySheet(
         food: food,
         meal: _meal,
+        initialGrams: grams,
         isFavorite: favorites.any((f) => f.name == food.displayName),
       ),
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+    await _save(result);
+  }
+
+  Future<void> _quickAdd() async {
+    final result = await showFitTrackSheet<_LogRequest>(
+      context: context,
+      builder: (_) => _ManualForm(meal: _meal),
     );
     if (result == null || !mounted) {
       return;
@@ -142,11 +191,14 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
   Future<void> _save(_LogRequest request) async {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+    final signIn = context.t('nutrition:signInToLog');
+    final logged = context.t(
+      'nutrition:loggedFood',
+      args: {'name': request.food.displayName},
+    );
     final service = ref.read(nutritionServiceProvider);
     if (service == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Sign in to log food.')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(signIn)));
       return;
     }
     final scaled = scaleFood(request.food, request.quantityG);
@@ -174,95 +226,240 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       ref.invalidate(favoriteFoodsProvider);
     }
     ref.invalidate(nutritionDayProvider(_day));
-    messenger.showSnackBar(
-      SnackBar(content: Text('Logged ${request.food.displayName}')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(logged)));
     router.pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
+    final favorites = ref.watch(favoriteFoodsProvider);
+    final recent = ref.watch(recentFoodsProvider);
+    final fromLocal =
+        _results.isNotEmpty && _results.every((f) => f.source == FoodSource.local);
+    const gap = SizedBox(height: FitTrackSpacing.md);
+
     return Scaffold(
-      backgroundColor: colors.bg,
+      backgroundColor: c.bg,
       appBar: AppBar(
-        backgroundColor: colors.header,
-        foregroundColor: colors.text,
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        shape: Border(bottom: BorderSide(color: c.line)),
+        toolbarHeight: 64,
+        titleSpacing: 0,
+        leading: FitTrackIconButton(
+          icon: Icons.arrow_back,
+          semanticLabel: context.t('nutrition:goBackLink'),
+          onPressed: () => context.pop(),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Log food'),
+            Text(
+              context.t('nutrition:addFoodTitle'),
+              style: FitTrackText.titleLg.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             Text(
               DateFormat('EEEE, MMM d').format(_day),
-              style: TextStyle(fontSize: 11, color: colors.muted),
+              style: FitTrackText.caption.copyWith(color: c.muted),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Scan barcode',
-            onPressed: () => context.push('/nutrition/scan'),
-            icon: const Icon(Icons.qr_code_scanner),
-          ),
-          IconButton(
-            tooltip: 'Photo scan',
-            onPressed: () => context.push('/nutrition/photo'),
-            icon: const Icon(Icons.photo_camera_outlined),
-          ),
-        ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          FitTrackSpacing.lg,
+          FitTrackSpacing.md,
+          FitTrackSpacing.lg,
+          FitTrackSpacing.xxl,
+        ),
         children: [
           SizedBox(
-            height: 54,
+            height: FitTrackSpacing.touchMin,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
               children: [
                 for (final m in mealOrder)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(mealLabel(m)),
+                    padding: const EdgeInsets.only(right: FitTrackSpacing.sm),
+                    child: FitTrackChip(
+                      label: mealText(context, m),
                       selected: _meal == m,
-                      onSelected: (_) => setState(() => _meal = m),
+                      onTap: () => setState(() => _meal = m),
                     ),
                   ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text('Search')),
-                ButtonSegment(value: 1, label: Text('Favorites')),
-                ButtonSegment(value: 2, label: Text('Manual')),
+          gap,
+          _SearchField(onChanged: _onQuery),
+          if (_searching)
+            Padding(
+              padding: const EdgeInsets.only(top: FitTrackSpacing.sm),
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: c.accent,
+                backgroundColor: c.line,
+              ),
+            ),
+          gap,
+          Row(
+            children: [
+              Expanded(
+                child: _MethodTile(
+                  title: context.t('nutrition:methodBarcode'),
+                  caption: context.t('nutrition:methodBarcodeDesc'),
+                  onTap: () => context.push('/nutrition/scan'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MethodTile(
+                  title: context.t('nutrition:methodPhoto'),
+                  caption: context.t('nutrition:methodPhotoDesc'),
+                  onTap: () => context.push('/nutrition/photo'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MethodTile(
+                  title: context.t('nutrition:methodQuick'),
+                  caption: context.t('nutrition:methodQuickDesc'),
+                  onTap: _quickAdd,
+                ),
+              ),
+            ],
+          ),
+          gap,
+          _ListCard(
+            title: context.t('nutrition:resultsTitle'),
+            trailing: context.t(
+              fromLocal ? 'nutrition:sourceIndian' : 'nutrition:sourceSearch',
+            ),
+            emptyText: _searching
+                ? context.t('nutrition:searching')
+                : context.t('nutrition:noFoodsFound'),
+            rows: [
+              for (final food in _results)
+                _FoodRow(
+                  key: ValueKey('r-${food.displayName}-${food.source.name}'),
+                  title: food.displayName,
+                  caption: _foodCaption(context, food),
+                  badge: _sourceCode(context, food.source),
+                  addLabel: context.t(
+                    'nutrition:addNamed',
+                    args: {'name': food.displayName},
+                  ),
+                  onTap: () => _select(food),
+                ),
+            ],
+          ),
+          gap,
+          favorites.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => _ListCard(
+              title: context.t('nutrition:favoritesTitle'),
+              emptyText: context.t('nutrition:favoritesLoadFailed'),
+              rows: const [],
+            ),
+            data: (list) => _ListCard(
+              title: context.t('nutrition:favoritesTitle'),
+              emptyText: context.t('nutrition:favoritesEmpty'),
+              rows: [
+                for (final food in list)
+                  Dismissible(
+                    key: ValueKey('f-${food.name}'),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding:
+                          const EdgeInsets.only(right: FitTrackSpacing.xl),
+                      color: c.bad,
+                      child: Icon(Icons.delete_outline, color: c.surface),
+                    ),
+                    onDismissed: (_) async {
+                      final service = ref.read(nutritionServiceProvider);
+                      final rows = await service?.favorites() ?? const [];
+                      for (final r in rows) {
+                        if (r['food_name'] == food.name) {
+                          await service?.removeFavorite(r['id'] as String);
+                        }
+                      }
+                      ref.invalidate(favoriteFoodsProvider);
+                    },
+                    child: _FoodRow(
+                      title: food.displayName,
+                      caption: _foodCaption(context, food),
+                      addLabel: context.t(
+                        'nutrition:addNamed',
+                        args: {'name': food.displayName},
+                      ),
+                      onTap: () => _select(food),
+                    ),
+                  ),
               ],
-              selected: {_tab},
-              onSelectionChanged: (s) => setState(() => _tab = s.first),
             ),
           ),
-          Expanded(
-            child: switch (_tab) {
-              0 => _SearchTab(
-                  results: _results,
-                  searching: _searching,
-                  onQuery: _onQuery,
-                  onSelect: _select,
-                ),
-              1 => _FavoritesTab(onSelect: _select),
-              _ => _ManualTab(
-                  meal: _meal,
-                  onSubmit: _save,
-                ),
-            },
-          ),
+          if (recent.isNotEmpty) ...[
+            gap,
+            _ListCard(
+              title: context.t('nutrition:recentTitle'),
+              emptyText: '',
+              rows: [
+                for (final l in recent)
+                  _FoodRow(
+                    key: ValueKey('c-${l.foodName}'),
+                    title: l.foodName,
+                    caption: l.calories == null
+                        ? context.t(
+                            'nutrition:recentCaptionNoKcal',
+                            args: {'qty': l.quantityG.round()},
+                          )
+                        : context.t(
+                            'nutrition:recentCaption',
+                            args: {
+                              'qty': l.quantityG.round(),
+                              'kcal': l.calories!.round(),
+                            },
+                          ),
+                    addLabel: context.t(
+                      'nutrition:addAgain',
+                      args: {'name': l.foodName},
+                    ),
+                    onTap: () =>
+                        _select(foodFromLog(l), grams: l.quantityG),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 }
+
+String _foodCaption(BuildContext context, FoodResult food) {
+  final protein = food.proteinPer100g.toStringAsFixed(1);
+  return food.caloriesPer100g == null
+      ? context.t('nutrition:foodCaptionNoKcal', args: {'protein': protein})
+      : context.t(
+          'nutrition:foodCaption',
+          args: {'kcal': food.caloriesPer100g!.round(), 'protein': protein},
+        );
+}
+
+String _sourceCode(BuildContext context, FoodSource source) =>
+    switch (source) {
+      FoodSource.local => context.t('nutrition:srcLocal'),
+      FoodSource.openFoodFacts => context.t('nutrition:srcOff'),
+      FoodSource.usda => context.t('nutrition:srcUsda'),
+      FoodSource.favorite => context.t('nutrition:srcFav'),
+    };
 
 class _LogRequest {
   const _LogRequest({
@@ -277,170 +474,246 @@ class _LogRequest {
   final bool favorite;
 }
 
-class _SearchTab extends StatelessWidget {
-  const _SearchTab({
-    required this.results,
-    required this.searching,
-    required this.onQuery,
-    required this.onSelect,
-  });
-  final List<FoodResult> results;
-  final bool searching;
-  final ValueChanged<String> onQuery;
-  final ValueChanged<FoodResult> onSelect;
+/// Always-visible search field (48px, strong border).
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.onChanged});
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TextField(
-            onChanged: onQuery,
-            decoration: const InputDecoration(
-              hintText: 'Search foods (dal, paneer, oats…)',
-              prefixIcon: Icon(Icons.search),
+    final c = AppPalette.of(context);
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.md),
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border.all(color: c.lineStrong),
+        borderRadius: BorderRadius.circular(FitTrackRadius.md),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, size: 18, color: c.muted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Semantics(
+              label: context.t('nutrition:searchFoods'),
+              textField: true,
+              child: TextField(
+                onChanged: onChanged,
+                style: FitTrackText.body.copyWith(color: c.ink),
+                cursorColor: c.accent,
+                decoration: InputDecoration.collapsed(
+                  hintText: context.t('nutrition:searchHint'),
+                  hintStyle: FitTrackText.body.copyWith(color: c.muted),
+                ),
+              ),
             ),
           ),
-        ),
-        if (searching) const LinearProgressIndicator(minHeight: 2),
-        Expanded(
-          child: results.isEmpty
-              ? Center(
-                  child: Text(
-                    searching ? 'Searching…' : 'No foods found',
-                    style: TextStyle(color: colors.muted),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                  itemCount: results.length,
-                  itemBuilder: (_, i) => _FoodTile(
-                    food: results[i],
-                    onTap: () => onSelect(results[i]),
-                  ),
-                ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _FavoritesTab extends ConsumerWidget {
-  const _FavoritesTab({required this.onSelect});
-  final ValueChanged<FoodResult> onSelect;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = AppPalette.of(context);
-    final favorites = ref.watch(favoriteFoodsProvider);
-    return favorites.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Could not load favorites')),
-      data: (list) => list.isEmpty
-          ? Center(
-              child: Text(
-                'Star a food when logging to save it here',
-                style: TextStyle(color: colors.muted),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              itemCount: list.length,
-              itemBuilder: (_, i) => Dismissible(
-                key: ValueKey(list[i].name),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  color: colors.danger,
-                  child: const Icon(Icons.delete_outline, color: Colors.white),
-                ),
-                onDismissed: (_) async {
-                  final service = ref.read(nutritionServiceProvider);
-                  final rows = await service?.favorites() ?? const [];
-                  for (final r in rows) {
-                    if (r['food_name'] == list[i].name) {
-                      await service?.removeFavorite(r['id'] as String);
-                    }
-                  }
-                  ref.invalidate(favoriteFoodsProvider);
-                },
-                child: _FoodTile(food: list[i], onTap: () => onSelect(list[i])),
-              ),
-            ),
-    );
-  }
-}
-
-class _FoodTile extends StatelessWidget {
-  const _FoodTile({required this.food, required this.onTap});
-  final FoodResult food;
+/// Barcode / Photo scan / Quick add entry tile.
+class _MethodTile extends StatelessWidget {
+  const _MethodTile({
+    required this.title,
+    required this.caption,
+    required this.onTap,
+  });
+  final String title;
+  final String caption;
   final VoidCallback onTap;
-
-  String get _source => switch (food.source) {
-        FoodSource.local => 'IN',
-        FoodSource.openFoodFacts => 'OFF',
-        FoodSource.usda => 'USDA',
-        FoodSource.favorite => 'FAV',
-      };
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    final kcal = food.caloriesPer100g == null
-        ? ''
-        : ' · ${food.caloriesPer100g!.round()} kcal';
-    return InkWell(
+    final c = AppPalette.of(context);
+    return FitTrackCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.card,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
+      padding: const EdgeInsets.all(FitTrackSpacing.md),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 58),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Text(
+              title,
+              style: FitTrackText.title.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: FitTrackSpacing.xs),
+            Text(
+              caption,
+              style: FitTrackText.caption.copyWith(color: c.muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card with a 44px header (title left, source/caption right) and rows.
+class _ListCard extends StatelessWidget {
+  const _ListCard({
+    required this.title,
+    required this.rows,
+    required this.emptyText,
+    this.trailing,
+  });
+  final String title;
+  final String? trailing;
+  final String emptyText;
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return FitTrackCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: FitTrackSpacing.touchMin,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
                 children: [
-                  Text(
-                    food.displayName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: colors.text,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: FitTrackText.title.copyWith(
+                        color: c.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${food.proteinPer100g.toStringAsFixed(1)} g protein / 100 g$kcal',
-                    style: TextStyle(fontSize: 11, color: colors.muted),
-                  ),
+                  if (trailing != null)
+                    Flexible(
+                      child: Text(
+                        trailing!,
+                        textAlign: TextAlign.end,
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                    ),
                 ],
               ),
             ),
+          ),
+          if (rows.isEmpty && emptyText.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: colors.cardAlt,
-                borderRadius: BorderRadius.circular(6),
+                border: Border(top: BorderSide(color: c.line)),
               ),
+              padding: const EdgeInsets.all(FitTrackSpacing.lg),
               child: Text(
-                _source,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: colors.muted,
-                ),
+                emptyText,
+                textAlign: TextAlign.center,
+                style: FitTrackText.body.copyWith(color: c.muted),
               ),
+            )
+          else
+            ...rows,
+        ],
+      ),
+    );
+  }
+}
+
+/// One food row: name and caption, optional source badge, 32px add button.
+class _FoodRow extends StatelessWidget {
+  const _FoodRow({
+    required this.title,
+    required this.caption,
+    required this.addLabel,
+    required this.onTap,
+    this.badge,
+    super.key,
+  });
+  final String title;
+  final String caption;
+  final String addLabel;
+  final String? badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border(top: BorderSide(color: c.line)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 6, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: FitTrackText.title.copyWith(
+                          color: c.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        caption,
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                if (badge != null) ...[
+                  const SizedBox(width: FitTrackSpacing.sm),
+                  FitTrackBadge(label: badge!),
+                ],
+                Semantics(
+                  button: true,
+                  label: addLabel,
+                  child: ExcludeSemantics(
+                    child: InkResponse(
+                      onTap: onTap,
+                      radius: 22,
+                      child: SizedBox(
+                        width: FitTrackSpacing.touchMin,
+                        height: FitTrackSpacing.touchMin,
+                        child: Center(
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: c.accent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              size: 16,
+                              color: c.accentText,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -452,17 +725,20 @@ class _QuantitySheet extends StatefulWidget {
     required this.food,
     required this.meal,
     required this.isFavorite,
+    required this.initialGrams,
   });
   final FoodResult food;
   final String meal;
   final bool isFavorite;
+  final double initialGrams;
 
   @override
   State<_QuantitySheet> createState() => _QuantitySheetState();
 }
 
 class _QuantitySheetState extends State<_QuantitySheet> {
-  final _controller = TextEditingController(text: '100');
+  late final _controller =
+      TextEditingController(text: widget.initialGrams.round().toString());
   late bool _favorite = widget.isFavorite;
 
   @override
@@ -475,30 +751,24 @@ class _QuantitySheetState extends State<_QuantitySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final scaled = scaleFood(widget.food, _grams);
     Widget stat(String label, String value, Color color) => Expanded(
           child: Column(
             children: [
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                ),
+                style: FitTrackText.stat.copyWith(color: color),
               ),
-              Text(label, style: TextStyle(fontSize: 10, color: colors.muted)),
+              Text(
+                label,
+                style: FitTrackText.caption.copyWith(color: c.muted),
+              ),
             ],
           ),
         );
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        20,
-        20,
-        20 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,92 +778,105 @@ class _QuantitySheetState extends State<_QuantitySheet> {
               Expanded(
                 child: Text(
                   widget.food.displayName,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: colors.text,
+                  style: FitTrackText.titleLg.copyWith(
+                    color: c.ink,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: 'Favorite',
+              FitTrackIconButton(
+                icon: _favorite ? Icons.star : Icons.star_border,
+                color: c.xpColor,
+                semanticLabel: context.t('nutrition:favoriteToggle'),
                 onPressed: () => setState(() => _favorite = !_favorite),
-                icon: Icon(
-                  _favorite ? Icons.star : Icons.star_border,
-                  color: AppColors.xp,
-                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          TextField(
+          const SizedBox(height: FitTrackSpacing.sm),
+          FitTrackTextField(
+            label: context.t('nutrition:quantityShort'),
             controller: _controller,
             autofocus: true,
             onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Quantity',
-              suffixText: 'g',
+            suffix: Padding(
+              padding: const EdgeInsets.all(FitTrackSpacing.md),
+              child: Text(
+                context.t('nutrition:unitG'),
+                style: FitTrackText.body.copyWith(color: c.muted),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: FitTrackSpacing.lg),
           Row(
             children: [
-              stat('PROTEIN g', scaled.protein.toStringAsFixed(1),
-                  AppColors.nutrition),
-              stat('KCAL', scaled.calories?.round().toString() ?? '—',
-                  AppColors.workout),
-              stat('CARBS g', scaled.carbs?.toStringAsFixed(1) ?? '—',
-                  AppColors.water),
               stat(
-                  'FAT g', scaled.fat?.toStringAsFixed(1) ?? '—', AppColors.xp),
+                context.t('nutrition:statProteinG'),
+                scaled.protein.toStringAsFixed(1),
+                c.nutritionColor,
+              ),
+              stat(
+                context.t('nutrition:statKcal'),
+                scaled.calories?.round().toString() ?? '—',
+                c.workoutColor,
+              ),
+              stat(
+                context.t('nutrition:statCarbsG'),
+                scaled.carbs?.toStringAsFixed(1) ?? '—',
+                c.waterColor,
+              ),
+              stat(
+                context.t('nutrition:statFatG'),
+                scaled.fat?.toStringAsFixed(1) ?? '—',
+                c.xpColor,
+              ),
             ],
           ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _grams > 0
-                  ? () => Navigator.of(context).pop(
-                        _LogRequest(
-                          food: widget.food,
-                          quantityG: _grams,
-                          meal: widget.meal,
-                          favorite: _favorite,
-                        ),
-                      )
-                  : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.accent,
-                foregroundColor: colors.accentText,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text('LOG TO ${mealLabel(widget.meal).toUpperCase()}'),
+          const SizedBox(height: FitTrackSpacing.xl),
+          FitTrackButton(
+            label: context.t(
+              'nutrition:logTo',
+              args: {'meal': mealText(context, widget.meal)},
             ),
+            size: FitTrackButtonSize.lg,
+            fullWidth: true,
+            onPressed: _grams > 0
+                ? () => Navigator.of(context).pop(
+                      _LogRequest(
+                        food: widget.food,
+                        quantityG: _grams,
+                        meal: widget.meal,
+                        favorite: _favorite,
+                      ),
+                    )
+                : null,
           ),
+          const SizedBox(height: FitTrackSpacing.sm),
         ],
       ),
     );
   }
 }
 
-class _ManualTab extends StatefulWidget {
-  const _ManualTab({required this.meal, required this.onSubmit});
+/// Quick add: enter a food and its values by hand.
+class _ManualForm extends StatefulWidget {
+  const _ManualForm({required this.meal});
   final String meal;
-  final ValueChanged<_LogRequest> onSubmit;
 
   @override
-  State<_ManualTab> createState() => _ManualTabState();
+  State<_ManualForm> createState() => _ManualFormState();
 }
 
-class _ManualTabState extends State<_ManualTab> {
-  final _formKey = GlobalKey<FormState>();
+class _ManualFormState extends State<_ManualForm> {
   final _name = TextEditingController();
   final _grams = TextEditingController(text: '100');
   final _protein = TextEditingController();
   final _calories = TextEditingController();
   final _carbs = TextEditingController();
   final _fat = TextEditingController();
+  String? _nameError;
+  String? _gramsError;
+  String? _proteinError;
 
   @override
   void dispose() {
@@ -608,32 +891,27 @@ class _ManualTabState extends State<_ManualTab> {
 
   double? _d(TextEditingController c) => double.tryParse(c.text.trim());
 
-  String? _required(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Required' : null;
-
-  String? _nonNegative(String? v) {
-    final n = double.tryParse((v ?? '').trim());
-    return n == null || n < 0 ? 'Enter a number' : null;
-  }
-
-  String? _positive(String? v) {
-    final n = double.tryParse((v ?? '').trim());
-    return n == null || n <= 0 ? 'Enter a number' : null;
-  }
-
   void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) {
+    final required = context.t('nutrition:errRequired');
+    final number = context.t('nutrition:errEnterNumber');
+    final grams = _d(_grams);
+    final protein = _d(_protein);
+    setState(() {
+      _nameError = _name.text.trim().isEmpty ? required : null;
+      _gramsError = grams == null || grams <= 0 ? number : null;
+      _proteinError = protein == null || protein < 0 ? number : null;
+    });
+    if (_nameError != null || _gramsError != null || _proteinError != null) {
       return;
     }
-    final grams = _d(_grams)!;
     // Values were entered for the stated quantity; store them per 100 g.
-    final per100 = 100 / grams;
+    final per100 = 100 / grams!;
     double? scale(double? v) => v == null ? null : v * per100;
-    widget.onSubmit(
+    Navigator.of(context).pop(
       _LogRequest(
         food: FoodResult(
           name: _name.text.trim(),
-          proteinPer100g: (_d(_protein) ?? 0) * per100,
+          proteinPer100g: protein! * per100,
           caloriesPer100g: scale(_d(_calories)),
           carbsPer100g: scale(_d(_carbs)),
           fatPer100g: scale(_d(_fat)),
@@ -646,45 +924,67 @@ class _ManualTabState extends State<_ManualTab> {
     );
   }
 
-  Widget _num(
+  Widget _field(
     String label,
     TextEditingController c, {
-    bool required = false,
-    FormFieldValidator<String>? validator,
+    String? error,
+    bool number = true,
   }) =>
       Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: TextFormField(
+        padding: const EdgeInsets.only(bottom: FitTrackSpacing.md),
+        child: FitTrackTextField(
+          label: label,
           controller: c,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          validator: validator ?? (required ? _positive : null),
-          decoration: InputDecoration(labelText: label),
+          errorText: error,
+          keyboardType: number
+              ? const TextInputType.numberWithOptions(decimal: true)
+              : TextInputType.text,
         ),
       );
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+    final c = AppPalette.of(context);
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: TextFormField(
-              controller: _name,
-              validator: _required,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Food name'),
+          Text(
+            context.t('nutrition:methodQuick'),
+            style: FitTrackText.titleLg.copyWith(
+              color: c.ink,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          _num('Quantity (g)', _grams, required: true),
-          _num('Protein (g) for this quantity', _protein,
-              validator: _nonNegative),
-          _num('Calories (kcal)', _calories),
-          _num('Carbs (g)', _carbs),
-          _num('Fat (g)', _fat),
-          FilledButton(onPressed: _submit, child: const Text('LOG FOOD')),
+          const SizedBox(height: FitTrackSpacing.md),
+          _field(
+            context.t('nutrition:fieldFoodName'),
+            _name,
+            error: _nameError,
+            number: false,
+          ),
+          _field(
+            context.t('nutrition:fieldQuantityG'),
+            _grams,
+            error: _gramsError,
+          ),
+          _field(
+            context.t('nutrition:fieldProteinForQty'),
+            _protein,
+            error: _proteinError,
+          ),
+          _field(context.t('nutrition:fieldCalories'), _calories),
+          _field(context.t('nutrition:fieldCarbs'), _carbs),
+          _field(context.t('nutrition:fieldFat'), _fat),
+          FitTrackButton(
+            label: context.t('nutrition:logFoodAction'),
+            size: FitTrackButtonSize.lg,
+            fullWidth: true,
+            onPressed: _submit,
+          ),
+          const SizedBox(height: FitTrackSpacing.sm),
         ],
       ),
     );
