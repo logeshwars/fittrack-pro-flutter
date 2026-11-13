@@ -109,7 +109,7 @@ class _PersonalSettingsScreenState
       _heightError = heightBad ? context.t('profile:errHeight') : null;
       _ageError = ageBad ? context.t('profile:errAge') : null;
     });
-    if (nameBad || weightBad || heightBad || ageBad) return;
+    if (weight == null || nameBad || weightBad || heightBad || ageBad) return;
 
     setState(() => _saving = true);
     final prefs = await SharedPreferences.getInstance();
@@ -129,7 +129,7 @@ class _PersonalSettingsScreenState
           if (height != null) 'height_cm': height,
           'goal': _goal,
           'protein_goal_g': calculateProteinGoal(
-            bodyweightKg: weight!,
+            bodyweightKg: weight,
             goal: _goal,
             heightCm: height,
           ),
