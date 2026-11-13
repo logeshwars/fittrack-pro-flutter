@@ -183,5 +183,20 @@
   "sdRepeat": "Répéter la séance",
   "sdDone": "Terminé",
   "sdNotFound": "Séance introuvable",
-  "sdGoBack": "Retour"
+  "sdGoBack": "Retour",
+  "spAbout": "À propos de ce split",
+  "spDayMeta": "{{focus}} · {{count}} exercices",
+  "spNotFound": "Introuvable dans la bibliothèque d'exercices",
+  "spSetsLine": "{{sets}} séries × {{reps}} · repos {{rest}}",
+  "spSwap": "Remplacer l'exercice",
+  "spSwapHint": "Remplacer {{name}}…",
+  "spSuggested": "Suggéré",
+  "spLoadFailed": "Impossible de charger les exercices",
+  "spStart": "Démarrer la séance",
+  "spCopy": "Copier dans mes routines",
+  "spSaveTitle": "Copier dans mes routines",
+  "spNameLabel": "Nom de la routine",
+  "spNoSave": "Aucun exercice correspondant à enregistrer",
+  "spAdded": "« {{name}} » ajoutée à vos routines",
+  "spSignIn": "Connectez-vous pour démarrer une séance."
 }

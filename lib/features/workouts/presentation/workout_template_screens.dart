@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/data/service_providers.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 import '../application/session_controller.dart';
 import '../data/preset_service.dart';
 import '../data/exercise_repository.dart';
@@ -107,6 +110,7 @@ Future<void> startSessionFor(
 ) async {
   final router = GoRouter.of(context);
   final messenger = ScaffoldMessenger.of(context);
+  final signIn = context.t('workout:spSignIn');
   final controller = ref.read(sessionControllerProvider.notifier);
   if (ref.read(sessionControllerProvider) != null) {
     router.push('/workout/active');
@@ -119,7 +123,7 @@ Future<void> startSessionFor(
   );
   if (!ok) {
     messenger.showSnackBar(
-      const SnackBar(content: Text('Sign in to start a workout.')),
+      SnackBar(content: Text(signIn)),
     );
     return;
   }
@@ -155,10 +159,8 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
 
   Future<void> _swap(int index, List<Exercise> all) async {
     final items = _items(all);
-    final picked = await showModalBottomSheet<Exercise>(
+    final picked = await showFitTrackSheet<Exercise>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppPalette.of(context).card,
       builder: (_) => _SwapSheet(target: items[index], all: all),
     );
     if (picked == null) {
@@ -172,13 +174,10 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
 
   Future<void> _start(List<Exercise> all) async {
     final messenger = ScaffoldMessenger.of(context);
+    final noMatch = context.t('workout:sdRepeatNoMatch');
     final exercises = toPresetExercises(_items(all));
     if (exercises.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('No exercises matched – add them manually'),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(noMatch)));
       return;
     }
     setState(() => _busy = true);
@@ -200,121 +199,248 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
 
   Future<void> _savePreset(List<Exercise> all) async {
     final messenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController(text: _name);
-    final name = await showDialog<String>(
+    final noSave = context.t('workout:spNoSave');
+    final name = await showFitTrackSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Save as preset'),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (_) => _NameSheet(initial: _name),
     );
-    controller.dispose();
-    if (name == null || name.isEmpty) {
+    if (name == null || name.isEmpty || !mounted) {
       return;
     }
     final exercises = toPresetExercises(_items(all));
     if (exercises.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('No matched exercises to save')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(noSave)));
       return;
     }
+    final added = context.t('workout:spAdded', args: {'name': name});
     await ref.read(presetServiceProvider)?.create(name, exercises);
     ref.invalidate(presetsProvider);
-    messenger.showSnackBar(
-      SnackBar(content: Text('"$name" added to your presets')),
-    );
+    messenger.showSnackBar(SnackBar(content: Text(added)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final split = _split;
     final all = ref.watch(allExercisesProvider);
     return Scaffold(
-      backgroundColor: colors.bg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: all.when(
           loading: () => Center(
-            child: CircularProgressIndicator(color: colors.accent),
+            child: CircularProgressIndicator(color: c.accent),
           ),
-          error: (_, __) =>
-              const Center(child: Text('Could not load exercises')),
+          error: (_, __) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(FitTrackSpacing.xxl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.t('workout:spLoadFailed'),
+                    style: FitTrackText.body.copyWith(color: c.muted),
+                  ),
+                  const SizedBox(height: FitTrackSpacing.lg),
+                  FitTrackButton(
+                    label: context.t('common:retry'),
+                    onPressed: () => ref.invalidate(allExercisesProvider),
+                  ),
+                ],
+              ),
+            ),
+          ),
           data: (exercises) {
             final items = _items(exercises);
             return ListView(
-              padding: const EdgeInsets.only(bottom: 44),
+              padding: const EdgeInsets.only(bottom: FitTrackSpacing.xxl),
               children: [
                 DetailHeader(
                   title: split.name,
-                  subtitle: '${split.frequency} · ${split.description}',
+                  subtitle: split.frequency,
                   onBack: () => context.pop(),
                 ),
-                SizedBox(
-                  height: 56,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    itemCount: split.days.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => ChoiceChip(
-                      label: Text(split.days[i].label),
-                      selected: i == _day,
-                      onSelected: (_) => setState(() => _day = i),
-                    ),
-                  ),
-                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-                  child: Text(
-                    split.days[_day].focus.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: colors.muted,
-                      letterSpacing: 2,
-                    ),
+                  padding: const EdgeInsets.fromLTRB(
+                    FitTrackSpacing.lg,
+                    FitTrackSpacing.md,
+                    FitTrackSpacing.lg,
+                    0,
                   ),
-                ),
-                for (var i = 0; i < items.length; i++)
-                  _ExerciseTile(
-                    item: items[i],
-                    onSwap: () => _swap(i, exercises),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : () => _start(exercises),
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('START WORKOUT'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colors.accent,
-                      foregroundColor: colors.accentText,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                  child: OutlinedButton.icon(
-                    onPressed: () => _savePreset(exercises),
-                    icon: const Icon(Icons.bookmark_add_outlined),
-                    label: const Text('SAVE AS PRESET'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FitTrackCard(
+                        padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Semantics(
+                              header: true,
+                              child: Text(
+                                context.t('workout:spAbout'),
+                                style: FitTrackText.title.copyWith(
+                                  color: c.ink,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: FitTrackSpacing.xs),
+                            Text(
+                              split.description,
+                              style: FitTrackText.label.copyWith(
+                                color: c.muted,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: FitTrackSpacing.md),
+                      FitTrackCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < split.days.length; i++)
+                              _DayRow(
+                                index: i,
+                                day: split.days[i],
+                                selected: i == _day,
+                                first: i == 0,
+                                onTap: () => setState(() => _day = i),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: FitTrackSpacing.lg),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          '${split.days[_day].label} · ${split.days[_day].focus}'
+                              .toUpperCase(),
+                          style: FitTrackText.caption.copyWith(
+                            color: c.muted,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: FitTrackSpacing.sm),
+                      for (var i = 0; i < items.length; i++)
+                        _ExerciseTile(
+                          item: items[i],
+                          onSwap: () => _swap(i, exercises),
+                        ),
+                      const SizedBox(height: FitTrackSpacing.xs),
+                      FitTrackButton(
+                        label: context.t('workout:spStart'),
+                        icon: Icons.play_arrow,
+                        size: FitTrackButtonSize.lg,
+                        fullWidth: true,
+                        loading: _busy,
+                        onPressed: _busy ? null : () => _start(exercises),
+                      ),
+                      const SizedBox(height: FitTrackSpacing.sm + 2),
+                      FitTrackButton(
+                        label: context.t('workout:spCopy'),
+                        icon: Icons.bookmark_add_outlined,
+                        variant: FitTrackButtonVariant.secondary,
+                        size: FitTrackButtonSize.lg,
+                        fullWidth: true,
+                        onPressed: () => _savePreset(exercises),
+                      ),
+                    ],
                   ),
                 ),
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _DayRow extends StatelessWidget {
+  const _DayRow({
+    required this.index,
+    required this.day,
+    required this.selected,
+    required this.first,
+    required this.onTap,
+  });
+
+  final int index;
+  final SplitDay day;
+  final bool selected;
+  final bool first;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    final meta = context.t(
+      'workout:spDayMeta',
+      args: {'focus': day.focus, 'count': day.exercises.length},
+    );
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${day.label}, $meta',
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FitTrackSpacing.md + 2,
+              vertical: FitTrackSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: selected ? c.accentTint : null,
+              border: first ? null : Border(top: BorderSide(color: c.line)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: selected ? c.accent : c.accentTint,
+                    borderRadius: BorderRadius.circular(FitTrackRadius.sm),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    style: FitTrackText.body.copyWith(
+                      color: selected ? c.accentText : c.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: FitTrackSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        day.label,
+                        style: FitTrackText.body.copyWith(
+                          color: c.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        meta,
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected) Icon(Icons.check, size: 18, color: c.accent),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -328,52 +454,132 @@ class _ExerciseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final p = item.predefined;
     final missing = item.exerciseId == null;
+    final detail = missing
+        ? context.t('workout:spNotFound')
+        : p.repsRange.isEmpty
+            ? context.t('workout:setsCount', args: {'count': p.sets})
+            : context.t(
+                'workout:spSetsLine',
+                args: {
+                  'sets': p.sets,
+                  'reps': p.repsRange,
+                  'rest': formatRest(p.restSecs),
+                },
+              );
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: FitTrackSpacing.sm + 2),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        FitTrackSpacing.md + 2,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: item.isSwapped ? Border.all(color: colors.accent) : null,
+        color: c.surface,
+        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        border: Border.all(color: item.isSwapped ? c.accent : c.line),
       ),
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: missing ? colors.muted : colors.text,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: FitTrackSpacing.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: FitTrackText.body.copyWith(
+                      color: missing ? c.muted : c.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  missing
-                      ? 'Not found in exercise library'
-                      : p.repsRange.isEmpty
-                          ? '${p.sets} sets'
-                          : '${p.sets} sets × ${p.repsRange} · rest ${formatRest(p.restSecs)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: missing ? colors.danger : colors.muted,
+                  const SizedBox(height: FitTrackSpacing.xs),
+                  Text(
+                    detail,
+                    style: FitTrackText.caption.copyWith(
+                      color: missing ? c.textBad : c.muted,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           if (onSwap != null)
-            IconButton(
-              tooltip: 'Swap exercise',
+            FitTrackIconButton(
+              icon: Icons.swap_horiz,
+              color: c.accent,
+              semanticLabel: context.t('workout:spSwap'),
               onPressed: onSwap,
-              icon: Icon(Icons.swap_horiz, color: colors.accent),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Name-entry sheet body; owns its text controller.
+class _NameSheet extends StatefulWidget {
+  const _NameSheet({required this.initial});
+  final String initial;
+
+  @override
+  State<_NameSheet> createState() => _NameSheetState();
+}
+
+class _NameSheetState extends State<_NameSheet> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              context.t('workout:spSaveTitle'),
+              style: FitTrackText.titleLg.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: FitTrackSpacing.md),
+          FitTrackTextField(
+            label: context.t('workout:spNameLabel'),
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
+          ),
+          const SizedBox(height: FitTrackSpacing.lg),
+          FitTrackButton(
+            label: context.t('common:save'),
+            fullWidth: true,
+            onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          ),
+          const SizedBox(height: FitTrackSpacing.sm),
+          FitTrackButton(
+            label: context.t('common:cancel'),
+            variant: FitTrackButtonVariant.ghost,
+            fullWidth: true,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ],
       ),
     );
@@ -394,46 +600,67 @@ class _SwapSheetState extends State<_SwapSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     final options = swapOptions(widget.target, widget.all, _query);
     final alts = widget.target.predefined.alternatives.toSet();
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * .7,
+        height: MediaQuery.sizeOf(context).height * .6,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                onChanged: (v) => setState(() => _query = v),
-                decoration: InputDecoration(
-                  hintText: 'Swap ${widget.target.name}…',
-                  prefixIcon: const Icon(Icons.search),
-                ),
+            FitTrackTextField(
+              label: context.t(
+                'workout:spSwapHint',
+                args: {'name': widget.target.name},
               ),
+              onChanged: (v) => setState(() => _query = v),
             ),
+            const SizedBox(height: FitTrackSpacing.sm),
             Expanded(
               child: ListView.builder(
                 itemCount: options.length,
                 itemBuilder: (_, i) {
                   final e = options[i];
-                  return ListTile(
-                    title: Text(e.name),
-                    subtitle: Text(e.equipment),
-                    trailing: alts.contains(e.name)
-                        ? Text(
-                            'SUGGESTED',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: colors.accent,
-                            ),
-                          )
-                        : null,
+                  return InkWell(
                     onTap: () => Navigator.of(context).pop(e),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: FitTrackSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border(top: BorderSide(color: c.line)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  e.name,
+                                  style: FitTrackText.body.copyWith(
+                                    color: c.ink,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  e.equipment,
+                                  style: FitTrackText.caption
+                                      .copyWith(color: c.muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (alts.contains(e.name))
+                            FitTrackBadge(
+                              label: context.t('workout:spSuggested'),
+                              tone: FitTrackBadgeTone.ok,
+                            ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

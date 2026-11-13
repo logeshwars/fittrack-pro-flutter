@@ -183,5 +183,20 @@
   "sdRepeat": "كرر التمرين",
   "sdDone": "تم",
   "sdNotFound": "التمرين غير موجود",
-  "sdGoBack": "رجوع"
+  "sdGoBack": "رجوع",
+  "spAbout": "حول هذا التقسيم",
+  "spDayMeta": "{{focus}} · {{count}} تمارين",
+  "spNotFound": "غير موجود في مكتبة التمارين",
+  "spSetsLine": "{{sets}} مجموعات × {{reps}} · راحة {{rest}}",
+  "spSwap": "استبدال التمرين",
+  "spSwapHint": "استبدال {{name}}…",
+  "spSuggested": "مقترح",
+  "spLoadFailed": "تعذر تحميل التمارين",
+  "spStart": "ابدأ التمرين",
+  "spCopy": "انسخ إلى روتيني",
+  "spSaveTitle": "انسخ إلى روتيني",
+  "spNameLabel": "اسم الروتين",
+  "spNoSave": "لا توجد تمارين مطابقة للحفظ",
+  "spAdded": "تمت إضافة \"{{name}}\" إلى روتينك",
+  "spSignIn": "سجّل الدخول لبدء تمرين."
 }

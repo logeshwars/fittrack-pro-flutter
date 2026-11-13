@@ -183,5 +183,20 @@
   "sdRepeat": "Repetir entrenamiento",
   "sdDone": "Listo",
   "sdNotFound": "Entrenamiento no encontrado",
-  "sdGoBack": "Volver"
+  "sdGoBack": "Volver",
+  "spAbout": "Sobre esta división",
+  "spDayMeta": "{{focus}} · {{count}} ejercicios",
+  "spNotFound": "No está en la biblioteca de ejercicios",
+  "spSetsLine": "{{sets}} series × {{reps}} · descanso {{rest}}",
+  "spSwap": "Cambiar ejercicio",
+  "spSwapHint": "Cambiar {{name}}…",
+  "spSuggested": "Sugerido",
+  "spLoadFailed": "No se pudieron cargar los ejercicios",
+  "spStart": "Empezar entrenamiento",
+  "spCopy": "Copiar a mis rutinas",
+  "spSaveTitle": "Copiar a mis rutinas",
+  "spNameLabel": "Nombre de la rutina",
+  "spNoSave": "No hay ejercicios coincidentes para guardar",
+  "spAdded": "\"{{name}}\" añadida a tus rutinas",
+  "spSignIn": "Inicia sesión para empezar un entrenamiento."
 }

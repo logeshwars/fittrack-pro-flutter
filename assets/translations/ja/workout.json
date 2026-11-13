@@ -183,5 +183,20 @@
   "sdRepeat": "ワークアウトを繰り返す",
   "sdDone": "完了",
   "sdNotFound": "ワークアウトが見つかりません",
-  "sdGoBack": "戻る"
+  "sdGoBack": "戻る",
+  "spAbout": "このスプリットについて",
+  "spDayMeta": "{{focus}} · {{count}}種目",
+  "spNotFound": "種目ライブラリに見つかりません",
+  "spSetsLine": "{{sets}}セット × {{reps}} · 休憩 {{rest}}",
+  "spSwap": "種目を入れ替え",
+  "spSwapHint": "{{name}}を入れ替え…",
+  "spSuggested": "おすすめ",
+  "spLoadFailed": "種目を読み込めませんでした",
+  "spStart": "ワークアウトを開始",
+  "spCopy": "マイルーティンにコピー",
+  "spSaveTitle": "マイルーティンにコピー",
+  "spNameLabel": "ルーティン名",
+  "spNoSave": "保存できる一致種目がありません",
+  "spAdded": "「{{name}}」をルーティンに追加しました",
+  "spSignIn": "ワークアウトを開始するにはサインインしてください。"
 }

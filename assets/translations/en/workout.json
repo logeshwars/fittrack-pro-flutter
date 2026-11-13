@@ -183,5 +183,20 @@
   "sdRepeat": "Repeat workout",
   "sdDone": "Done",
   "sdNotFound": "Workout not found",
-  "sdGoBack": "Go back"
+  "sdGoBack": "Go back",
+  "spAbout": "About this split",
+  "spDayMeta": "{{focus}} · {{count}} exercises",
+  "spNotFound": "Not found in exercise library",
+  "spSetsLine": "{{sets}} sets × {{reps}} · rest {{rest}}",
+  "spSwap": "Swap exercise",
+  "spSwapHint": "Swap {{name}}…",
+  "spSuggested": "Suggested",
+  "spLoadFailed": "Could not load exercises",
+  "spStart": "Start workout",
+  "spCopy": "Copy to my routines",
+  "spSaveTitle": "Copy to my routines",
+  "spNameLabel": "Routine name",
+  "spNoSave": "No matched exercises to save",
+  "spAdded": "\"{{name}}\" added to your routines",
+  "spSignIn": "Sign in to start a workout."
 }

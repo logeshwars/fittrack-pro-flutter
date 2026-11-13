@@ -183,5 +183,20 @@
   "sdRepeat": "Workout wiederholen",
   "sdDone": "Fertig",
   "sdNotFound": "Workout nicht gefunden",
-  "sdGoBack": "Zurück"
+  "sdGoBack": "Zurück",
+  "spAbout": "Über diesen Split",
+  "spDayMeta": "{{focus}} · {{count}} Übungen",
+  "spNotFound": "Nicht in der Übungsbibliothek gefunden",
+  "spSetsLine": "{{sets}} Sätze × {{reps}} · Pause {{rest}}",
+  "spSwap": "Übung tauschen",
+  "spSwapHint": "{{name}} tauschen…",
+  "spSuggested": "Vorgeschlagen",
+  "spLoadFailed": "Übungen konnten nicht geladen werden",
+  "spStart": "Workout starten",
+  "spCopy": "In meine Routinen kopieren",
+  "spSaveTitle": "In meine Routinen kopieren",
+  "spNameLabel": "Routinenname",
+  "spNoSave": "Keine passenden Übungen zum Speichern",
+  "spAdded": "„{{name}}“ zu deinen Routinen hinzugefügt",
+  "spSignIn": "Melde dich an, um ein Workout zu starten."
 }
