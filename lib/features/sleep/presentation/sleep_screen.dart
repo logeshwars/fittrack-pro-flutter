@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/data/service_providers.dart';
+import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_components.dart';
 import '../../progress/domain/progress_models.dart';
+import '../../settings/data/goal_targets.dart';
 
 final sleepHistoryProvider =
     FutureProvider.autoDispose<List<SleepLog>>((ref) async {
@@ -16,6 +20,14 @@ final sleepHistoryProvider =
   return [for (final r in rows) SleepLog.fromJson(r)];
 });
 
+String _duration(BuildContext context, int minutes) {
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  return m == 0
+      ? context.t('common:slHours', args: {'h': h})
+      : context.t('common:slHoursMinutes', args: {'h': h, 'm': m});
+}
+
 class SleepScreen extends ConsumerWidget {
   const SleepScreen({super.key});
 
@@ -23,100 +35,107 @@ class SleepScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = AppPalette.of(context);
     final sleep = ref.watch(sleepHistoryProvider);
+    final goalMinutes =
+        ref.watch(goalTargetsProvider).valueOrNull?.sleepMinutes.round();
 
     return Scaffold(
       backgroundColor: colors.bg,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/sleep/log'),
-        backgroundColor: colors.accent,
-        foregroundColor: colors.accentText,
-        child: const Icon(Icons.add),
-      ),
       body: SafeArea(
-        child: RefreshIndicator(
-          color: colors.accent,
-          backgroundColor: colors.card,
-          onRefresh: () async {
-            ref.invalidate(sleepHistoryProvider);
-            await ref.read(sleepHistoryProvider.future);
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 96),
-            children: [
-              _Header(onBack: () => context.pop()),
-              sleep.when(
-                loading: () => Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Center(
-                    child: CircularProgressIndicator(color: colors.accent),
+        child: Column(
+          children: [
+            _TopBar(onBack: () => context.pop()),
+            Expanded(
+              child: RefreshIndicator(
+                color: colors.accent,
+                backgroundColor: colors.surface,
+                onRefresh: () async {
+                  ref.invalidate(sleepHistoryProvider);
+                  await ref.read(sleepHistoryProvider.future);
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    FitTrackSpacing.lg,
+                    FitTrackSpacing.md,
+                    FitTrackSpacing.lg,
+                    FitTrackSpacing.tabBarClearance,
                   ),
-                ),
-                error: (_, __) => const _Empty(
-                  title: 'Sleep history unavailable',
-                  subtitle: 'Pull to retry.',
-                ),
-                data: (items) => _Content(
-                  items: items,
-                  onDelete: (item) async {
-                    await ref.read(sleepServiceProvider)?.deleteLog(item.id);
-                    ref.invalidate(sleepHistoryProvider);
-                  },
+                  children: [
+                    sleep.when(
+                      loading: () => Padding(
+                        padding: const EdgeInsets.all(FitTrackSpacing.xxl),
+                        child: Center(
+                          child:
+                              CircularProgressIndicator(color: colors.accent),
+                        ),
+                      ),
+                      error: (_, __) => _Message(
+                        title: context.t('common:slLoadFailed'),
+                        actionLabel: context.t('common:retry'),
+                        onAction: () => ref.invalidate(sleepHistoryProvider),
+                      ),
+                      data: (items) => _Content(
+                        items: items,
+                        goalMinutes: goalMinutes,
+                        onDelete: (item) async {
+                          await ref
+                              .read(sleepServiceProvider)
+                              ?.deleteLog(item.id);
+                          ref.invalidate(sleepHistoryProvider);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.onBack});
   final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 20, 14),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.xs,
+        FitTrackSpacing.sm,
+        FitTrackSpacing.lg,
+        FitTrackSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: colors.header,
-        border: Border(bottom: BorderSide(color: colors.border)),
+        color: c.header,
+        border: Border(bottom: BorderSide(color: c.line)),
       ),
       child: Row(
         children: [
-          InkWell(
-            onTap: onBack,
-            borderRadius: BorderRadius.circular(18),
-            child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Icon(Icons.arrow_back, color: colors.text, size: 19),
-            ),
+          FitTrackIconButton(
+            icon: Icons.arrow_back,
+            color: c.ink,
+            semanticLabel: context.t('settings:backLabel'),
+            onPressed: onBack,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 2),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Sleep',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    color: colors.text,
-                  ),
+            child: Semantics(
+              header: true,
+              child: Text(
+                context.t('common:slTitle'),
+                style: FitTrackText.titleLg.copyWith(
+                  color: c.ink,
+                  fontWeight: FontWeight.w600,
                 ),
-                Text(
-                  'Recovery & sleep history',
-                  style: TextStyle(fontSize: 10, color: colors.muted),
-                ),
-              ],
+              ),
             ),
           ),
-          const Icon(Icons.bedtime, color: AppColors.sleep, size: 24),
+          Icon(Icons.bedtime, color: c.sleepColor, size: 22),
         ],
       ),
     );
@@ -124,213 +143,327 @@ class _Header extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.items, required this.onDelete});
+  const _Content({
+    required this.items,
+    required this.goalMinutes,
+    required this.onDelete,
+  });
   final List<SleepLog> items;
+  final int? goalMinutes;
   final ValueChanged<SleepLog> onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     if (items.isEmpty) {
-      return const _Empty(
-        title: 'No sleep logged yet',
-        subtitle: 'Track your first night to build recovery history.',
+      return _Message(
+        title: context.t('common:slEmptyTitle'),
+        subtitle: context.t('common:slEmptySub'),
+        actionLabel: context.t('common:slLogCta'),
+        onAction: () => context.push('/sleep/log'),
       );
     }
 
     final latest = items.first;
     final avgMinutes =
-        items.fold<int>(0, (sum, item) => sum + item.durationMinutes) /
-            items.length;
-    final qualityValues = items
-        .where((item) => item.quality != null)
-        .map((item) => item.quality!)
-        .toList();
+        (items.fold<int>(0, (sum, item) => sum + item.durationMinutes) /
+                items.length)
+            .round();
+    final qualityValues = [
+      for (final item in items)
+        if (item.quality != null) item.quality!,
+    ];
     final avgQuality = qualityValues.isEmpty
         ? null
         : qualityValues.reduce((a, b) => a + b) / qualityValues.length;
+    final time = DateFormat('h:mm a');
+    final times = context.t(
+      'common:slTimes',
+      args: {
+        'bed': time.format(latest.bedtime.toLocal()),
+        'wake': time.format(latest.wakeTime.toLocal()),
+      },
+    );
+    final goal = goalMinutes;
+    final progress = goal == null || goal <= 0
+        ? 0.0
+        : (latest.durationMinutes / goal).clamp(0, 1).toDouble();
+    final week = items.take(7).toList().reversed.toList();
+    final weekAvg =
+        (week.fold<int>(0, (s, i) => s + i.durationMinutes) / week.length)
+            .round();
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.accentTint,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Text(
-                'LAST NIGHT',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: colors.muted,
-                  letterSpacing: 1.6,
+        FitTrackCard(
+          padding: const EdgeInsets.all(FitTrackSpacing.lg - 2),
+          child: Semantics(
+            container: true,
+            label: [
+              context.t('common:slLastNight'),
+              _duration(context, latest.durationMinutes),
+              times,
+              if (goal != null)
+                context.t(
+                  'common:slGoal',
+                  args: {'goal': _duration(context, goal)},
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _duration(latest.durationMinutes),
-                style: const TextStyle(
-                  fontSize: 46,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.sleep,
-                  letterSpacing: -1,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '${DateFormat('h:mm a').format(latest.bedtime.toLocal())} – ${DateFormat('h:mm a').format(latest.wakeTime.toLocal())}',
-                style: TextStyle(fontSize: 11, color: colors.muted),
-              ),
-              if (latest.quality != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  List.filled(latest.quality!, '★').join(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.sleep,
-                    letterSpacing: 3,
+            ].join(', '),
+            child: ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.t('common:slLastNight'),
+                    style: FitTrackText.caption.copyWith(
+                      color: c.muted,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _Stat(
-                  icon: Icons.bedtime_outlined,
-                  value: _duration(avgMinutes.round()),
-                  label: 'AVG SLEEP',
-                  color: AppColors.sleep,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _Stat(
-                  icon: Icons.calendar_month_outlined,
-                  value: '${items.length}',
-                  label: 'NIGHTS',
-                  color: AppColors.water,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _Stat(
-                  icon: Icons.star_outline,
-                  value:
-                      avgQuality == null ? '—' : avgQuality.toStringAsFixed(1),
-                  label: 'QUALITY',
-                  color: AppColors.xp,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'SLEEP HISTORY',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: colors.muted,
-                letterSpacing: 2,
+                  const SizedBox(height: FitTrackSpacing.xs),
+                  Text(
+                    _duration(context, latest.durationMinutes),
+                    style: FitTrackText.hero.copyWith(
+                      color: c.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    goal == null
+                        ? times
+                        : '$times · ${context.t('common:slGoal', args: {
+                                  'goal': _duration(context, goal)
+                                })}',
+                    style: FitTrackText.caption.copyWith(
+                      color: c.muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (goal != null) ...[
+                    const SizedBox(height: 10),
+                    FitTrackProgressBar(
+                      progress: progress,
+                      color: c.sleepColor,
+                    ),
+                  ],
+                  if (latest.quality != null) ...[
+                    const SizedBox(height: FitTrackSpacing.sm),
+                    Text(
+                      context.t(
+                        'common:slQualityOf',
+                        args: {'n': latest.quality!},
+                      ),
+                      style: FitTrackText.caption.copyWith(
+                        color: c.muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
         ),
+        const SizedBox(height: FitTrackSpacing.md),
+        _WeekChart(nights: week, average: weekAvg, goalMinutes: goal),
+        const SizedBox(height: FitTrackSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: FitTrackStatTile(
+                value: _duration(context, avgMinutes),
+                label: context.t('common:slAvgSleep'),
+              ),
+            ),
+            const SizedBox(width: FitTrackSpacing.sm),
+            Expanded(
+              child: FitTrackStatTile(
+                value: '${items.length}',
+                label: context.t('common:slNights'),
+              ),
+            ),
+            const SizedBox(width: FitTrackSpacing.sm),
+            Expanded(
+              child: FitTrackStatTile(
+                value: avgQuality == null ? '—' : avgQuality.toStringAsFixed(1),
+                label: context.t('common:slQuality'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: FitTrackSpacing.lg),
+        FitTrackButton(
+          label: context.t('common:slLogCta'),
+          icon: Icons.add,
+          size: FitTrackButtonSize.lg,
+          fullWidth: true,
+          onPressed: () => context.push('/sleep/log'),
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: items
-                .take(12)
-                .map(
-                  (item) => Dismissible(
-                    key: ValueKey(item.id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.only(right: 20),
-                      alignment: Alignment.centerRight,
-                      decoration: BoxDecoration(
-                        color: colors.danger,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child:
-                          const Icon(Icons.delete_outline, color: Colors.white),
-                    ),
-                    onDismissed: (_) => onDelete(item),
-                    child: _SleepRow(item: item),
-                  ),
-                )
-                .toList(),
+          padding: const EdgeInsets.fromLTRB(
+            2,
+            FitTrackSpacing.xl,
+            2,
+            FitTrackSpacing.sm,
+          ),
+          child: Semantics(
+            header: true,
+            child: Text(
+              context.t('common:slHistory').toUpperCase(),
+              style: FitTrackText.caption.copyWith(
+                color: c.muted,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
+        for (final item in items.take(12))
+          Padding(
+            padding: const EdgeInsets.only(bottom: FitTrackSpacing.sm),
+            child: Dismissible(
+              key: ValueKey(item.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                padding: const EdgeInsets.only(right: FitTrackSpacing.xl),
+                alignment: Alignment.centerRight,
+                decoration: BoxDecoration(
+                  color: c.danger,
+                  borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+                ),
+                child: Icon(
+                  Icons.delete_outline,
+                  semanticLabel: context.t('common:slDelete'),
+                  color: Colors.white,
+                ),
+              ),
+              onDismissed: (_) => onDelete(item),
+              child: _SleepRow(item: item),
+            ),
+          ),
       ],
     );
   }
-
-  static String _duration(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    return m == 0 ? '${h}h' : '${h}h ${m}m';
-  }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
+/// Last seven logged nights as bars; the latest is drawn in the full domain
+/// colour and the rest in its soft tint.
+class _WeekChart extends StatelessWidget {
+  const _WeekChart({
+    required this.nights,
+    required this.average,
+    required this.goalMinutes,
   });
+  final List<SleepLog> nights;
+  final int average;
+  final int? goalMinutes;
 
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
+  static const _plotHeight = 100.0;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              color: colors.text,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-            ),
+    final c = AppPalette.of(context);
+    final peak = [
+      for (final n in nights) n.durationMinutes,
+      if (goalMinutes != null) goalMinutes!,
+    ].reduce((a, b) => a > b ? a : b);
+    final day = DateFormat('E');
+    return FitTrackCard(
+      padding: const EdgeInsets.all(FitTrackSpacing.lg - 2),
+      child: Semantics(
+        container: true,
+        label: [
+          context.t('common:slLast7'),
+          context.t('common:slAverage',
+              args: {'value': _duration(context, average)}),
+          for (final n in nights)
+            '${day.format(n.wakeTime.toLocal())} '
+                '${_duration(context, n.durationMinutes)}',
+        ].join(', '),
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.t('common:slLast7'),
+                      style: FitTrackText.body.copyWith(
+                        color: c.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    context.t(
+                      'common:slAverage',
+                      args: {'value': _duration(context, average)},
+                    ),
+                    style: FitTrackText.caption.copyWith(
+                      color: c.muted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: FitTrackSpacing.lg - 2),
+              Container(
+                height: _plotHeight,
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: c.line)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var i = 0; i < nights.length; i++) ...[
+                      if (i > 0) const SizedBox(width: FitTrackSpacing.sm),
+                      Expanded(
+                        child: Container(
+                          height: _plotHeight *
+                              (nights[i].durationMinutes / peak)
+                                  .clamp(0.04, 1),
+                          decoration: BoxDecoration(
+                            color: i == nights.length - 1
+                                ? c.sleepColor
+                                : c.sleepSoft,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  for (var i = 0; i < nights.length; i++) ...[
+                    if (i > 0) const SizedBox(width: FitTrackSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        day.format(nights[i].wakeTime.toLocal()),
+                        textAlign: TextAlign.center,
+                        style: FitTrackText.caption.copyWith(
+                          color: i == nights.length - 1 ? c.ink : c.muted,
+                          fontWeight: i == nights.length - 1
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.faint,
-              fontWeight: FontWeight.w700,
-              fontSize: 8,
-              letterSpacing: 1,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -342,101 +475,120 @@ class _SleepRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.card,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.sleep.withValues(alpha: .10),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.bedtime,
-              size: 19,
-              color: AppColors.sleep,
-            ),
+    final c = AppPalette.of(context);
+    final time = DateFormat('h:mm a');
+    final line = '${DateFormat('EEE · MMM d').format(item.wakeTime.toLocal())}'
+        ' · ${time.format(item.bedtime.toLocal())}'
+        ' – ${time.format(item.wakeTime.toLocal())}';
+    return Semantics(
+      container: true,
+      label: [
+        _duration(context, item.durationMinutes),
+        line,
+        if (item.quality != null)
+          context.t('common:slQualityOf', args: {'n': item.quality!}),
+      ].join(', '),
+      child: ExcludeSemantics(
+        child: FitTrackCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: FitTrackSpacing.lg - 2,
+            vertical: FitTrackSpacing.md,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: c.sleepSoft,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.bedtime, size: 18, color: c.sleepColor),
+              ),
+              const SizedBox(width: FitTrackSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _duration(context, item.durationMinutes),
+                      style: FitTrackText.body.copyWith(
+                        color: c.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      line,
+                      style: FitTrackText.caption.copyWith(
+                        color: c.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (item.quality != null)
                 Text(
-                  _Content._duration(item.durationMinutes),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: colors.text,
+                  context.t('common:slQualityOf', args: {'n': item.quality!}),
+                  style: FitTrackText.caption.copyWith(
+                    color: c.muted,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '${DateFormat('EEE · MMM d').format(item.wakeTime.toLocal())} · ${DateFormat('h:mm a').format(item.bedtime.toLocal())} – ${DateFormat('h:mm a').format(item.wakeTime.toLocal())}',
-                  style: TextStyle(fontSize: 10, color: colors.muted),
-                ),
-              ],
-            ),
+            ],
           ),
-          if (item.quality != null)
-            Text(
-              '${item.quality}/5',
-              style: const TextStyle(
-                color: AppColors.sleep,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _Empty extends StatelessWidget {
-  const _Empty({required this.title, required this.subtitle});
+class _Message extends StatelessWidget {
+  const _Message({
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+    this.subtitle,
+  });
   final String title;
-  final String subtitle;
+  final String? subtitle;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
+    final c = AppPalette.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 80, 24, 0),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.xl,
+        FitTrackSpacing.tabBarClearance - FitTrackSpacing.xxl,
+        FitTrackSpacing.xl,
+        0,
+      ),
       child: Column(
         children: [
-          Icon(Icons.bedtime, size: 56, color: colors.border2),
-          const SizedBox(height: 14),
+          Icon(Icons.bedtime, size: 48, color: c.faint),
+          const SizedBox(height: FitTrackSpacing.lg),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: colors.muted,
+            style: FitTrackText.titleLg.copyWith(
+              color: c.ink,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: colors.faint),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: () => context.push('/sleep/log'),
-            icon: const Icon(Icons.add),
-            label: const Text('Log sleep'),
-          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: FitTrackSpacing.xs),
+            Text(
+              subtitle!,
+              textAlign: TextAlign.center,
+              style: FitTrackText.body.copyWith(color: c.muted),
+            ),
+          ],
+          const SizedBox(height: FitTrackSpacing.xl),
+          FitTrackButton(label: actionLabel, onPressed: onAction),
         ],
       ),
     );
