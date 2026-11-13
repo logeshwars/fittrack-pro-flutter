@@ -115,6 +115,15 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=USDA_FDC_API_KEY="$USDA_FDC_API_KEY" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN"
+          # Smaller arm64-only APK (same debug signing) so it fits Telegram's
+          # 50 MB bot upload limit. Gradle reuses the work from the build above.
+          flutter build apk --debug --split-per-abi --target-platform android-arm64 \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
+            --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
+            --dart-define=USDA_FDC_API_KEY="$USDA_FDC_API_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
       - name: Show APK signing certificate (register this SHA-1 in Google Cloud)
         run: |
           APK=build/app/outputs/flutter-apk/app-debug.apk
@@ -172,21 +181,37 @@ jobs:
             echo "::notice::Telegram secrets not set; skipping notification"
             exit 0
           fi
-          APK=build/app/outputs/flutter-apk/app-debug.apk
+          OUT=build/app/outputs/flutter-apk
+          APK="$OUT/app-arm64-v8a-debug.apk"
+          [[ -f "$APK" ]] || APK="$OUT/app-debug.apk"
+          LIMIT=52428800  # Bot API upload limit (50 MB)
           if [[ "$JOB_STATUS" == "success" ]]; then ICON="✅"; WORD="succeeded"; else ICON="❌"; WORD="$JOB_STATUS"; fi
           TEXT="$ICON FitTrack Pro Android build $WORD
           Branch: $BRANCH (${SHA:0:7})
           ${COMMIT_MSG%%$'\n'*}
           $RUN_URL"
           API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
-          # Bot API accepts uploads up to 50 MB; larger APKs get a download link instead.
-          if [[ "$JOB_STATUS" == "success" && -f "$APK" && $(stat -c%s "$APK") -lt 52428800 ]]; then
+          send_doc() {  # file, caption
             curl -sS --fail -o /dev/null "$API/sendDocument" \
-              -F chat_id="$TELEGRAM_CHAT_ID" -F document=@"$APK" -F caption="$TEXT" \
-              || echo "::warning::Telegram upload failed"
+              -F chat_id="$TELEGRAM_CHAT_ID" -F document=@"$1" -F caption="$2" \
+              || echo "::warning::Telegram upload failed for $1"
+          }
+          if [[ "$JOB_STATUS" == "success" && -f "$APK" ]]; then
+            if [[ $(stat -c%s "$APK") -lt $LIMIT ]]; then
+              send_doc "$APK" "$TEXT"
+            else
+              # Still too big for one upload: send plain parts to join on a computer.
+              mkdir -p "$RUNNER_TEMP/tg" && rm -f "$RUNNER_TEMP/tg"/*
+              split -b 45m -d "$APK" "$RUNNER_TEMP/tg/fittrack-debug.apk.part"
+              PARTS=("$RUNNER_TEMP/tg"/fittrack-debug.apk.part*)
+              curl -sS --fail -o /dev/null "$API/sendMessage" \
+                --data-urlencode chat_id="$TELEGRAM_CHAT_ID" \
+                --data-urlencode text="$TEXT
+          APK is over 50 MB, so it comes in ${#PARTS[@]} parts. Join them: cat fittrack-debug.apk.part* > fittrack-debug.apk" \
+                || echo "::warning::Telegram message failed"
+              for part in "${PARTS[@]}"; do send_doc "$part" "$(basename "$part")"; done
+            fi
           else
-            [[ "$JOB_STATUS" == "success" ]] && TEXT="$TEXT
-          (APK over 50 MB: download it from the Artifacts section of the run page)"
             curl -sS --fail -o /dev/null "$API/sendMessage" \
               --data-urlencode chat_id="$TELEGRAM_CHAT_ID" --data-urlencode text="$TEXT" \
               || echo "::warning::Telegram message failed"
