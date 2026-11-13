@@ -599,7 +599,7 @@ class _TrendCard extends StatelessWidget {
                             spots: points,
                             isCurved: true,
                             barWidth: 3,
-                            color: AppColors.weight,
+                            color: c.waterColor,
                             dotData: FlDotData(
                               show: true,
                               checkToShowDot: (spot, bar) =>
