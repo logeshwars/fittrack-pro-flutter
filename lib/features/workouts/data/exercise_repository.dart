@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class Exercise {
   const Exercise({
     required this.id,
@@ -55,20 +53,4 @@ class Exercise {
 
   static List<String> _stringList(Object? value) =>
       value is List ? [for (final v in value) v.toString()] : const [];
-}
-
-class ExerciseRepository {
-  const ExerciseRepository(this._client);
-  final SupabaseClient _client;
-  Future<List<Exercise>> getGlobalExercises({String? muscleGroup}) async {
-    var query = _client
-        .from('exercises')
-        .select('id,name,muscle_group,equipment')
-        .isFilter('google_user_id', null);
-    if (muscleGroup != null && muscleGroup.isNotEmpty) {
-      query = query.eq('muscle_group', muscleGroup);
-    }
-    final rows = await query.order('name').limit(500);
-    return rows.map((row) => Exercise.fromJson(row)).toList();
-  }
 }

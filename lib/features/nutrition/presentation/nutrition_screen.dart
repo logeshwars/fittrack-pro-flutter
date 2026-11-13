@@ -100,26 +100,33 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
   void _shift(int days) =>
       setState(() => _day = dayOnly(_day.add(Duration(days: days))));
 
-  bool _xpBusy = false;
+  final Set<String> _xpBusy = {};
 
-  /// +20 XP once per day when the protein goal is reached.
-  void _awardProteinXp(double protein, double goal) {
-    if (_xpBusy || !_isToday || goal <= 0 || protein < goal) {
+  /// Daily nutrition goal bonuses: protein +20 XP, calories +15 XP, each
+  /// once per day. Mirrors the React Native dashboard awards.
+  void _awardDailyGoalXp(NutritionTotals totals, GoalTargets goals) {
+    _awardGoalXp('protein', totals.proteinG, goals.protein, 20);
+    _awardGoalXp('calories', totals.calories, goals.calories, 15);
+  }
+
+  /// Awards [xp] the first time [current] reaches [goal] on the shown day.
+  void _awardGoalXp(String name, double current, double goal, int xp) {
+    if (_xpBusy.contains(name) || !_isToday || goal <= 0 || current < goal) {
       return;
     }
-    _xpBusy = true;
+    _xpBusy.add(name);
     () async {
       final prefs = await SharedPreferences.getInstance();
       final key =
-          'fittrack_protein_xp_${DateFormat('yyyy-MM-dd').format(_day)}';
+          'fittrack_${name}_xp_${DateFormat('yyyy-MM-dd').format(_day)}';
       if (prefs.getBool(key) == true) {
         return;
       }
       await prefs.setBool(key, true);
-      await ref.read(gamificationServiceProvider)?.awardXp(20);
+      await ref.read(gamificationServiceProvider)?.awardXp(xp);
     }()
         .catchError((Object _) {})
-        .whenComplete(() => _xpBusy = false);
+        .whenComplete(() => _xpBusy.remove(name));
   }
 
   Future<void> _delete(NutritionLog log) async {
@@ -294,7 +301,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                 final totals = NutritionTotals.fromLogs(items);
                 final fiber =
                     items.fold<double>(0, (s, l) => s + (l.fiberG ?? 0));
-                _awardProteinXp(totals.proteinG, goals.protein);
+                _awardDailyGoalXp(totals, goals);
                 final micro = sumMicronutrients(
                     [for (final l in items) l.micronutrients]);
                 final groups = groupByMeal(items);
