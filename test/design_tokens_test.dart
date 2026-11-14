@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show Brightness;
 
 import 'package:fittrack_pro/core/theme/app_colors.dart';
 import 'package:fittrack_pro/core/theme/fittrack_tokens.dart';
@@ -119,7 +120,22 @@ void main() {
     expect(FitTrackRadius.lg, 12);
     expect(FitTrackRadius.xl, 20);
     expect(FitTrackRadius.pill, 9999);
+    // The names the screens use: cards 10, controls 8.
+    expect(FitTrackRadius.card, 10);
+    expect(FitTrackRadius.control, 8);
+    // Hero cards are rounder on Night than on Pearl.
+    expect(FitTrackRadius.hero(Brightness.dark), 18);
+    expect(FitTrackRadius.hero(Brightness.light), 12);
     expect(FitTrackSpacing.touchMin, 44);
     expect(FitTrackSpacing.tabBarClearance, 110);
+    // Screen gutter, gap between cards and card padding.
+    expect(FitTrackSpacing.gutter, 16);
+    expect(FitTrackSpacing.gap, 12);
+    expect(FitTrackSpacing.cardPad, 14);
+  });
+
+  test('both themes have a type family bundled in assets', () {
+    expect(FitTrackText.family, 'WorkSans');
+    expect(FitTrackText.familyPearl, 'SourceSans3');
   });
 }

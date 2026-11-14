@@ -30,7 +30,7 @@ Line icons, 24px grid, 2px round stroke, `currentColor`. The app uses `phosphor-
 
 ## Rules that name tokens
 
-1. Screen background is `bg`. Cards, rows and inputs are `surface` with a `line` border and `radius-lg`.
+1. Screen background is `bg`. Cards, rows and inputs are `surface` with a `line` border and `radius-card` (10); buttons and inputs use `radius-control` (8). The Today and Nutrition hero cards use `radius-hero`: 18 on Night, 12 on Pearl.
 2. Primary text is `ink`; secondary text is `muted`. Never use `muted` below 12px.
 3. One primary button per view: `accent` fill, `on-accent` text. Destructive confirms use `bad` fill. Cancel is secondary, never red.
 4. Inputs: `surface` fill, `line-strong` border, focus adds a 2px `accent` ring. Errors use a `bad` border and `text-bad` helper text.

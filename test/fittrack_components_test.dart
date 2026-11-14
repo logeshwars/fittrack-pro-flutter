@@ -12,11 +12,11 @@ Widget _host(Widget child, {ThemeData? theme}) => MaterialApp(
 void main() {
   for (final entry in {'night': AppTheme.dark, 'pearl': AppTheme.light}.entries) {
     group(entry.key, () {
-      testWidgets('button heights are 36 / 44 / 52', (tester) async {
+      testWidgets('button heights are 36 / 44 / 48', (tester) async {
         for (final (size, height) in [
           (FitTrackButtonSize.sm, 36.0),
           (FitTrackButtonSize.md, 44.0),
-          (FitTrackButtonSize.lg, 52.0),
+          (FitTrackButtonSize.lg, 48.0),
         ]) {
           await tester.pumpWidget(_host(
             FitTrackButton(label: 'Go', size: size, onPressed: () {}),
