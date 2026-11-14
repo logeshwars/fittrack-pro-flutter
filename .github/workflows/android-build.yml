@@ -99,7 +99,7 @@ jobs:
           else
             echo "::warning::DEBUG_KEYSTORE_BASE64 not set; Google Sign-In will not match a registered SHA-1"
           fi
-      - name: Build debug APK
+      - name: Build APKs
         env:
           SUPABASE_URL: ${{ github.event_name == 'pull_request' && '' || secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ github.event_name == 'pull_request' && '' || secrets.SUPABASE_ANON_KEY }}
@@ -115,9 +115,15 @@ jobs:
             --dart-define=REVENUECAT_ANDROID_KEY="$REVENUECAT_ANDROID_KEY" \
             --dart-define=USDA_FDC_API_KEY="$USDA_FDC_API_KEY" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN"
-          # Smaller arm64-only APK (same debug signing) so it fits Telegram's
-          # 50 MB bot upload limit. Gradle reuses the work from the build above.
-          flutter build apk --debug --split-per-abi --target-platform android-arm64 \
+          # Arm64-only release APK for phone installs. A debug APK carries the
+          # Dart VM in JIT mode plus unstripped symbols and runs past 50 MB
+          # even for one ABI, which forced the Telegram upload to be split
+          # into parts the phone cannot rejoin on its own. Release is AOT and
+          # roughly a third of the size, so it arrives as one tappable file.
+          # Release signing points at the same debug config (app/build.gradle
+          # .kts), so this APK carries the fixed keystore and the SHA-1
+          # registered for Google Sign-In still matches.
+          flutter build apk --release --split-per-abi --target-platform android-arm64 \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
@@ -182,8 +188,12 @@ jobs:
             exit 0
           fi
           OUT=build/app/outputs/flutter-apk
-          APK="$OUT/app-arm64-v8a-debug.apk"
-          [[ -f "$APK" ]] || APK="$OUT/app-debug.apk"
+          # Prefer the arm64 release APK: it is the one that fits in a single
+          # upload, so it can be installed straight from the chat.
+          for candidate in app-arm64-v8a-release.apk app-arm64-v8a-debug.apk app-debug.apk; do
+            APK="$OUT/$candidate"
+            [[ -f "$APK" ]] && break
+          done
           LIMIT=52428800  # Bot API upload limit (50 MB)
           if [[ "$JOB_STATUS" == "success" ]]; then ICON="✅"; WORD="succeeded"; else ICON="❌"; WORD="$JOB_STATUS"; fi
           TEXT="$ICON FitTrack Pro Android build $WORD
@@ -198,16 +208,37 @@ jobs:
           }
           if [[ "$JOB_STATUS" == "success" && -f "$APK" ]]; then
             if [[ $(stat -c%s "$APK") -lt $LIMIT ]]; then
-              send_doc "$APK" "$TEXT"
+              SIZE_MB=$(( $(stat -c%s "$APK") / 1048576 ))
+              send_doc "$APK" "$TEXT
+
+          $(basename "$APK") · ${SIZE_MB} MB
+          Tap the file, then Install. Allow installs from Telegram if Android asks."
             else
               # Still too big for one upload: send plain parts to join on a computer.
               mkdir -p "$RUNNER_TEMP/tg" && rm -f "$RUNNER_TEMP/tg"/*
               split -b 45m -d "$APK" "$RUNNER_TEMP/tg/fittrack-debug.apk.part"
               PARTS=("$RUNNER_TEMP/tg"/fittrack-debug.apk.part*)
+              SUM="$(sha256sum "$APK" | cut -d" " -f1)"
               curl -sS --fail -o /dev/null "$API/sendMessage" \
                 --data-urlencode chat_id="$TELEGRAM_CHAT_ID" \
                 --data-urlencode text="$TEXT
-          APK is over 50 MB, so it comes in ${#PARTS[@]} parts. Join them: cat fittrack-debug.apk.part* > fittrack-debug.apk" \
+
+          $(basename "$APK") is ${#PARTS[@]} parts (over the 50 MB bot limit), so it has to be rejoined before it will install. Download every part, keeping the names as they arrive, then:
+
+          Android, in Termux (run termux-setup-storage once):
+            cd /sdcard/Download/Telegram && cat fittrack-debug.apk.part* > fittrack.apk
+          Then open fittrack.apk from Files and tap Install.
+
+          Linux or macOS:
+            cat fittrack-debug.apk.part* > fittrack.apk
+
+          Windows, in cmd (not PowerShell):
+            copy /b fittrack-debug.apk.part00 + fittrack-debug.apk.part01 fittrack.apk
+
+          Check the join worked - this must match:
+            $SUM
+
+          Or skip all of it and take the APK from the run page: $RUN_URL" \
                 || echo "::warning::Telegram message failed"
               for part in "${PARTS[@]}"; do send_doc "$part" "$(basename "$part")"; done
             fi
