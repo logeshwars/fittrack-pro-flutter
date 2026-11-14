@@ -34,7 +34,6 @@ dependencies:
   timezone: ^0.10.0
   flutter_timezone: ^3.0.1
   flutter_svg: ^2.0.10
-  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +67,15 @@ flutter:
           weight: 700
         - asset: assets/fonts/WorkSans-ExtraBold.ttf
           weight: 800
+    - family: PhosphorRegular
+      fonts:
+        - asset: assets/fonts/Phosphor-Regular.ttf
+    - family: PhosphorBold
+      fonts:
+        - asset: assets/fonts/Phosphor-Bold.ttf
+    - family: PhosphorFill
+      fonts:
+        - asset: assets/fonts/Phosphor-Fill.ttf
     - family: SourceSans3
       fonts:
         - asset: assets/fonts/SourceSans3-Regular.ttf
