@@ -612,7 +612,7 @@ class _ListRow extends StatelessWidget {
                     style: FitTrackText.label.copyWith(color: c.accentText),
                   )
                 else
-                  Icon(FitIcons.chevronRight, size: 20, color: c.faint),
+                  Icon(FitIcons.chevronRight, size: 16, color: c.chevron),
               ],
             ),
           ),

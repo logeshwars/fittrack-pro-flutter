@@ -254,9 +254,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: FitTrackSpacing.xl),
             Text(
               context.t(signup ? 'common:signupTitle' : 'common:loginTitle'),
-              style: FitTrackText.screenTitle.copyWith(
+              style: FitTrackText.display.copyWith(
                 color: colors.ink,
                 fontWeight: FontWeight.w600,
+                letterSpacing: -0.52,
               ),
             ),
             const SizedBox(height: 6),

@@ -1887,7 +1887,7 @@ class _HubRow extends StatelessWidget {
                 ],
                 if (showChevron) ...[
                   const SizedBox(width: FitTrackSpacing.sm),
-                  Icon(FitIcons.chevronRight, size: 20, color: c.faint),
+                  Icon(FitIcons.chevronRight, size: 16, color: c.chevron),
                 ],
               ],
             ),
@@ -2060,12 +2060,15 @@ class _SectionTitle extends StatelessWidget {
         FitTrackSpacing.lg,
         6,
       ),
-      child: Text(
-        text,
-        style: FitTrackText.caption.copyWith(
-          color: colors.muted,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+      child: Semantics(
+        header: true,
+        child: Text(
+          text.toUpperCase(),
+          style: FitTrackText.caption.copyWith(
+            color: colors.muted,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
