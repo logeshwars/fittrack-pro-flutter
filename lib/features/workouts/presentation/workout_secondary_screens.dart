@@ -416,10 +416,7 @@ class _CompleteCard extends StatelessWidget {
                 children: [
                   Text(
                     '+$xp',
-                    style: FitTrackText.hero.copyWith(
-                      color: c.bg,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: FitTrackText.statLg.copyWith(color: c.bg),
                   ),
                   const SizedBox(width: FitTrackSpacing.sm),
                   Text(

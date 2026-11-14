@@ -795,10 +795,8 @@ class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
                             children: [
                               Text(
                                 '$calculated',
-                                style: FitTrackText.stat.copyWith(
-                                  color: colors.ink,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: FitTrackText.statLg
+                                    .copyWith(color: colors.ink),
                               ),
                               const SizedBox(width: 6),
                               Expanded(
@@ -974,10 +972,7 @@ class _GoalStepper extends StatelessWidget {
                   child: Text(
                     value,
                     textAlign: TextAlign.center,
-                    style: FitTrackText.body.copyWith(
-                      color: colors.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: FitTrackText.title.copyWith(color: colors.ink),
                   ),
                 ),
               ),
