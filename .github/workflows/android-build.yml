@@ -9,7 +9,8 @@ on:
       - 'test/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
-      - 'tool/bootstrap_native.sh'
+      - 'tool/**'
+      - 'android/**'
       - '.github/workflows/android-build.yml'
   pull_request:
     paths:
@@ -17,7 +18,8 @@ on:
       - 'test/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
-      - 'tool/bootstrap_native.sh'
+      - 'tool/**'
+      - 'android/**'
       - '.github/workflows/android-build.yml'
 
 permissions:
