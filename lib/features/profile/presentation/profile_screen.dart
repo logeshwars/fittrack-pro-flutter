@@ -83,7 +83,6 @@ class _ProfileBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final c = AppPalette.of(context);
     final achievementsAsync = ref.watch(achievementsProvider);
     final achievements = achievementsAsync.valueOrNull;
     final board = ref.watch(leaderboardProvider).valueOrNull;
