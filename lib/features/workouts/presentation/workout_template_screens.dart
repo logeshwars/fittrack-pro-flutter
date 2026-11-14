@@ -9,6 +9,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../application/session_controller.dart';
 import '../data/preset_service.dart';
 import '../data/exercise_repository.dart';
@@ -266,16 +267,16 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    FitTrackSpacing.lg,
-                    FitTrackSpacing.md,
-                    FitTrackSpacing.lg,
+                    FitTrackSpacing.gutter,
+                    FitTrackSpacing.gap,
+                    FitTrackSpacing.gutter,
                     0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       FitTrackCard(
-                        padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
+                        padding: const EdgeInsets.all(FitTrackSpacing.cardPad),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -317,19 +318,10 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
                         ),
                       ),
                       const SizedBox(height: FitTrackSpacing.lg),
-                      Semantics(
-                        header: true,
-                        child: Text(
-                          '${split.days[_day].label} · ${split.days[_day].focus}'
-                              .toUpperCase(),
-                          style: FitTrackText.caption.copyWith(
-                            color: c.muted,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1,
-                          ),
-                        ),
+                      FitTrackSectionLabel(
+                        title: '${split.days[_day].label} · '
+                            '${split.days[_day].focus}',
                       ),
-                      const SizedBox(height: FitTrackSpacing.sm),
                       for (var i = 0; i < items.length; i++)
                         _ExerciseTile(
                           item: items[i],
@@ -789,9 +781,9 @@ class WorkoutPresetScreen extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    FitTrackSpacing.lg,
-                    FitTrackSpacing.md,
-                    FitTrackSpacing.lg,
+                    FitTrackSpacing.gutter,
+                    FitTrackSpacing.gap,
+                    FitTrackSpacing.gutter,
                     0,
                   ),
                   child: Column(
@@ -1145,7 +1137,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
           ),
           const SizedBox(height: FitTrackSpacing.md),
           FitTrackCard(
-            padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
+            padding: const EdgeInsets.all(FitTrackSpacing.cardPad),
             child: Row(
               children: [
                 Expanded(
@@ -1200,30 +1192,18 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
 
     return Scaffold(
       backgroundColor: c.bg,
-      appBar: AppBar(
-        backgroundColor: c.header,
-        foregroundColor: c.ink,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: c.line)),
-        leading: FitTrackIconButton(
-          icon: FitIcons.back,
-          color: c.ink,
-          semanticLabel: context.t('settings:backLabel'),
-          onPressed: () => context.pop(),
-        ),
-        title: Semantics(
-          header: true,
-          child: Text(
-            context.t(_editing ? 'workout:reEditTitle' : 'workout:reNewTitle'),
-            style: FitTrackText.titleLg.copyWith(
-              color: c.ink,
-              fontWeight: FontWeight.w600,
+      body: Column(
+        children: [
+          FitTrackTopBar(
+            title: context.t(
+              _editing ? 'workout:reEditTitle' : 'workout:reNewTitle',
             ),
+            backLabel: context.t('settings:backLabel'),
+            onBack: () => context.pop(),
           ),
-        ),
+          Expanded(child: body),
+        ],
       ),
-      body: body,
       bottomNavigationBar: _loading || _missing
           ? null
           : Container(
