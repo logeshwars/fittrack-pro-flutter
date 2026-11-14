@@ -47,7 +47,7 @@ class WeightTrend {
   }
 }
 
-const _ranges = [7, 30, 90, 180];
+const _ranges = [7, 30, 90];
 
 class WeightScreen extends ConsumerStatefulWidget {
   const WeightScreen({super.key});
@@ -140,30 +140,15 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
 
     return Scaffold(
       backgroundColor: c.bg,
-      appBar: AppBar(
-        backgroundColor: c.header,
-        foregroundColor: c.ink,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: c.line)),
-        leading: FitTrackIconButton(
-          icon: FitIcons.back,
-          color: c.ink,
-          semanticLabel: context.t('settings:backLabel'),
-          onPressed: () => context.pop(),
-        ),
-        title: Semantics(
-          header: true,
-          child: Text(
-            context.t('common:wtTitle'),
-            style: FitTrackText.titleLg.copyWith(
-              color: c.ink,
-              fontWeight: FontWeight.w600,
-            ),
+      body: Column(
+        children: [
+          FitTrackTopBar(
+            title: context.t('common:wtTitle'),
+            backLabel: context.t('settings:backLabel'),
+            onBack: () => context.pop(),
           ),
-        ),
-      ),
-      body: logs.when(
+          Expanded(
+            child: logs.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => _Message(
           title: context.t('common:wtLoadFailed'),
@@ -189,9 +174,9 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(
-                FitTrackSpacing.lg,
-                FitTrackSpacing.md,
-                FitTrackSpacing.lg,
+                FitTrackSpacing.gutter,
+                FitTrackSpacing.gap,
+                FitTrackSpacing.gutter,
                 FitTrackSpacing.xxl,
               ),
               children: [
@@ -202,15 +187,14 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                   rangeLabel: _rangeLabel(context, _range),
                   kg: kg,
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 FitTrackSegmentedTabs(
                   labels: [for (final r in _ranges) _rangeLabel(context, r)],
                   selectedIndex: _ranges.indexOf(_range),
                   onSelected: (i) => setState(() => _range = _ranges[i]),
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 FitTrackCard(
-                  padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
                   child: all.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.symmetric(
@@ -232,9 +216,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                           kg: kg,
                         ),
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 FitTrackCard(
-                  padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -242,10 +225,8 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                         header: true,
                         child: Text(
                           context.t('common:wtLogTitle'),
-                          style: FitTrackText.title.copyWith(
-                            color: c.ink,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              FitTrackText.rowTitle.copyWith(color: c.ink),
                         ),
                       ),
                       const SizedBox(height: FitTrackSpacing.md - 2),
@@ -305,7 +286,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 FitTrackCard(
                   padding: EdgeInsets.zero,
                   child: Column(
@@ -372,6 +353,9 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
             ),
           );
         },
+          ),
+          ),
+        ],
       ),
     );
   }
@@ -543,7 +527,7 @@ class _TrendCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: FitTrackSpacing.md),
+        const SizedBox(height: FitTrackSpacing.gap),
         SizedBox(
           height: 140,
           child: points.length < 2

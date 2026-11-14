@@ -8,6 +8,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../data/sleep_service.dart';
 import 'sleep_screen.dart' show sleepHistoryProvider;
 import '../../../core/widgets/fittrack_icons.dart';
@@ -147,56 +148,20 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                FitTrackSpacing.xs,
-                FitTrackSpacing.sm,
-                FitTrackSpacing.lg,
-                FitTrackSpacing.xs,
-              ),
-              child: Row(
-                children: [
-                  FitTrackIconButton(
-                    icon: FitIcons.back,
-                    color: c.ink,
-                    semanticLabel: context.t('settings:backLabel'),
-                    onPressed: () => context.pop(),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            context.t('common:slLogTitle'),
-                            style: FitTrackText.screenTitle.copyWith(
-                              color: c.ink,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          nightLabel,
-                          style: FitTrackText.caption.copyWith(
-                            color: c.muted,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  FitTrackButton(
-                    label: context.t('common:slChangeDate'),
-                    variant: FitTrackButtonVariant.ghost,
-                    size: FitTrackButtonSize.sm,
-                    icon: FitIcons.calendar,
-                    onPressed: _pickDay,
-                  ),
-                ],
+            FitTrackTopBar(
+              title: context.t('common:slLogTitle'),
+              subtitle: nightLabel,
+              backLabel: context.t('settings:backLabel'),
+              onBack: () => context.pop(),
+              trailing: FitTrackButton(
+                label: context.t('common:slChangeDate'),
+                variant: FitTrackButtonVariant.ghost,
+                size: FitTrackButtonSize.sm,
+                icon: FitIcons.calendar,
+                onPressed: _pickDay,
               ),
             ),
             Expanded(

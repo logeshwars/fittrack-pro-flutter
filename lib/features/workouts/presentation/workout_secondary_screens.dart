@@ -37,6 +37,7 @@ class WorkoutHistoryDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: detail.when(
           loading: () => Center(
             child: CircularProgressIndicator(color: colors.accent),

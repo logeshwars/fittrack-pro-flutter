@@ -86,6 +86,7 @@ class LeaderboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           color: colors.accent,
           onRefresh: () async {

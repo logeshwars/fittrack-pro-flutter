@@ -7,6 +7,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../../dashboard/providers/dashboard_provider.dart';
 import '../../gamification/data/badges_data.dart';
 import '../../gamification/domain/badge_definition.dart';
@@ -28,9 +29,10 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            _TopBar(
+            _ProfileTopBar(
               onBack: () => context.pop(),
               onSettings: () => context.push('/settings'),
             ),
@@ -52,54 +54,23 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onBack, required this.onSettings});
-
+class _ProfileTopBar extends StatelessWidget {
+  const _ProfileTopBar({required this.onBack, required this.onSettings});
   final VoidCallback onBack;
   final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.xs,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.xs,
-        FitTrackSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: c.header,
-        border: Border(bottom: BorderSide(color: c.line)),
-      ),
-      child: Row(
-        children: [
-          FitTrackIconButton(
-            icon: FitIcons.back,
-            color: c.ink,
-            semanticLabel: context.t('settings:backLabel'),
-            onPressed: onBack,
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(
-                context.t('profile:title'),
-                style: FitTrackText.titleLg.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          FitTrackIconButton(
-            icon: FitIcons.settings,
-            color: c.ink,
-            semanticLabel: context.t('profile:settingsLabel'),
-            onPressed: onSettings,
-          ),
-        ],
+    return FitTrackTopBar(
+      title: context.t('profile:title'),
+      backLabel: context.t('settings:backLabel'),
+      onBack: onBack,
+      trailing: FitTrackIconButton(
+        icon: FitIcons.settings,
+        color: c.ink,
+        semanticLabel: context.t('profile:settingsLabel'),
+        onPressed: onSettings,
       ),
     );
   }
@@ -145,9 +116,9 @@ class _ProfileBody extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.lg,
-        FitTrackSpacing.md,
-        FitTrackSpacing.lg,
+        FitTrackSpacing.gutter,
+        FitTrackSpacing.gap,
+        FitTrackSpacing.gutter,
         FitTrackSpacing.xxl,
       ),
       children: [
@@ -158,32 +129,43 @@ class _ProfileBody extends ConsumerWidget {
           level: data.level,
           totalXp: data.totalXp,
         ),
-        const SizedBox(height: FitTrackSpacing.md),
-        _StatGrid(
-          cells: [
-            (context.t('profile:statWorkouts'), count('total_workouts'), null),
-            (
-              context.t('profile:statStreak'),
-              '${data.currentStreak}',
-              context.t('profile:dayUnit'),
+        const SizedBox(height: FitTrackSpacing.gap),
+        FitTrackStatStrip(
+          stats: [
+            FitTrackStat(
+              label: context.t('profile:statWorkouts'),
+              value: count('total_workouts'),
             ),
-            (context.t('profile:statPrs'), count('total_prs'), null),
+            FitTrackStat(
+              label: context.t('profile:statStreak'),
+              value: '${data.currentStreak}',
+              unit: context.t('profile:dayUnit'),
+            ),
+            FitTrackStat(
+              label: context.t('profile:statPrs'),
+              value: count('total_prs'),
+            ),
           ],
         ),
-        const SizedBox(height: FitTrackSpacing.md),
-        _StatGrid(
-          cells: [
-            (context.t('profile:totalXP'), number.format(data.totalXp), null),
-            (
-              context.t('profile:bodyKg'),
-              data.latestWeightKg == null
-                  ? '—'
+        const SizedBox(height: FitTrackSpacing.gap),
+        FitTrackStatStrip(
+          stats: [
+            FitTrackStat(
+              label: context.t('profile:totalXP'),
+              value: number.format(data.totalXp),
+            ),
+            FitTrackStat(
+              label: context.t('profile:bodyKg'),
+              value: data.latestWeightKg == null
+                  ? '–'
                   : data.latestWeightKg!.toStringAsFixed(1),
-              data.latestWeightKg == null ? null : context.t('profile:kgUnit'),
+              unit: data.latestWeightKg == null
+                  ? null
+                  : context.t('profile:kgUnit'),
             ),
           ],
         ),
-        const SizedBox(height: FitTrackSpacing.md),
+        const SizedBox(height: FitTrackSpacing.gap),
         _BadgesCard(
           earned: earned.take(4).toList(),
           earnedCount: earned.length,
@@ -192,7 +174,7 @@ class _ProfileBody extends ConsumerWidget {
           loading: achievementsAsync.isLoading,
           onSeeAll: () => context.push('/achievements'),
         ),
-        const SizedBox(height: FitTrackSpacing.md),
+        const SizedBox(height: FitTrackSpacing.gap),
         FitTrackCard(
           padding: EdgeInsets.zero,
           child: Column(
@@ -217,13 +199,7 @@ class _ProfileBody extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: FitTrackSpacing.xl),
-        Padding(
-          padding: const EdgeInsets.only(bottom: FitTrackSpacing.sm),
-          child: Text(
-            context.t('profile:settings'),
-            style: FitTrackText.overline.copyWith(color: c.muted),
-          ),
-        ),
+        FitTrackSectionLabel(title: context.t('profile:settings')),
         FitTrackCard(
           padding: EdgeInsets.zero,
           child: Column(
@@ -434,85 +410,6 @@ class _IdentityCard extends StatelessWidget {
 }
 
 /// A row of stat cells sharing one bordered surface, split by 1px lines.
-class _StatGrid extends StatelessWidget {
-  const _StatGrid({required this.cells});
-
-  /// (label, value, optional unit) per cell.
-  final List<(String, String, String?)> cells;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: c.surface,
-        border: Border.all(color: c.line),
-        borderRadius: BorderRadius.circular(FitTrackRadius.card),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < cells.length; i++) ...[
-              if (i > 0) VerticalDivider(width: 1, thickness: 1, color: c.line),
-              Expanded(
-                child: Semantics(
-                  container: true,
-                  label: [
-                    cells[i].$1,
-                    cells[i].$2,
-                    if (cells[i].$3 != null) cells[i].$3!,
-                  ].join(' '),
-                  child: ExcludeSemantics(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: FitTrackSpacing.lg - 2,
-                        vertical: FitTrackSpacing.md,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cells[i].$1,
-                            style: FitTrackText.caption.copyWith(
-                              color: c.muted,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: FitTrackSpacing.xs),
-                          Text.rich(
-                            TextSpan(
-                              text: cells[i].$2,
-                              children: [
-                                if (cells[i].$3 != null)
-                                  TextSpan(
-                                    text: ' ${cells[i].$3}',
-                                    style: FitTrackText.caption.copyWith(
-                                      color: c.muted,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            style: FitTrackText.stat.copyWith(
-                              color: c.ink,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _BadgesCard extends StatelessWidget {
   const _BadgesCard({
     required this.earned,

@@ -230,6 +230,7 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: all.when(
           loading: () => Center(
             child: CircularProgressIndicator(color: c.accent),
@@ -732,6 +733,7 @@ class WorkoutPresetScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: presets.when(
           loading: () => Center(
             child: CircularProgressIndicator(color: c.accent),

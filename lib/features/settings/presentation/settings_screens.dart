@@ -205,6 +205,7 @@ class _PersonalSettingsScreenState
         ),
       ),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Column(
           children: [
@@ -738,6 +739,7 @@ class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
         ),
       ),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Column(
           children: [
@@ -1390,6 +1392,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 44),
           children: [
@@ -1633,6 +1636,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             _Header(title: context.t('settings:hubTitle')),
@@ -1953,6 +1957,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 44),
           children: [
@@ -2026,59 +2031,19 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   }
 }
 
+/// Settings screens share one header; the look comes from [FitTrackTopBar].
 class _Header extends StatelessWidget {
   const _Header({required this.title, this.subtitle});
   final String title;
   final String? subtitle;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.xs,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.line)),
-      ),
-      child: Row(
-        children: [
-          FitTrackIconButton(
-            icon: FitIcons.back,
-            semanticLabel: context.t('settings:backLabel'),
-            onPressed: () => context.pop(),
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: FitTrackText.titleLg.copyWith(
-                    color: colors.ink,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      subtitle!,
-                      style: FitTrackText.caption.copyWith(color: colors.muted),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => FitTrackTopBar(
+        title: title,
+        subtitle: subtitle,
+        backLabel: context.t('settings:backLabel'),
+        onBack: () => context.pop(),
+      );
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -2226,6 +2191,7 @@ class _LoadingScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             _Header(title: title),

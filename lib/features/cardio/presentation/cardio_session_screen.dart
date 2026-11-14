@@ -7,6 +7,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../application/cardio_controller.dart';
 import '../data/cardio_service.dart';
 import '../domain/cardio_tracking.dart';
@@ -212,56 +213,21 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(
-                FitTrackSpacing.xs,
-                FitTrackSpacing.sm,
-                FitTrackSpacing.sm,
-                FitTrackSpacing.sm,
+            FitTrackTopBar(
+              title: _typeName(context, s.type),
+              subtitle: context.t(
+                s.gpsEnabled ? 'common:cardioGpsOn' : 'common:cardioGpsOff',
               ),
-              decoration: BoxDecoration(
-                color: c.surface,
-                border: Border(bottom: BorderSide(color: c.line)),
-              ),
-              child: Row(
-                children: [
-                  FitTrackIconButton(
-                    icon: FitIcons.back,
-                    semanticLabel: context.t('settings:backLabel'),
-                    onPressed: () => context.pop(),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _typeName(context, s.type),
-                          style: FitTrackText.titleLg.copyWith(
-                            color: c.ink,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          context.t(
-                            s.gpsEnabled
-                                ? 'common:cardioGpsOn'
-                                : 'common:cardioGpsOff',
-                          ),
-                          style: FitTrackText.label.copyWith(color: c.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                  FitTrackButton(
-                    label: context.t('common:cardioDiscard'),
-                    variant: FitTrackButtonVariant.ghost,
-                    size: FitTrackButtonSize.sm,
-                    onPressed: _discard,
-                  ),
-                ],
+              backLabel: context.t('settings:backLabel'),
+              onBack: () => context.pop(),
+              trailing: FitTrackButton(
+                label: context.t('common:cardioDiscard'),
+                variant: FitTrackButtonVariant.ghost,
+                size: FitTrackButtonSize.sm,
+                onPressed: _discard,
               ),
             ),
             Expanded(

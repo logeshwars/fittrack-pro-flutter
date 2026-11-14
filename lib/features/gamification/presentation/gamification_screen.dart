@@ -84,49 +84,14 @@ class _GamificationScreenState extends ConsumerState<GamificationScreen> {
     return Scaffold(
       backgroundColor: c.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(
-                FitTrackSpacing.xs,
-                FitTrackSpacing.sm,
-                FitTrackSpacing.sm,
-                FitTrackSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: c.surface,
-                border: Border(bottom: BorderSide(color: c.line)),
-              ),
-              child: Row(
-                children: [
-                  FitTrackIconButton(
-                    icon: FitIcons.back,
-                    semanticLabel: context.t('settings:backLabel'),
-                    onPressed: () => context.pop(),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.t('profile:badgesTitle'),
-                          style: FitTrackText.titleLg.copyWith(
-                            color: c.ink,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (subtitle != null)
-                          Text(
-                            subtitle,
-                            style:
-                                FitTrackText.label.copyWith(color: c.muted),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            FitTrackTopBar(
+              title: context.t('profile:badgesTitle'),
+              subtitle: subtitle,
+              backLabel: context.t('settings:backLabel'),
+              onBack: () => context.pop(),
             ),
             Expanded(
               child: RefreshIndicator(

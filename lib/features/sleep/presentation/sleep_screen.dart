@@ -7,6 +7,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../../progress/domain/progress_models.dart';
 import '../../settings/data/goal_targets.dart';
 import '../../../core/widgets/fittrack_icons.dart';
@@ -41,10 +42,13 @@ class SleepScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.bg,
-      body: SafeArea(
-        child: Column(
+      body: Column(
           children: [
-            _TopBar(onBack: () => context.pop()),
+            FitTrackTopBar(
+              title: context.t('common:slTitle'),
+              backLabel: context.t('settings:backLabel'),
+              onBack: () => context.pop(),
+            ),
             Expanded(
               child: RefreshIndicator(
                 color: colors.accent,
@@ -56,10 +60,10 @@ class SleepScreen extends ConsumerWidget {
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(
-                    FitTrackSpacing.lg,
-                    FitTrackSpacing.md,
-                    FitTrackSpacing.lg,
-                    FitTrackSpacing.tabBarClearance,
+                    FitTrackSpacing.gutter,
+                    FitTrackSpacing.gap,
+                    FitTrackSpacing.gutter,
+                    FitTrackSpacing.xxl,
                   ),
                   children: [
                     sleep.when(
@@ -91,53 +95,6 @@ class SleepScreen extends ConsumerWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.onBack});
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.xs,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.lg,
-        FitTrackSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: c.header,
-        border: Border(bottom: BorderSide(color: c.line)),
-      ),
-      child: Row(
-        children: [
-          FitTrackIconButton(
-            icon: FitIcons.back,
-            color: c.ink,
-            semanticLabel: context.t('settings:backLabel'),
-            onPressed: onBack,
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(
-                context.t('common:slTitle'),
-                style: FitTrackText.titleLg.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          Icon(FitIcons.sleep, color: c.sleepColor, size: 22),
-        ],
       ),
     );
   }
@@ -198,7 +155,6 @@ class _Content extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FitTrackCard(
-          padding: const EdgeInsets.all(FitTrackSpacing.lg - 2),
           child: Semantics(
             container: true,
             label: [
@@ -225,10 +181,9 @@ class _Content extends StatelessWidget {
                   const SizedBox(height: FitTrackSpacing.xs),
                   Text(
                     _duration(context, latest.durationMinutes),
-                    style: FitTrackText.hero.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: FitTrackText.statLg.copyWith(color: c.ink),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -267,34 +222,27 @@ class _Content extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: FitTrackSpacing.md),
+        const SizedBox(height: FitTrackSpacing.gap),
         _WeekChart(nights: week, average: weekAvg, goalMinutes: goal),
-        const SizedBox(height: FitTrackSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: FitTrackStatTile(
-                value: _duration(context, avgMinutes),
-                label: context.t('common:slAvgSleep'),
-              ),
+        const SizedBox(height: FitTrackSpacing.gap),
+        FitTrackStatStrip(
+          stats: [
+            FitTrackStat(
+              label: context.t('common:slAvgSleep'),
+              value: _duration(context, avgMinutes),
             ),
-            const SizedBox(width: FitTrackSpacing.sm),
-            Expanded(
-              child: FitTrackStatTile(
-                value: '${items.length}',
-                label: context.t('common:slNights'),
-              ),
+            FitTrackStat(
+              label: context.t('common:slNights'),
+              value: '${items.length}',
             ),
-            const SizedBox(width: FitTrackSpacing.sm),
-            Expanded(
-              child: FitTrackStatTile(
-                value: avgQuality == null ? '—' : avgQuality.toStringAsFixed(1),
-                label: context.t('common:slQuality'),
-              ),
+            FitTrackStat(
+              label: context.t('common:slQuality'),
+              value:
+                  avgQuality == null ? '–' : avgQuality.toStringAsFixed(1),
             ),
           ],
         ),
-        const SizedBox(height: FitTrackSpacing.lg),
+        const SizedBox(height: FitTrackSpacing.gap),
         FitTrackButton(
           label: context.t('common:slLogCta'),
           icon: FitIcons.add,
@@ -302,25 +250,8 @@ class _Content extends StatelessWidget {
           fullWidth: true,
           onPressed: () => context.push('/sleep/log'),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            2,
-            FitTrackSpacing.xl,
-            2,
-            FitTrackSpacing.sm,
-          ),
-          child: Semantics(
-            header: true,
-            child: Text(
-              context.t('common:slHistory').toUpperCase(),
-              style: FitTrackText.caption.copyWith(
-                color: c.muted,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ),
+        const SizedBox(height: FitTrackSpacing.xl),
+        FitTrackSectionLabel(title: context.t('common:slHistory')),
         for (final item in items.take(12))
           Padding(
             padding: const EdgeInsets.only(bottom: FitTrackSpacing.sm),
