@@ -736,7 +736,6 @@ class _QuantitySheetState extends State<_QuantitySheet> {
                   widget.food.displayName,
                   style: FitTrackText.titleLg.copyWith(
                     color: c.ink,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -911,7 +910,6 @@ class _ManualFormState extends State<_ManualForm> {
             context.t('nutrition:methodQuick'),
             style: FitTrackText.titleLg.copyWith(
               color: c.ink,
-              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: FitTrackSpacing.md),

@@ -344,7 +344,6 @@ class _PhotoScanScreenState extends ConsumerState<PhotoScanScreen> {
                                       '${kcal.round()}',
                                       style: FitTrackText.hero.copyWith(
                                         color: colors.ink,
-                                        fontWeight: FontWeight.w700,
                                         fontFeatures: const [
                                           FontFeature.tabularFigures(),
                                         ],

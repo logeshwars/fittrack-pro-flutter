@@ -114,6 +114,14 @@ abstract final class FitTrackText {
     letterSpacing: -0.2,
   );
 
+  /// Section title on a setup or detail page: 24 / 600.
+  static const titleXl = TextStyle(
+    fontSize: 24,
+    height: 30 / 24,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.48,
+  );
+
   /// Pushed screen title and sheet title: 18 / 600.
   static const titleLg = TextStyle(
     fontSize: 18,

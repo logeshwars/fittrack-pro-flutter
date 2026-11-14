@@ -107,7 +107,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     context.t('common:payEyebrow'),
                     style: FitTrackText.caption.copyWith(
                       color: colors.accent,
-                      fontWeight: FontWeight.w700,
                       letterSpacing: 1,
                     ),
                   ),
@@ -119,9 +118,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             args: {'days': trialDays},
                           )
                         : context.t('common:payTitle'),
-                    style: FitTrackText.screenTitle.copyWith(
+                    style: FitTrackText.display.copyWith(
                       color: colors.ink,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: -0.52,
                       height: 1.15,
                     ),
                   ),
@@ -509,10 +509,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   Expanded(
                     child: Text(
                       context.t('common:subTitle'),
-                      style: FitTrackText.screenTitle.copyWith(
-                        color: colors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style:
+                          FitTrackText.screenTitle.copyWith(color: colors.ink),
                     ),
                   ),
                   FitTrackIconButton(
@@ -544,7 +542,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                               context.t('common:subCurrentPlan').toUpperCase(),
                               style: FitTrackText.caption.copyWith(
                                 color: colors.muted,
-                                fontWeight: FontWeight.w700,
                                 letterSpacing: 1,
                               ),
                             ),
@@ -565,7 +562,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           planName,
                           style: FitTrackText.stat.copyWith(
                             color: colors.ink,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 2),

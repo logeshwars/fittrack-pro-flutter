@@ -182,10 +182,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   const SizedBox(height: 6),
                   Text(
                     context.t('common:onbTitle'),
-                    style: FitTrackText.screenTitle.copyWith(
-                      color: colors.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: FitTrackText.titleXl.copyWith(color: colors.ink),
                   ),
                   const SizedBox(height: 6),
                   Text(

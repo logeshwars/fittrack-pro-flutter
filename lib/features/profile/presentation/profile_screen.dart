@@ -318,7 +318,6 @@ class _IdentityCard extends StatelessWidget {
                     initial,
                     style: FitTrackText.stat.copyWith(
                       color: c.accentText,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

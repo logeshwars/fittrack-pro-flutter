@@ -206,7 +206,6 @@ class _PermissionError extends StatelessWidget {
             textAlign: TextAlign.center,
             style: FitTrackText.titleLg.copyWith(
               color: FitTrackCamera.ink,
-              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: FitTrackSpacing.md),

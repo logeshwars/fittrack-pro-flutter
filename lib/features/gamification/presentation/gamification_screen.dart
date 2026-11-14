@@ -176,10 +176,7 @@ class _Body extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: FitTrackText.titleLg.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: FitTrackText.titleLg.copyWith(color: c.ink),
               ),
               const SizedBox(height: 2),
               Text(label, style: FitTrackText.caption.copyWith(color: c.muted)),
@@ -452,7 +449,6 @@ class _BadgeTile extends StatelessWidget {
                     context.t('profile:xpReward', args: {'n': badge.xpReward}),
                     style: FitTrackText.caption.copyWith(
                       color: c.xpColor,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

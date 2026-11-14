@@ -281,7 +281,6 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                               ),
                               style: FitTrackText.caption.copyWith(
                                 color: stateColor,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],

@@ -94,9 +94,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   children: [
                     Text(
                       context.t('common:resetTitle'),
-                      style: FitTrackText.screenTitle.copyWith(
+                      style: FitTrackText.display.copyWith(
                         color: colors.ink,
                         fontWeight: FontWeight.w600,
+                        letterSpacing: -0.52,
                       ),
                     ),
                     const SizedBox(height: FitTrackSpacing.sm - 2),

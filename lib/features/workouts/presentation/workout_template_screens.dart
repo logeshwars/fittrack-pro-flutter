@@ -410,7 +410,6 @@ class _DayRow extends StatelessWidget {
                     '${index + 1}',
                     style: FitTrackText.body.copyWith(
                       color: selected ? c.accentText : c.accent,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

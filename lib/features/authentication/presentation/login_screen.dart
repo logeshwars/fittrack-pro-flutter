@@ -449,7 +449,6 @@ class _BrandMark extends StatelessWidget {
             'FT',
             style: FitTrackText.titleLg.copyWith(
               color: colors.accentText,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ),

@@ -204,7 +204,6 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                               context.t('common:slDuration').toUpperCase(),
                               style: FitTrackText.caption.copyWith(
                                 color: c.muted,
-                                fontWeight: FontWeight.w700,
                                 letterSpacing: 1,
                               ),
                             ),
@@ -247,7 +246,6 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                             ' · ${context.t('common:slQ$_quality').toUpperCase()}',
                             style: FitTrackText.caption.copyWith(
                               color: c.muted,
-                              fontWeight: FontWeight.w700,
                               letterSpacing: 1,
                             ),
                           ),
@@ -354,10 +352,7 @@ class _TimeCard extends StatelessWidget {
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: FitTrackText.hero.copyWith(
-              color: c.ink,
-              fontWeight: FontWeight.w800,
-            ),
+            style: FitTrackText.hero.copyWith(color: c.ink),
           ),
         );
 
@@ -397,7 +392,6 @@ class _TimeCard extends StatelessWidget {
               title.toUpperCase(),
               style: FitTrackText.caption.copyWith(
                 color: c.muted,
-                fontWeight: FontWeight.w700,
                 letterSpacing: 1,
               ),
             ),
@@ -537,7 +531,6 @@ class _MeridiemButton extends StatelessWidget {
               label,
               style: FitTrackText.body.copyWith(
                 color: selected ? c.accentText : c.ink,
-                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -583,7 +576,6 @@ class _QualityButton extends StatelessWidget {
               '$value',
               style: FitTrackText.titleLg.copyWith(
                 color: selected ? c.accentText : c.ink,
-                fontWeight: FontWeight.w800,
               ),
             ),
           ),

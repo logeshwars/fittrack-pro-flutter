@@ -478,7 +478,6 @@ class _Row extends StatelessWidget {
                         initials,
                         style: FitTrackText.overline.copyWith(
                           color: colors.ink,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
