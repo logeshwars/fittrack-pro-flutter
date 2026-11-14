@@ -165,6 +165,33 @@ def patch_gradle_properties() -> None:
         props.write_text(text.rstrip("\n") + "\n" + line + "\n")
 
 
+RELEASE_LINT_MARKER = "// fittrack: skip Lint's release-only gate"
+RELEASE_LINT_BLOCK = RELEASE_LINT_MARKER + """
+// `assembleRelease` runs a `lintVital*` task per module, and on some plugin
+// modules (google_sign_in_android) Lint crashes inside its own Javadoc
+// parser with `NoSuchMethodError: JavaDocParser.parseDataItem`. That is a
+// bug in the Lint/AGP pair the Flutter template pins, not in code we own,
+// and Lint is not a release gate for this app -- `flutter analyze` is. Skip
+// the tasks so a release APK can be built.
+subprojects {
+    tasks.matching { it.name.startsWith("lintVital") }.configureEach {
+        enabled = false
+    }
+}
+"""
+
+
+def patch_release_lint() -> None:
+    """Let `flutter build apk --release` finish despite a Lint crash."""
+    gradle = Path("android/build.gradle.kts")
+    if not gradle.exists():
+        return
+    text = gradle.read_text()
+    if RELEASE_LINT_MARKER in text:
+        return
+    gradle.write_text(text.rstrip("\n") + "\n" + RELEASE_LINT_BLOCK)
+
+
 def patch_ios() -> None:
     plist = Path("ios/Runner/Info.plist")
     if not plist.exists():
@@ -187,5 +214,6 @@ if __name__ == "__main__":
     patch_android_notification_icon()
     patch_gradle_properties()
     patch_debug_signing()
+    patch_release_lint()
     patch_ios()
     print("Native permissions patched.")
