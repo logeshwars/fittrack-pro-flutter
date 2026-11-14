@@ -717,7 +717,6 @@ class _ExerciseCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = AppPalette.of(context);
-    final kg = context.t('workout:kgUnit');
     final previous = ref.watch(previousSetsProvider(exercise.exerciseId));
     final history = previous.valueOrNull ?? const [];
     final hint = suggestOverload(history);
