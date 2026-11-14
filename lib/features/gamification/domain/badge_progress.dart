@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_colors.dart';
 import 'badge_definition.dart';
 
-/// Rank tier colours (port of the RN `TIER` palette).
-Color tierColor(String tier) => switch (tier) {
-      'silver' => const Color(0xFF9CA3AF),
-      'gold' => const Color(0xFFF59E0B),
-      'elite' => const Color(0xFFFFFFFF),
-      'legend' => const Color(0xFFA855F7),
-      _ => const Color(0xFFCD7F32),
+/// Rank tier colour for the theme in use: the luminous value on Night, the
+/// deep one on Pearl.
+Color tierColor(String tier, AppPalette palette) => switch (tier) {
+      'silver' => palette.tierSilver,
+      'gold' => palette.tierGold,
+      'elite' => palette.tierElite,
+      'legend' => palette.tierLegend,
+      _ => palette.tierBronze,
     };
 
 /// Display label for a rank tier.

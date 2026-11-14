@@ -109,5 +109,9 @@
   "lbLoadFailed": "No se pudo cargar la clasificación.",
   "lbRowMeta": "{{volume}} kg · {{days}} días",
   "lbUnknown": "Desconocido",
-  "lbRankLabel": "Puesto {{n}}"
+  "lbRankLabel": "Puesto {{n}}",
+  "unitDays": "días",
+  "last13Weeks": "Últimas 13 semanas",
+  "sleepTrackingTitle": "Seguimiento del sueño",
+  "sleepTrackingSub": "Registra anoche y mira tu tendencia de 7 noches"
 }

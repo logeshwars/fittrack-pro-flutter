@@ -8,10 +8,12 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../data/food_search_service.dart';
 import '../domain/food_result.dart';
 import '../domain/nutrition_models.dart';
 import 'nutrition_screen.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Favorites as [FoodResult]s.
 final favoriteFoodsProvider =
@@ -237,64 +239,42 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     final recent = ref.watch(recentFoodsProvider);
     final fromLocal =
         _results.isNotEmpty && _results.every((f) => f.source == FoodSource.local);
-    const gap = SizedBox(height: FitTrackSpacing.md);
+    const gap = SizedBox(height: FitTrackSpacing.gap);
+
+    // Board order. Post-workout joins only when it is the meal being added to.
+    final meals = [
+      'breakfast',
+      'lunch',
+      'snack',
+      'dinner',
+      if (_meal == 'post_workout') 'post_workout',
+    ];
+    final isToday = _day == dayOnly(DateTime.now());
 
     return Scaffold(
       backgroundColor: c.bg,
-      appBar: AppBar(
-        backgroundColor: c.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: c.line)),
-        toolbarHeight: 64,
-        titleSpacing: 0,
-        leading: FitTrackIconButton(
-          icon: Icons.arrow_back,
-          semanticLabel: context.t('nutrition:goBackLink'),
-          onPressed: () => context.pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.t('nutrition:addFoodTitle'),
-              style: FitTrackText.titleLg.copyWith(
-                color: c.ink,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              DateFormat('EEEE, MMM d').format(_day),
-              style: FitTrackText.caption.copyWith(color: c.muted),
-            ),
-          ],
-        ),
-      ),
-      body: ListView(
+      body: Column(
+        children: [
+          FitTrackTopBar(
+            title: context.t('nutrition:addFoodTitle'),
+            subtitle: isToday ? null : DateFormat('EEEE, MMM d').format(_day),
+            backLabel: context.t('nutrition:goBackLink'),
+            onBack: () => context.pop(),
+          ),
+          Expanded(
+            child: ListView(
         padding: const EdgeInsets.fromLTRB(
-          FitTrackSpacing.lg,
-          FitTrackSpacing.md,
-          FitTrackSpacing.lg,
+          FitTrackSpacing.gutter,
+          FitTrackSpacing.gap,
+          FitTrackSpacing.gutter,
           FitTrackSpacing.xxl,
         ),
         children: [
-          SizedBox(
-            height: FitTrackSpacing.touchMin,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final m in mealOrder)
-                  Padding(
-                    padding: const EdgeInsets.only(right: FitTrackSpacing.sm),
-                    child: FitTrackChip(
-                      label: mealText(context, m),
-                      selected: _meal == m,
-                      onTap: () => setState(() => _meal = m),
-                    ),
-                  ),
-              ],
-            ),
+          FitTrackSegmentedTabs(
+            compact: true,
+            labels: [for (final m in meals) mealText(context, m)],
+            selectedIndex: meals.indexOf(_meal).clamp(0, meals.length - 1),
+            onSelected: (i) => setState(() => _meal = meals[i]),
           ),
           gap,
           _SearchField(onChanged: _onQuery),
@@ -380,7 +360,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                       padding:
                           const EdgeInsets.only(right: FitTrackSpacing.xl),
                       color: c.bad,
-                      child: Icon(Icons.delete_outline, color: c.surface),
+                      child: Icon(FitIcons.delete, color: c.surface),
                     ),
                     onDismissed: (_) async {
                       final service = ref.read(nutritionServiceProvider);
@@ -439,6 +419,9 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
           ],
         ],
       ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -480,39 +463,15 @@ class _SearchField extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.md),
-      decoration: BoxDecoration(
-        color: c.surface,
-        border: Border.all(color: c.lineStrong),
-        borderRadius: BorderRadius.circular(FitTrackRadius.md),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search, size: 18, color: c.muted),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Semantics(
-              label: context.t('nutrition:searchFoods'),
-              textField: true,
-              child: TextField(
-                onChanged: onChanged,
-                style: FitTrackText.body.copyWith(color: c.ink),
-                cursorColor: c.accent,
-                decoration: InputDecoration.collapsed(
-                  hintText: context.t('nutrition:searchHint'),
-                  hintStyle: FitTrackText.body.copyWith(color: c.muted),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Semantics(
+        label: context.t('nutrition:searchFoods'),
+        textField: true,
+        child: FitTrackSearchField(
+          hint: context.t('nutrition:searchHint'),
+          height: FitTrackSpacing.controlLg,
+          onChanged: onChanged,
+        ),
+      );
 }
 
 /// Barcode / Photo scan / Quick add entry tile.
@@ -533,16 +492,15 @@ class _MethodTile extends StatelessWidget {
       onTap: onTap,
       padding: const EdgeInsets.all(FitTrackSpacing.md),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 58),
+        constraints: const BoxConstraints(minHeight: 60),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: FitTrackText.title.copyWith(
-                color: c.ink,
-                fontWeight: FontWeight.w600,
-              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: FitTrackText.rowTitle.copyWith(color: c.ink),
             ),
             const SizedBox(height: FitTrackSpacing.xs),
             Text(
@@ -586,10 +544,7 @@ class _ListCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: FitTrackText.title.copyWith(
-                        color: c.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: FitTrackText.rowTitle.copyWith(color: c.ink),
                     ),
                   ),
                   if (trailing != null)
@@ -665,10 +620,7 @@ class _FoodRow extends StatelessWidget {
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: FitTrackText.title.copyWith(
-                          color: c.ink,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: FitTrackText.rowTitle.copyWith(color: c.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -680,7 +632,11 @@ class _FoodRow extends StatelessWidget {
                 ),
                 if (badge != null) ...[
                   const SizedBox(width: FitTrackSpacing.sm),
-                  FitTrackBadge(label: badge!),
+                  FitTrackTag(
+                    label: badge!,
+                    background: c.line,
+                    foreground: c.muted,
+                  ),
                 ],
                 Semantics(
                   button: true,
@@ -701,7 +657,7 @@ class _FoodRow extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.add,
+                              FitIcons.add,
                               size: 16,
                               color: c.accentText,
                             ),
@@ -785,7 +741,7 @@ class _QuantitySheetState extends State<_QuantitySheet> {
                 ),
               ),
               FitTrackIconButton(
-                icon: _favorite ? Icons.star : Icons.star_border,
+                icon: _favorite ? FitIcons.starFilled : FitIcons.star,
                 color: c.xpColor,
                 semanticLabel: context.t('nutrition:favoriteToggle'),
                 onPressed: () => setState(() => _favorite = !_favorite),

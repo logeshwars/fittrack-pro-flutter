@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   // ── Night (dark) ──────────────────────────────────────────────────────────
   static const darkBg = Color(0xFF15181B);
-  static const darkHeader = darkBg;
+  static const darkHeader = Color(0xFF1F2429); // surface
   static const darkCard = Color(0xFF1F2429); // surface
   static const darkCardAlt = Color(0xFF15181B); // recessed panel: bg
   static const darkBorder = Color(0xFF2D343A); // line
@@ -22,10 +22,11 @@ abstract final class AppColors {
   static const darkMuted = Color(0xFFA3ADA8);
   static const darkFaint = Color(0xFFA3ADA8); // V2 has no faint: muted
   static const darkInputBg = Color(0xFF1F2429);
+  static const darkSegTrack = Color(0xFF2D343A); // line
 
   // ── Pearl (light) ─────────────────────────────────────────────────────────
   static const lightBg = Color(0xFFFFFFFF);
-  static const lightHeader = lightBg;
+  static const lightHeader = Color(0xFFF5F5F4); // surface
   static const lightCard = Color(0xFFF5F5F4); // surface
   static const lightCardAlt = Color(0xFFFFFFFF); // recessed panel: bg
   static const lightBorder = Color(0xFFE5E5E2); // line
@@ -38,6 +39,23 @@ abstract final class AppColors {
   static const lightMuted = Color(0xFF5E5E5B);
   static const lightFaint = Color(0xFF5E5E5B); // V2 has no faint: muted
   static const lightInputBg = Color(0xFFF5F5F4);
+  static const lightSegTrack = Color(0xFFDCDCD8);
+  static const darkChevron = Color(0xFF8B9591);
+  static const lightChevron = Color(0xFF8A8A86);
+
+  // ── Rest timer bar (dark in both themes) ──────────────────────────────────
+  static const restBg = Color(0xFF0E1113);
+  static const restInk = Color(0xFFFFFFFF);
+  static const restMuted = Color(0xFFB8BFCB);
+  static const restOutline = Color(0xFF5A646B);
+
+  // ── Hero art (Today and Nutrition headers) ────────────────────────────────
+  static const heroDarkStart = Color(0xFF2A3239);
+  static const heroDarkEnd = Color(0xFF1E252B);
+  static const heroDarkRing = Color(0xFF41505A);
+  static const heroLightStart = Color(0xFFECECEA);
+  static const heroLightEnd = Color(0xFFD8D8D4);
+  static const heroLightDot = Color(0xFFBDBDB8);
 
   // ── Domain palette (color belongs to data, never chrome) ──────────────────
   // Unsuffixed = Night (luminous); `Light` = Pearl (deep, reads on white).
@@ -108,6 +126,8 @@ class AppPalette {
     required this.muted,
     required this.faint,
     required this.inputBg,
+    required this.segTrack,
+    required this.chevron,
     required this.danger,
     required this.warning,
     required this.ok,
@@ -142,6 +162,12 @@ class AppPalette {
   final Color muted;
   final Color faint;
   final Color inputBg;
+
+  /// Track behind a segmented control.
+  final Color segTrack;
+
+  /// Disclosure chevrons in rows.
+  final Color chevron;
   final Color danger;
   final Color warning;
 
@@ -190,6 +216,8 @@ class AppPalette {
     muted: AppColors.darkMuted,
     faint: AppColors.darkFaint,
     inputBg: AppColors.darkInputBg,
+    segTrack: AppColors.darkSegTrack,
+    chevron: AppColors.darkChevron,
     danger: AppColors.dangerDark,
     warning: AppColors.warningDark,
     ok: AppColors.okDark,
@@ -225,6 +253,8 @@ class AppPalette {
     muted: AppColors.lightMuted,
     faint: AppColors.lightFaint,
     inputBg: AppColors.lightInputBg,
+    segTrack: AppColors.lightSegTrack,
+    chevron: AppColors.lightChevron,
     danger: AppColors.dangerLight,
     warning: AppColors.warningLight,
     ok: AppColors.okLight,

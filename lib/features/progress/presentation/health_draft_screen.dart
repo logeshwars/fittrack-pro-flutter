@@ -6,6 +6,7 @@ import '../../../core/local/local_draft_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../domain/health_drafts.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class HealthDraftScreen extends StatefulWidget {
   const HealthDraftScreen({this.initialTab = 0, super.key});
@@ -246,7 +247,7 @@ class _Header extends StatelessWidget {
             onTap: onBack,
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Icon(Icons.arrow_back, size: 20, color: colors.text),
+              child: Icon(FitIcons.back, size: 20, color: colors.text),
             ),
           ),
           const SizedBox(width: 8),
@@ -340,7 +341,7 @@ class _WeightPanel extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: const Icon(
-                    Icons.monitor_weight_outlined,
+                    FitIcons.weight,
                     size: 30,
                     color: AppColors.weight,
                   ),
@@ -471,7 +472,7 @@ class _WeightRow extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
-                  Icons.monitor_weight_outlined,
+                  FitIcons.weight,
                   size: 24,
                   color: AppColors.weight,
                 ),
@@ -627,7 +628,7 @@ class _SleepPanel extends StatelessWidget {
           const SizedBox(height: 16),
           _TimePicker(
             label: 'BEDTIME',
-            icon: Icons.bedtime,
+            icon: FitIcons.sleep,
             hour24: bedHour,
             minute: bedMinute,
             onHour: onBedHour,
@@ -636,7 +637,7 @@ class _SleepPanel extends StatelessWidget {
           const SizedBox(height: 16),
           _TimePicker(
             label: 'WAKE TIME',
-            icon: Icons.wb_sunny_outlined,
+            icon: FitIcons.sun,
             hour24: wakeHour,
             minute: wakeMinute,
             onHour: onWakeHour,
@@ -691,7 +692,7 @@ class _SleepPanel extends StatelessWidget {
                               child: Column(
                                 children: [
                                   Icon(
-                                    Icons.bedtime,
+                                    FitIcons.sleep,
                                     size: 19,
                                     color: quality >= q
                                         ? AppColors.sleep
@@ -972,7 +973,7 @@ class _SleepRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.bedtime, size: 20, color: AppColors.sleep),
+          const Icon(FitIcons.sleep, size: 20, color: AppColors.sleep),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

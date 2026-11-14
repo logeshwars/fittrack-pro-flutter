@@ -5,6 +5,42 @@ import '../../../core/data/service_providers.dart';
 import '../../settings/data/goal_targets.dart';
 import '../../workouts/domain/workout_models.dart';
 
+/// One meal logged today: its type, when the first item went in and the
+/// calories of everything logged under it.
+class DashboardMeal {
+  const DashboardMeal({
+    required this.type,
+    required this.firstLoggedAt,
+    required this.calories,
+  });
+
+  final String type;
+  final DateTime firstLoggedAt;
+  final double calories;
+}
+
+/// Groups today's food rows by meal, earliest first.
+List<DashboardMeal> mealsFromRows(Iterable<Map<String, dynamic>> rows) {
+  final first = <String, DateTime>{};
+  final kcal = <String, double>{};
+  for (final row in rows) {
+    final type = (row['meal_type'] as String?) ?? 'other';
+    final at = DateTime.tryParse('${row['logged_at'] ?? ''}')?.toLocal();
+    if (at == null) continue;
+    final seen = first[type];
+    if (seen == null || at.isBefore(seen)) first[type] = at;
+    kcal[type] = (kcal[type] ?? 0) + ((row['calories'] as num?)?.toDouble() ?? 0);
+  }
+  return [
+    for (final type in first.keys)
+      DashboardMeal(
+        type: type,
+        firstLoggedAt: first[type]!,
+        calories: kcal[type] ?? 0,
+      ),
+  ]..sort((a, b) => a.firstLoggedAt.compareTo(b.firstLoggedAt));
+}
+
 class DashboardData {
   const DashboardData({
     required this.configured,
@@ -24,6 +60,7 @@ class DashboardData {
     this.totalXp = 0,
     this.level = 1,
     this.currentStreak = 0,
+    this.meals = const [],
   });
 
   final bool configured;
@@ -43,6 +80,7 @@ class DashboardData {
   final int totalXp;
   final int level;
   final int currentStreak;
+  final List<DashboardMeal> meals;
 
   int get workouts => recentWorkouts.length;
 }
@@ -140,5 +178,6 @@ final dashboardProvider =
     totalXp: (stats?['total_xp'] as num?)?.toInt() ?? 0,
     level: (stats?['level'] as num?)?.toInt() ?? 1,
     currentStreak: (stats?['current_streak'] as num?)?.toInt() ?? 0,
+    meals: mealsFromRows(foodRows),
   );
 });

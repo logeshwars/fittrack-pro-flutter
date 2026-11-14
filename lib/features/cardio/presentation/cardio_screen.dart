@@ -12,6 +12,7 @@ import '../application/cardio_controller.dart';
 import '../data/cardio_service.dart';
 import '../domain/cardio_session.dart';
 import '../domain/cardio_tracking.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 final cardioProvider =
     FutureProvider.autoDispose<List<CardioSession>>((ref) async {
@@ -40,17 +41,17 @@ class _Activity {
 }
 
 const _activities = [
-  _Activity('running', Icons.directions_run, 'cardioTypeRunning',
+  _Activity('running', FitIcons.run, 'cardioTypeRunning',
       'cardioXp5km', 'cardioHintRunning'),
-  _Activity('cycling', Icons.directions_bike, 'cardioTypeCycling',
+  _Activity('cycling', FitIcons.cycle, 'cardioTypeCycling',
       'cardioXpBase', 'cardioHintCycling'),
-  _Activity('walking', Icons.directions_walk, 'cardioTypeWalking',
+  _Activity('walking', FitIcons.walk, 'cardioTypeWalking',
       'cardioXp30min', 'cardioHintWalking'),
-  _Activity('swimming', Icons.pool, 'cardioTypeSwimming', 'cardioXpBase',
+  _Activity('swimming', FitIcons.swim, 'cardioTypeSwimming', 'cardioXpBase',
       'cardioHintSwimming'),
-  _Activity('hiit', Icons.timer_outlined, 'cardioTypeHiit', 'cardioXpHiit',
+  _Activity('hiit', FitIcons.hiit, 'cardioTypeHiit', 'cardioXpHiit',
       'cardioHintHiit'),
-  _Activity('other', Icons.favorite_outline, 'cardioTypeOther', 'cardioXpBase',
+  _Activity('other', FitIcons.otherActivity, 'cardioTypeOther', 'cardioXpBase',
       'cardioHintOther'),
 ];
 
@@ -69,50 +70,42 @@ class CardioScreen extends ConsumerWidget {
     final c = AppPalette.of(context);
     final sessions = ref.watch(cardioProvider);
 
-    return RefreshIndicator(
-      color: c.accent,
-      backgroundColor: c.surface,
-      onRefresh: () async {
-        ref.invalidate(cardioProvider);
-        ref.invalidate(cardioStatsProvider);
-        await ref.read(cardioProvider.future);
-      },
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(
-          bottom: FitTrackSpacing.tabBarClearance - 60,
+    return Column(
+      children: [
+        FitTrackScreenHeader(
+          title: context.t('common:cardioTitle'),
+          subtitle: context.t('common:cardioSubtitle'),
         ),
-        children: [
-          FitTrackScreenHeader(
-            title: context.t('common:cardioTitle'),
-            subtitle: context.t('common:cardioSubtitle'),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              FitTrackSpacing.lg,
-              FitTrackSpacing.md,
-              FitTrackSpacing.lg,
-              0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        Expanded(
+          child: RefreshIndicator(
+            color: c.accent,
+            backgroundColor: c.surface,
+            onRefresh: () async {
+              ref.invalidate(cardioProvider);
+              ref.invalidate(cardioStatsProvider);
+              await ref.read(cardioProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.gutter,
+                FitTrackSpacing.gap,
+                FitTrackSpacing.gutter,
+                FitTrackSpacing.xxl,
+              ),
               children: [
                 const _ResumeBanner(),
                 _StatsStrip(stats: ref.watch(cardioStatsProvider).valueOrNull),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 FitTrackCard(
-                  padding: const EdgeInsets.all(14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         context.t('common:cardioXpTitle'),
-                        style: FitTrackText.body.copyWith(
-                          color: c.ink,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: FitTrackText.rowTitle.copyWith(color: c.ink),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: FitTrackSpacing.xs),
                       Text(
                         context.t('common:cardioXpRules'),
                         style: FitTrackText.caption.copyWith(color: c.muted),
@@ -120,32 +113,20 @@ class CardioScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
-                Padding(
-                  padding: const EdgeInsets.only(left: 2, bottom: 8),
-                  child: Text(
-                    context.t('common:cardioStartSession'),
-                    style: FitTrackText.body.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                const SizedBox(height: FitTrackSpacing.gap),
+                FitTrackSectionLabel(
+                  title: context.t('common:cardioStartSession'),
                 ),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: .62,
+                FitTrackGrid(
+                  columns: 3,
                   children: [
                     for (final a in _activities) _ActivityTile(activity: a),
                   ],
                 ),
-                const SizedBox(height: FitTrackSpacing.md),
+                const SizedBox(height: FitTrackSpacing.gap),
                 sessions.when(
                   loading: () => Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(FitTrackSpacing.xxl),
                     child: Center(
                       child: CircularProgressIndicator(color: c.accent),
                     ),
@@ -159,64 +140,40 @@ class CardioScreen extends ConsumerWidget {
                             '${context.t('common:noCardioYet')}. ${context.t('common:startFirstCardio')}',
                       );
                     }
-                    return FitTrackCard(
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            height: FitTrackSpacing.touchMin,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 14),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    context.t('common:cardioRecent'),
-                                    style: FitTrackText.body.copyWith(
-                                      color: c.ink,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${items.length}',
-                                    style: FitTrackText.caption
-                                        .copyWith(color: c.muted),
-                                  ),
-                                ],
+                    return FitTrackListCard(
+                      title: context.t('common:cardioRecent'),
+                      trailing: '${items.length}',
+                      children: [
+                        for (final item in items)
+                          Dismissible(
+                            key: ValueKey(item.id),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              padding: const EdgeInsetsDirectional.only(
+                                end: FitTrackSpacing.xl,
                               ),
+                              alignment: AlignmentDirectional.centerEnd,
+                              color: c.bad,
+                              child: Icon(FitIcons.delete, color: c.bg),
                             ),
+                            onDismissed: (_) async {
+                              await ref
+                                  .read(cardioServiceProvider)
+                                  ?.deleteSession(item.id);
+                              ref.invalidate(cardioProvider);
+                              ref.invalidate(cardioStatsProvider);
+                            },
+                            child: _SessionRow(session: item),
                           ),
-                          for (final item in items)
-                            Dismissible(
-                              key: ValueKey(item.id),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                padding: const EdgeInsets.only(right: 20),
-                                alignment: Alignment.centerRight,
-                                color: c.bad,
-                                child: Icon(Icons.delete_outline, color: c.bg),
-                              ),
-                              onDismissed: (_) async {
-                                await ref
-                                    .read(cardioServiceProvider)
-                                    ?.deleteSession(item.id);
-                                ref.invalidate(cardioProvider);
-                                ref.invalidate(cardioStatsProvider);
-                              },
-                              child: _SessionRow(session: item),
-                            ),
-                        ],
-                      ),
+                      ],
                     );
                   },
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -234,36 +191,24 @@ class _ActivityTile extends StatelessWidget {
       label: '$name, ${context.t('common:${activity.xp}')}',
       child: ExcludeSemantics(
         child: FitTrackCard(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(FitTrackSpacing.md),
           onTap: () => context.push('/cardio/session?type=${activity.type}'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: c.cardioColor.withValues(alpha: .16),
-                  borderRadius: BorderRadius.circular(FitTrackRadius.sm),
-                ),
-                child: Icon(activity.icon, size: 18, color: c.cardioColor),
-              ),
+              FitTrackIconTile(icon: activity.icon, color: c.cardioColor),
               const SizedBox(height: 6),
               Text(
                 name,
-                style: FitTrackText.body.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w600,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: FitTrackText.rowTitle.copyWith(color: c.ink),
               ),
               const SizedBox(height: 6),
               Text(
                 context.t('common:${activity.xp}'),
-                style: FitTrackText.caption.copyWith(color: c.muted),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                context.t('common:${activity.hint}'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: FitTrackText.caption.copyWith(color: c.muted),
               ),
             ],
@@ -288,52 +233,19 @@ class _SessionRow extends StatelessWidget {
       if (session.caloriesBurned != null)
         context.t('common:cardioKcal', args: {'kcal': session.caloriesBurned}),
     ];
-    return Material(
+    return ColoredBox(
       color: c.surface,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration:
-            BoxDecoration(border: Border(top: BorderSide(color: c.line))),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    session.name ?? _typeName(context, session.type),
-                    style: FitTrackText.body.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    parts.join(' · '),
-                    style: FitTrackText.caption.copyWith(color: c.muted),
-                  ),
-                ],
+      child: FitTrackRow(
+        minHeight: 56,
+        title: session.name ?? _typeName(context, session.type),
+        subtitle: parts.join(' · '),
+        trailing: session.distanceKm == null
+            ? null
+            : FitTrackValue(
+                value: session.distanceKm!.toStringAsFixed(1),
+                unit: context.t('common:cardioKm'),
+                style: FitTrackText.rowTitle,
               ),
-            ),
-            if (session.distanceKm != null)
-              Text.rich(
-                TextSpan(
-                  text: session.distanceKm!.toStringAsFixed(1),
-                  style: FitTrackText.body.copyWith(
-                    color: c.ink,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: ' ${context.t('common:cardioKm')}',
-                      style: FitTrackText.caption.copyWith(color: c.muted),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
@@ -347,11 +259,11 @@ class _Info extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
     return FitTrackCard(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
       child: Column(
         children: [
-          Icon(Icons.directions_run, size: 40, color: c.muted),
-          const SizedBox(height: 12),
+          FitTrackIconTile(icon: FitIcons.run, color: c.cardioColor, size: 44),
+          const SizedBox(height: FitTrackSpacing.md),
           Text(
             text,
             textAlign: TextAlign.center,
@@ -390,35 +302,32 @@ class _ResumeBannerState extends ConsumerState<_ResumeBanner> {
       padding: const EdgeInsets.only(bottom: FitTrackSpacing.md),
       child: Material(
         color: c.accentSoft,
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
         child: InkWell(
           onTap: () => context.push('/cardio/session?type=${active.type}'),
-          borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+          borderRadius: BorderRadius.circular(FitTrackRadius.card),
           child: Container(
             constraints:
                 const BoxConstraints(minHeight: FitTrackSpacing.touchMin),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(FitTrackSpacing.cardPad),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+              borderRadius: BorderRadius.circular(FitTrackRadius.card),
               border: Border.all(color: c.accent),
             ),
             child: Row(
               children: [
-                Icon(Icons.timer_outlined, color: c.ink),
-                const SizedBox(width: 12),
+                Icon(FitIcons.timer, size: 20, color: c.accent),
+                const SizedBox(width: FitTrackSpacing.md),
                 Expanded(
                   child: Text(
                     context.t(
                       'common:cardioInProgress',
                       args: {'type': _typeName(context, active.type)},
                     ),
-                    style: FitTrackText.body.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: FitTrackText.rowTitle.copyWith(color: c.ink),
                   ),
                 ),
-                Icon(Icons.arrow_forward, size: 16, color: c.muted),
+                Icon(FitIcons.chevronRight, size: 16, color: c.chevron),
               ],
             ),
           ),
@@ -434,61 +343,27 @@ class _StatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
     final s = stats;
-    Widget cell(String label, String value, {String? unit}) => Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: FitTrackText.caption.copyWith(color: c.muted)),
-                const SizedBox(height: 4),
-                Text.rich(
-                  TextSpan(
-                    text: value,
-                    style: FitTrackText.stat.copyWith(color: c.ink),
-                    children: [
-                      if (unit != null)
-                        TextSpan(
-                          text: ' $unit',
-                          style: FitTrackText.caption.copyWith(color: c.muted),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  context.t('common:cardioLast30'),
-                  style: FitTrackText.caption.copyWith(color: c.muted),
-                ),
-              ],
-            ),
-          ),
-        );
-    return FitTrackCard(
-      padding: EdgeInsets.zero,
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            cell(
-              context.t('common:cardioStatSessions'),
-              s == null ? '—' : '${s.totalSessions}',
-            ),
-            VerticalDivider(width: 1, thickness: 1, color: c.line),
-            cell(
-              context.t('common:cardioStatDistance'),
-              s == null ? '—' : s.totalDistanceKm.toStringAsFixed(1),
-              unit: context.t('common:cardioKm'),
-            ),
-            VerticalDivider(width: 1, thickness: 1, color: c.line),
-            cell(
-              context.t('common:cardioStatMinutes'),
-              s == null ? '—' : '${s.totalMinutes}',
-            ),
-          ],
+    final period = context.t('common:cardioLast30');
+    return FitTrackStatStrip(
+      stats: [
+        FitTrackStat(
+          label: context.t('common:cardioStatSessions'),
+          value: s == null ? '–' : '${s.totalSessions}',
+          caption: period,
         ),
-      ),
+        FitTrackStat(
+          label: context.t('common:cardioStatDistance'),
+          value: s == null ? '–' : s.totalDistanceKm.toStringAsFixed(1),
+          unit: context.t('common:cardioKm'),
+          caption: period,
+        ),
+        FitTrackStat(
+          label: context.t('common:cardioStatMinutes'),
+          value: s == null ? '–' : '${s.totalMinutes}',
+          caption: period,
+        ),
+      ],
     );
   }
 }

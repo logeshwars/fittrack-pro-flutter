@@ -22,6 +22,7 @@ import '../../workouts/domain/workout_metrics.dart';
 import '../data/goal_targets.dart';
 import '../../../core/l10n/language_controller.dart';
 import '../../../core/l10n/translations.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class PersonalSettingsScreen extends ConsumerStatefulWidget {
   const PersonalSettingsScreen({super.key});
@@ -839,7 +840,7 @@ class _GoalsSettingsScreenState extends ConsumerState<GoalsSettingsScreen> {
                     padding: EdgeInsets.zero,
                     child: ClipRRect(
                       borderRadius:
-                          BorderRadius.circular(FitTrackRadius.lg - 1),
+                          BorderRadius.circular(FitTrackRadius.card - 1),
                       child: Column(
                         children: [
                           for (var i = 0; i < _goalSpecs.length; i++)
@@ -950,7 +951,7 @@ class _GoalStepper extends StatelessWidget {
             ),
           ),
           FitTrackIconButton(
-            icon: Icons.remove,
+            icon: FitIcons.remove,
             semanticLabel: decreaseLabel,
             style: FitTrackIconButtonStyle.outlined,
             onPressed: onDecrease,
@@ -981,7 +982,7 @@ class _GoalStepper extends StatelessWidget {
             ),
           ),
           FitTrackIconButton(
-            icon: Icons.add,
+            icon: FitIcons.add,
             semanticLabel: increaseLabel,
             style: FitTrackIconButtonStyle.outlined,
             onPressed: onIncrease,
@@ -1099,12 +1100,12 @@ class AlertsSettingsScreen extends ConsumerWidget {
       };
 
   static IconData _icon(ReminderCategory c) => switch (c) {
-        ReminderCategory.morning => Icons.wb_sunny_outlined,
-        ReminderCategory.nutrition => Icons.restaurant,
-        ReminderCategory.hydration => Icons.water_drop_outlined,
-        ReminderCategory.fitness => Icons.fitness_center,
-        ReminderCategory.sleep => Icons.bedtime_outlined,
-        ReminderCategory.supplement => Icons.medication_outlined,
+        ReminderCategory.morning => FitIcons.sun,
+        ReminderCategory.nutrition => FitIcons.nutrition,
+        ReminderCategory.hydration => FitIcons.water,
+        ReminderCategory.fitness => FitIcons.workout,
+        ReminderCategory.sleep => FitIcons.sleep,
+        ReminderCategory.supplement => FitIcons.supplement,
       };
 
   static String _categoryLabel(BuildContext context, ReminderCategory c) =>
@@ -1174,7 +1175,7 @@ class AlertsSettingsScreen extends ConsumerWidget {
                         const SizedBox(height: FitTrackSpacing.lg),
                         FitTrackButton(
                           label: context.t('settings:retry'),
-                          icon: Icons.refresh,
+                          icon: FitIcons.refresh,
                           variant: FitTrackButtonVariant.secondary,
                           onPressed: () => ref.invalidate(remindersProvider),
                         ),
@@ -1481,7 +1482,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                         FitTrackBadge(
                           label: context.t('settings:previewActive'),
                           tone: FitTrackBadgeTone.ok,
-                          icon: Icons.check,
+                          icon: FitIcons.check,
                         ),
                       ],
                     ),
@@ -1882,7 +1883,7 @@ class _HubRow extends StatelessWidget {
                 ],
                 if (showChevron) ...[
                   const SizedBox(width: FitTrackSpacing.sm),
-                  Icon(Icons.chevron_right, size: 20, color: c.faint),
+                  Icon(FitIcons.chevronRight, size: 20, color: c.faint),
                 ],
               ],
             ),
@@ -2047,7 +2048,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           FitTrackIconButton(
-            icon: Icons.arrow_back,
+            icon: FitIcons.back,
             semanticLabel: context.t('settings:backLabel'),
             onPressed: () => context.pop(),
           ),
@@ -2117,7 +2118,7 @@ class _Surface extends StatelessWidget {
       child: FitTrackCard(
         padding: EdgeInsets.zero,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(FitTrackRadius.lg - 1),
+          borderRadius: BorderRadius.circular(FitTrackRadius.card - 1),
           child: Column(children: children),
         ),
       ),
@@ -2134,7 +2135,7 @@ class _ChoiceCard extends StatelessWidget {
     return FitTrackCard(
       padding: EdgeInsets.zero,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg - 1),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card - 1),
         child: Column(children: children),
       ),
     );
@@ -2205,7 +2206,7 @@ class _ChoiceRow extends StatelessWidget {
                   ),
                 ),
                 if (active)
-                  Icon(Icons.check, size: 20, color: colors.accentText),
+                  Icon(FitIcons.check, size: 20, color: colors.accentText),
               ],
             ),
           ),

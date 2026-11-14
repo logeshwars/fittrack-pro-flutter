@@ -3,13 +3,15 @@ import '../l10n/language_controller.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/fittrack_tokens.dart';
+import 'fittrack_icons.dart';
 
 enum FitTrackButtonVariant { primary, secondary, tint, ghost, danger }
 
 enum FitTrackButtonSize { sm, md, lg, pill }
 
-/// Button (C1). One primary per view. Cancel is secondary, never red.
-/// `sm` is 36px tall but keeps a 44px tap area.
+/// Button. 44px tall (`lg` 48 for the call to action at the foot of a
+/// page), radius 8, 14 / 600 label. One primary per view. Cancel is
+/// secondary, never red. `sm` is 36px tall but keeps a 44px tap area.
 class FitTrackButton extends StatelessWidget {
   const FitTrackButton({
     required this.label,
@@ -41,26 +43,23 @@ class FitTrackButton extends StatelessWidget {
         FitTrackButtonSize.pill => 32.0,
       };
 
-  /// C1: radius 10 / 12 / 14 by size, full pill for `pill`.
-  double get _radius => switch (size) {
-        FitTrackButtonSize.sm => 10.0,
-        FitTrackButtonSize.md => 12.0,
-        FitTrackButtonSize.lg => 14.0,
-        FitTrackButtonSize.pill => FitTrackRadius.pill,
-      };
+  /// Radius 8 on every size, full pill for `pill`.
+  double get _radius => size == FitTrackButtonSize.pill
+      ? FitTrackRadius.pill
+      : FitTrackRadius.control;
 
-  double get _fontSize => switch (size) {
-        FitTrackButtonSize.sm => 12.0,
-        FitTrackButtonSize.md => 13.0,
-        FitTrackButtonSize.lg => 14.0,
-        FitTrackButtonSize.pill => 11.0,
+  TextStyle get _textStyle => switch (size) {
+        FitTrackButtonSize.sm => FitTrackText.label,
+        FitTrackButtonSize.md => FitTrackText.rowTitle,
+        FitTrackButtonSize.lg => FitTrackText.rowTitle,
+        FitTrackButtonSize.pill => FitTrackText.caption,
       };
 
   double get _hPad => switch (size) {
         FitTrackButtonSize.sm => 14.0,
-        FitTrackButtonSize.md => 16.0,
-        FitTrackButtonSize.lg => 20.0,
-        FitTrackButtonSize.pill => 12.0,
+        FitTrackButtonSize.md => 18.0,
+        FitTrackButtonSize.lg => 18.0,
+        FitTrackButtonSize.pill => 14.0,
       };
 
   @override
@@ -69,10 +68,10 @@ class FitTrackButton extends StatelessWidget {
     final (bg, fg, border) = switch (variant) {
       FitTrackButtonVariant.primary => (c.accent, c.onAccent, c.accent),
       FitTrackButtonVariant.secondary => (c.surface, c.ink, c.lineStrong),
-      FitTrackButtonVariant.tint => (c.accentSoft, c.ink, c.accentSoft),
+      FitTrackButtonVariant.tint => (c.accentSoft, c.accent, c.accentSoft),
       FitTrackButtonVariant.ghost => (
           Colors.transparent,
-          c.ink,
+          c.accent,
           Colors.transparent
         ),
       FitTrackButtonVariant.danger => (c.bad, c.onAccent, c.bad),
@@ -111,16 +110,17 @@ class FitTrackButton extends StatelessWidget {
                     ),
                   )
                 else if (icon != null)
-                  Icon(icon, size: 18, color: fg),
+                  Icon(icon, size: 16, color: fg),
                 if (loading || icon != null) const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: FitTrackText.label.copyWith(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _textStyle.copyWith(
                       color: fg,
-                      fontSize: _fontSize,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -268,10 +268,7 @@ class FitTrackTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: FitTrackText.caption.copyWith(
-            color: c.muted,
-            fontWeight: FontWeight.w700,
-          ),
+          style: FitTrackText.caption.copyWith(color: c.muted),
         ),
         const SizedBox(height: 6),
         ConstrainedBox(
@@ -303,7 +300,7 @@ class FitTrackTextField extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (errorText != null) ...[
-                  Icon(Icons.error_outline, size: 14, color: c.textBad),
+                  Icon(FitIcons.error, size: 14, color: c.textBad),
                   const SizedBox(width: 4),
                 ],
                 Expanded(
@@ -370,7 +367,7 @@ class FitTrackBadge extends StatelessWidget {
                 label,
                 style: FitTrackText.caption.copyWith(
                   color: fg,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -444,7 +441,7 @@ class FitTrackRankBadge extends StatelessWidget {
                 style: FitTrackText.caption.copyWith(
                   color: color,
                   fontSize: size.fontSize,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -455,12 +452,14 @@ class FitTrackRankBadge extends StatelessWidget {
   }
 }
 
-/// Card (C4): surface, 1px line, radius 12, padding 16. No shadow.
+/// Card: surface, 1px line, radius 10, padding 14. No shadow.
 class FitTrackCard extends StatelessWidget {
   const FitTrackCard({
     required this.child,
-    this.padding = const EdgeInsets.all(FitTrackSpacing.lg),
+    this.padding = const EdgeInsets.all(FitTrackSpacing.cardPad),
     this.onTap,
+    this.borderColor,
+    this.radius = FitTrackRadius.card,
     super.key,
   });
 
@@ -468,20 +467,25 @@ class FitTrackCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
 
+  /// Defaults to `line`. Pass `accent` for the card in focus.
+  final Color? borderColor;
+  final double radius;
+
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
-    final radius = BorderRadius.circular(FitTrackRadius.lg);
+    final radius = BorderRadius.circular(this.radius);
     return Material(
       color: c.surface,
       borderRadius: radius,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: c.line),
+            border: Border.all(color: borderColor ?? c.line),
           ),
           child: Padding(padding: padding, child: child),
         ),
@@ -523,7 +527,7 @@ class FitTrackLogBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
-    final radius = BorderRadius.circular(FitTrackRadius.lg);
+    final radius = BorderRadius.circular(FitTrackRadius.card);
     return Material(
       color: c.surface,
       borderRadius: radius,
@@ -554,10 +558,10 @@ class FitTrackLogBanner extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                overline.toUpperCase(),
-                                style: FitTrackText.overline.copyWith(
+                                overline,
+                                style: FitTrackText.caption.copyWith(
                                   color: domainColor,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -574,9 +578,7 @@ class FitTrackLogBanner extends StatelessWidget {
                                 child: Text(
                                   xp!,
                                   style: FitTrackText.overline.copyWith(
-                                    color: c.ink,
-                                    letterSpacing: 0,
-                                    fontWeight: FontWeight.w800,
+                                    color: c.accent,
                                   ),
                                 ),
                               ),
@@ -585,10 +587,7 @@ class FitTrackLogBanner extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           title,
-                          style: FitTrackText.title.copyWith(
-                            color: c.ink,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: FitTrackText.title.copyWith(color: c.ink),
                         ),
                         if (caption != null)
                           Text(
@@ -620,12 +619,14 @@ class FitTrackLogBanner extends StatelessWidget {
   }
 }
 
-/// Stat tile (C4): caption label, 22px tabular value, optional "of N" line.
+/// Stat tile: caption label, 20 / 600 tabular value with an optional unit
+/// in caption style, optional caption line. Padding 12.
 class FitTrackStatTile extends StatelessWidget {
   const FitTrackStatTile({
     required this.value,
     required this.label,
     this.caption,
+    this.unit,
     this.onTap,
     super.key,
   });
@@ -633,6 +634,9 @@ class FitTrackStatTile extends StatelessWidget {
   final String value;
   final String label;
   final String? caption;
+
+  /// Shown after the value in caption style, for example `kg`.
+  final String? unit;
   final VoidCallback? onTap;
 
   @override
@@ -640,29 +644,507 @@ class FitTrackStatTile extends StatelessWidget {
     final c = AppPalette.of(context);
     return FitTrackCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(FitTrackSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: FitTrackText.caption.copyWith(color: c.muted)),
-          const SizedBox(height: 4),
           Text(
-            value,
-            style: FitTrackText.stat.copyWith(
-              color: c.ink,
-              fontSize: 22,
-              letterSpacing: -0.44,
-            ),
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: FitTrackText.caption.copyWith(color: c.muted),
           ),
-          if (caption != null)
-            Text(caption!, style: FitTrackText.caption.copyWith(color: c.muted)),
+          const SizedBox(height: FitTrackSpacing.xs),
+          FitTrackValue(value: value, unit: unit),
+          if (caption != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              caption!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: FitTrackText.caption.copyWith(color: c.muted),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Progress bar (C5): 6px, radius 3, `line` track. Fill is accent by default,
+/// A 20 / 600 number with its unit in caption style: `52 min`, `9,840 kg`.
+class FitTrackValue extends StatelessWidget {
+  const FitTrackValue({
+    required this.value,
+    this.unit,
+    this.style,
+    this.textAlign,
+    super.key,
+  });
+
+  final String value;
+  final String? unit;
+
+  /// Defaults to [FitTrackText.stat].
+  final TextStyle? style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Text.rich(
+      TextSpan(
+        text: value,
+        children: [
+          if (unit != null && unit!.isNotEmpty)
+            TextSpan(
+              text: ' $unit',
+              style: FitTrackText.caption.copyWith(
+                color: c.muted,
+                letterSpacing: 0,
+              ),
+            ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: textAlign,
+      style: (style ?? FitTrackText.stat).copyWith(color: c.ink),
+    );
+  }
+}
+
+/// One cell of a [FitTrackStatStrip].
+class FitTrackStat {
+  const FitTrackStat({
+    required this.label,
+    required this.value,
+    this.unit,
+    this.caption,
+  });
+
+  final String label;
+  final String value;
+  final String? unit;
+  final String? caption;
+}
+
+/// Stat strip: equal columns in one card, split by `line` dividers. Each
+/// cell is a caption label over a 20 / 600 value.
+class FitTrackStatStrip extends StatelessWidget {
+  const FitTrackStatStrip({required this.stats, super.key});
+
+  final List<FitTrackStat> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
+        border: Border.all(color: c.line),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < stats.length; i++)
+              Expanded(
+                child: Semantics(
+                  container: true,
+                  label: [
+                    stats[i].label,
+                    stats[i].value,
+                    if (stats[i].unit != null) stats[i].unit!,
+                    if (stats[i].caption != null) stats[i].caption!,
+                  ].join(' '),
+                  child: ExcludeSemantics(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FitTrackSpacing.cardPad,
+                        vertical: FitTrackSpacing.md,
+                      ),
+                      decoration: BoxDecoration(
+                        border: i == 0
+                            ? null
+                            : BorderDirectional(
+                                start: BorderSide(color: c.line),
+                              ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            stats[i].label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                FitTrackText.caption.copyWith(color: c.muted),
+                          ),
+                          const SizedBox(height: FitTrackSpacing.xs),
+                          FitTrackValue(
+                            value: stats[i].value,
+                            unit: stats[i].unit,
+                          ),
+                          if (stats[i].caption != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              stats[i].caption!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: FitTrackText.caption
+                                  .copyWith(color: c.muted),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// List card: a 44px header (14 / 600 title, optional trailing text or
+/// link) over rows split by `line` dividers.
+class FitTrackListCard extends StatelessWidget {
+  const FitTrackListCard({
+    required this.children,
+    this.title,
+    this.trailing,
+    this.actionLabel,
+    this.onAction,
+    super.key,
+  });
+
+  final String? title;
+
+  /// Muted caption at the end of the header, for example a count.
+  final String? trailing;
+
+  /// Accent link at the end of the header, for example `See all`.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    final hasHeader = title != null;
+    return FitTrackCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (hasHeader)
+            SizedBox(
+              height: FitTrackSpacing.touchMin,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: FitTrackSpacing.cardPad,
+                  end: FitTrackSpacing.cardPad,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        header: true,
+                        child: Text(
+                          title!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: FitTrackText.rowTitle.copyWith(color: c.ink),
+                        ),
+                      ),
+                    ),
+                    if (trailing != null)
+                      Text(
+                        trailing!,
+                        style: FitTrackText.caption.copyWith(color: c.muted),
+                      ),
+                    if (actionLabel != null)
+                      FitTrackLink(label: actionLabel!, onTap: onAction),
+                  ],
+                ),
+              ),
+            ),
+          for (var i = 0; i < children.length; i++)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: (i == 0 && !hasHeader)
+                    ? null
+                    : Border(top: BorderSide(color: c.line)),
+              ),
+              child: children[i],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Row inside a [FitTrackListCard]: 14 / 600 title, caption line, optional
+/// leading and trailing widgets. 64px minimum height, 14px side padding.
+class FitTrackRow extends StatelessWidget {
+  const FitTrackRow({
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.trailing,
+    this.onTap,
+    this.minHeight = 64,
+    this.chevron = false,
+    this.endPadding = FitTrackSpacing.cardPad,
+    super.key,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? leading;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final double minHeight;
+
+  /// Draws the 16px disclosure chevron after [trailing].
+  final bool chevron;
+
+  /// 14 by default; 6 when [trailing] is a 44px icon button.
+  final double endPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    final row = ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: FitTrackSpacing.cardPad,
+          end: endPadding,
+          top: FitTrackSpacing.sm,
+          bottom: FitTrackSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            if (leading != null) ...[
+              leading!,
+              const SizedBox(width: FitTrackSpacing.md),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: FitTrackText.rowTitle.copyWith(color: c.ink),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.caption.copyWith(color: c.muted),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: FitTrackSpacing.md),
+              trailing!,
+            ],
+            if (chevron) ...[
+              const SizedBox(width: FitTrackSpacing.sm),
+              Icon(FitIcons.chevronRight, size: 16, color: c.chevron),
+            ],
+          ],
+        ),
+      ),
+    );
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
+  }
+}
+
+/// Accent text link, 13 / 600, with a 44px tap height: `See all`, `+ New`.
+class FitTrackLink extends StatelessWidget {
+  const FitTrackLink({required this.label, required this.onTap, super.key});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Semantics(
+      button: true,
+      label: label,
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(FitTrackRadius.control),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: FitTrackSpacing.touchMin,
+            ),
+            child: Align(
+              widthFactor: 1,
+              alignment: AlignmentDirectional.centerEnd,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8),
+                child: Text(
+                  label,
+                  style: FitTrackText.label.copyWith(color: c.accent),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small tag, 11 / 700, radius 10: the gold `PR` mark by default.
+class FitTrackTag extends StatelessWidget {
+  const FitTrackTag({
+    required this.label,
+    this.background,
+    this.foreground,
+    super.key,
+  });
+
+  final String label;
+  final Color? background;
+  final Color? foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: background ?? c.warnSoft,
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
+      ),
+      child: Text(
+        label,
+        style: FitTrackText.overline.copyWith(
+          color: foreground ?? c.warn,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+/// A 32px rounded square holding a domain icon on a soft tint of its color.
+class FitTrackIconTile extends StatelessWidget {
+  const FitTrackIconTile({
+    required this.icon,
+    required this.color,
+    this.size = 32,
+    super.key,
+  });
+
+  final IconData icon;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(FitTrackRadius.control),
+        ),
+        child: Icon(icon, size: size * 0.56, color: color),
+      );
+}
+
+/// Search field: 44px, radius 10, `line-strong` border, 18px muted glass.
+class FitTrackSearchField extends StatelessWidget {
+  const FitTrackSearchField({
+    required this.hint,
+    this.controller,
+    this.onChanged,
+    this.onSubmitted,
+    this.autofocus = false,
+    this.height = FitTrackSpacing.controlMd,
+    this.trailing,
+    super.key,
+  });
+
+  final String hint;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final bool autofocus;
+  final double height;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    return Container(
+      height: height,
+      padding: const EdgeInsetsDirectional.only(start: FitTrackSpacing.md),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
+        border: Border.all(color: c.lineStrong),
+      ),
+      child: Row(
+        children: [
+          Icon(FitIcons.search, size: 18, color: c.muted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              autofocus: autofocus,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              textInputAction: TextInputAction.search,
+              cursorColor: c.accent,
+              style: FitTrackText.title.copyWith(
+                color: c.ink,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: FitTrackText.title.copyWith(
+                  color: c.muted,
+                  fontWeight: FontWeight.w400,
+                ),
+                filled: false,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+          if (trailing != null)
+            trailing!
+          else
+            const SizedBox(width: FitTrackSpacing.md),
+        ],
+      ),
+    );
+  }
+}
+
+/// Progress bar: 5px, radius 3, `line` track. Fill is accent by default,
 /// a domain color, `ok` when complete or `warn` when over target.
 class FitTrackProgressBar extends StatelessWidget {
   const FitTrackProgressBar({
@@ -686,7 +1168,7 @@ class FitTrackProgressBar extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: SizedBox(
-            height: 6,
+            height: 5,
             child: Stack(
               children: [
                 Positioned.fill(child: ColoredBox(color: c.line)),
@@ -703,7 +1185,8 @@ class FitTrackProgressBar extends StatelessWidget {
   }
 }
 
-/// Filter chip (C2): 44px, pill, `line-strong` outline; selected is accent.
+/// Filter chip: 44px pill, surface with a `line-strong` outline, 13 / 500;
+/// selected is `ink` with an on-accent 13 / 600 label.
 class FitTrackChip extends StatelessWidget {
   const FitTrackChip({
     required this.label,
@@ -726,24 +1209,24 @@ class FitTrackChip extends StatelessWidget {
       label: label,
       child: ExcludeSemantics(
         child: Material(
-          color: selected ? c.accent : Colors.transparent,
+          color: selected ? c.ink : c.surface,
           borderRadius: radius,
           child: InkWell(
             onTap: onTap,
             borderRadius: radius,
             child: Container(
               height: FitTrackSpacing.touchMin,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: radius,
-                border: selected ? null : Border.all(color: c.lineStrong),
+                border: Border.all(color: selected ? c.ink : c.lineStrong),
               ),
               child: Text(
                 label,
                 style: FitTrackText.label.copyWith(
-                  color: selected ? c.onAccent : c.ink,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? c.bg : c.ink,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ),
@@ -754,8 +1237,8 @@ class FitTrackChip extends StatelessWidget {
   }
 }
 
-/// Tab bar (C7): 60px, 22px icon + 11px label. Active is ink w800 with a 2px
-/// accent marker; inactive is muted. Tab order: Today, Workout, Nutrition,
+/// Tab bar: 64px, 22px icon + 11px label. Active is accent 700 with a 2px
+/// accent marker; inactive is muted 600. Tab order: Today, Workout, Nutrition,
 /// Cardio, Progress. Tab keys are `fittrack-tab-$i`.
 class FitTrackTabBar extends StatelessWidget {
   const FitTrackTabBar({
@@ -772,7 +1255,8 @@ class FitTrackTabBar extends StatelessWidget {
       iconBuilder;
   final List<String> labels;
 
-  static const height = 60.0;
+  /// Content height; the device's bottom inset is added below it.
+  static const height = 64.0;
 
   @override
   Widget build(BuildContext context) {
@@ -789,7 +1273,7 @@ class FitTrackTabBar extends StatelessWidget {
           child: Row(
             children: List.generate(labels.length, (i) {
               final selected = i == selectedIndex;
-              final color = selected ? c.ink : c.muted;
+              final color = selected ? c.accent : c.muted;
               return Expanded(
                 child: Semantics(
                   button: true,
@@ -799,7 +1283,7 @@ class FitTrackTabBar extends StatelessWidget {
                     child: InkResponse(
                       key: Key('fittrack-tab-$i'),
                       onTap: () => onSelected(i),
-                      radius: 32,
+                      radius: 36,
                       child: Stack(
                         alignment: Alignment.topCenter,
                         children: [
@@ -812,16 +1296,17 @@ class FitTrackTabBar extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 iconBuilder(i, color, focused: selected),
-                                const SizedBox(height: 3),
+                                const SizedBox(height: FitTrackSpacing.xs),
                                 Text(
                                   labels[i],
                                   maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    height: 1.2,
+                                    height: 14 / 11,
                                     color: color,
                                     fontWeight: selected
-                                        ? FontWeight.w800
+                                        ? FontWeight.w700
                                         : FontWeight.w600,
                                   ),
                                 ),
@@ -940,21 +1425,20 @@ Future<bool> showFitTrackConfirm({
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: FitTrackText.titleLg.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                ),
+                style: FitTrackText.titleLg.copyWith(color: c.ink),
               ),
               if (message != null) ...[
                 const SizedBox(height: 4),
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: FitTrackText.caption.copyWith(color: c.muted),
+                  style: FitTrackText.label.copyWith(
+                    color: c.muted,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ],
-              const SizedBox(height: 14),
+              const SizedBox(height: FitTrackSpacing.lg),
               FitTrackButton(
                 label: confirmLabel,
                 variant: destructive

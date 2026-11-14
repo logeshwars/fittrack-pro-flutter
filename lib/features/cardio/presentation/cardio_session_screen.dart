@@ -11,6 +11,7 @@ import '../application/cardio_controller.dart';
 import '../data/cardio_service.dart';
 import '../domain/cardio_tracking.dart';
 import 'cardio_screen.dart' show cardioProvider, cardioStatsProvider;
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Live cardio session: timer, optional GPS distance, calories, finish.
 class CardioSessionScreen extends ConsumerStatefulWidget {
@@ -227,7 +228,7 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
               child: Row(
                 children: [
                   FitTrackIconButton(
-                    icon: Icons.arrow_back,
+                    icon: FitIcons.back,
                     semanticLabel: context.t('settings:backLabel'),
                     onPressed: () => context.pop(),
                   ),
@@ -301,7 +302,7 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              s.isPaused ? Icons.pause : Icons.play_arrow,
+                              s.isPaused ? FitIcons.pause : FitIcons.play,
                               size: 14,
                               color: stateColor,
                             ),
@@ -458,7 +459,7 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                                 ? 'common:cardioResume'
                                 : 'common:cardioPause',
                           ),
-                          icon: s.isPaused ? Icons.play_arrow : Icons.pause,
+                          icon: s.isPaused ? FitIcons.play : FitIcons.pause,
                           variant: FitTrackButtonVariant.secondary,
                           size: FitTrackButtonSize.lg,
                           fullWidth: true,
@@ -470,7 +471,7 @@ class _CardioSessionScreenState extends ConsumerState<CardioSessionScreen>
                       Expanded(
                         child: FitTrackButton(
                           label: context.t('common:cardioFinish'),
-                          icon: Icons.check,
+                          icon: FitIcons.check,
                           size: FitTrackButtonSize.lg,
                           fullWidth: true,
                           loading: _saving,

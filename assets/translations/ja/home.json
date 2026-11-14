@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "目標",
   "setsCount": "{{count}}セット",
-  "starsLabel": "5段階中{{count}}"
+  "starsLabel": "5段階中{{count}}",
+  "nextLabel": "次",
+  "unitG": "g",
+  "stepsNone": "歩数は利用できません"
 }

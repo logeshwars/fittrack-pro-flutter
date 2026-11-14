@@ -10,6 +10,7 @@ import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
 import '../data/sleep_service.dart';
 import 'sleep_screen.dart' show sleepHistoryProvider;
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Default bedtime (yesterday 23:00) and wake time (today 07:00).
 ({DateTime bedtime, DateTime wake}) defaultSleepWindow(DateTime now) {
@@ -158,7 +159,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
               child: Row(
                 children: [
                   FitTrackIconButton(
-                    icon: Icons.arrow_back,
+                    icon: FitIcons.back,
                     color: c.ink,
                     semanticLabel: context.t('settings:backLabel'),
                     onPressed: () => context.pop(),
@@ -192,7 +193,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                     label: context.t('common:slChangeDate'),
                     variant: FitTrackButtonVariant.ghost,
                     size: FitTrackButtonSize.sm,
-                    icon: Icons.calendar_today_outlined,
+                    icon: FitIcons.calendar,
                     onPressed: _pickDay,
                   ),
                 ],
@@ -404,13 +405,13 @@ class _TimeCard extends StatelessWidget {
         Column(
           children: [
             _StepButton(
-              icon: Icons.add,
+              icon: FitIcons.add,
               label: upLabel,
               onTap: () => onChanged(_wrap(minutes + step)),
             ),
             digits(value),
             _StepButton(
-              icon: Icons.remove,
+              icon: FitIcons.remove,
               label: downLabel,
               onTap: () => onChanged(_wrap(minutes - step)),
             ),

@@ -16,6 +16,7 @@ import '../domain/progress_aggregates.dart';
 import '../domain/progress_models.dart';
 import 'weight_screen.dart' show weightHistoryProvider;
 import '../../../core/l10n/language_controller.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Everything the analytics tab needs, fetched once.
 class ProgressData {
@@ -88,73 +89,142 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
         ref.watch(goalTargetsProvider).valueOrNull ?? const GoalTargets();
     final tier = '${data.valueOrNull?.stats?['rank_tier'] ?? ''}';
 
-    return RefreshIndicator(
-      color: c.accent,
-      backgroundColor: c.surface,
-      onRefresh: () async {
-        ref.invalidate(progressDataProvider);
-        ref.invalidate(weightHistoryProvider);
-        await ref.read(progressDataProvider.future);
-      },
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 44),
-        children: [
-          FitTrackScreenHeader(
-            title: context.t('progress:title'),
-            subtitle: context.t('progress:analytics'),
-            trailing: tier.isEmpty
-                ? null
-                : InkWell(
-                    onTap: () => context.push('/leaderboard'),
-                    borderRadius: BorderRadius.circular(FitTrackRadius.pill),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: FitTrackSpacing.touchMin,
-                      ),
-                      child: Center(
-                        child: FitTrackRankBadge(
-                          tier: _tierOf(tier),
-                          label: context.t(
-                            'progress:rankBadge',
-                            args: {'tier': context.t('progress:tier_$tier')},
-                          ),
-                        ),
-                      ),
+    return Column(
+      children: [
+        FitTrackScreenHeader(
+          title: context.t('progress:title'),
+          subtitle: context.t('progress:analytics'),
+          trailing: tier.isEmpty
+              ? null
+              : _RankPill(
+                  tier: _tierOf(tier),
+                  label: context.t(
+                    'progress:rankBadge',
+                    args: {'tier': context.t('progress:tier_$tier')},
+                  ),
+                  onTap: () => context.push('/leaderboard'),
+                ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            color: c.accent,
+            backgroundColor: c.surface,
+            onRefresh: () async {
+              ref.invalidate(progressDataProvider);
+              ref.invalidate(weightHistoryProvider);
+              await ref.read(progressDataProvider.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                FitTrackSpacing.gutter,
+                FitTrackSpacing.gap,
+                FitTrackSpacing.gutter,
+                FitTrackSpacing.xxl,
+              ),
+              children: [
+                FitTrackSegmentedTabs(
+                  labels: [
+                    context.t('progress:analytics'),
+                    context.t('progress:leaderboard'),
+                  ],
+                  selectedIndex: tab,
+                  onSelected: (value) {
+                    if (value == 1) {
+                      context.push('/leaderboard');
+                    } else {
+                      setState(() => tab = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: FitTrackSpacing.gap),
+                data.when(
+                  loading: () => Padding(
+                    padding: const EdgeInsets.all(FitTrackSpacing.xxl),
+                    child: Center(
+                      child: CircularProgressIndicator(color: c.accent),
                     ),
                   ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              FitTrackSpacing.lg,
-              FitTrackSpacing.md,
-              FitTrackSpacing.lg,
-              0,
-            ),
-            child: FitTrackSegmentedTabs(
-              labels: [
-                context.t('progress:analytics'),
-                context.t('progress:leaderboard'),
+                  error: (_, __) =>
+                      _Info(text: context.t('progress:unableLoad')),
+                  data: (d) => _Analytics(data: d, goals: goals),
+                ),
               ],
-              selectedIndex: tab,
-              onSelected: (value) {
-                if (value == 1) {
-                  context.push('/leaderboard');
-                } else {
-                  setState(() => tab = value);
-                }
-              },
             ),
           ),
-          data.when(
-            loading: () => Padding(
-              padding: const EdgeInsets.all(32),
-              child: Center(child: CircularProgressIndicator(color: c.accent)),
+        ),
+      ],
+    );
+  }
+}
+
+/// Rank pill in the header: a soft tint of the tier color, a dot and the
+/// tier name. 32px tall inside a 44px tap area.
+class _RankPill extends StatelessWidget {
+  const _RankPill({
+    required this.tier,
+    required this.label,
+    required this.onTap,
+  });
+  final FitTrackTier tier;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppPalette.of(context);
+    final color = switch (tier) {
+      FitTrackTier.bronze => c.tierBronze,
+      FitTrackTier.silver => c.tierSilver,
+      FitTrackTier.gold => c.tierGold,
+      FitTrackTier.elite => c.tierElite,
+      FitTrackTier.legend => c.tierLegend,
+    };
+    return Semantics(
+      button: true,
+      label: label,
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(FitTrackRadius.pill),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: FitTrackSpacing.touchMin,
             ),
-            error: (_, __) => _Info(text: context.t('progress:unableLoad')),
-            data: (d) => _Analytics(data: d, goals: goals),
+            child: Center(
+              widthFactor: 1,
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: tier == FitTrackTier.gold
+                      ? c.warnSoft
+                      : color.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(FitTrackRadius.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration:
+                          BoxDecoration(color: color, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      label,
+                      style: FitTrackText.caption.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -271,20 +341,19 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
         ),
     };
 
-    String days(int n) => context.t('progress:daysValue', args: {'n': n});
-    final kpis = [
-      (context.t('progress:kpiCurrentStreak'), days(streak)),
-      (context.t('progress:kpiBestStreak'), days(bestStreak)),
-      (context.t('progress:kpiWorkouts'), '$totalWorkouts'),
+    final daysUnit = context.t('progress:unitDays');
+    final tonnes = totalVolume / 1000;
+    final kpis = <(String, String, String?)>[
+      (context.t('progress:kpiCurrentStreak'), '$streak', daysUnit),
+      (context.t('progress:kpiBestStreak'), '$bestStreak', daysUnit),
+      (context.t('progress:kpiWorkouts'), '$totalWorkouts', null),
       (
         context.t('progress:kpiTotalVolume'),
-        '${(totalVolume / 1000).round()} ${context.t('progress:unitTonnes')}'
+        tonnes < 10 ? tonnes.toStringAsFixed(1) : '${tonnes.round()}',
+        context.t('progress:unitTonnes'),
       ),
-      (
-        context.t('progress:kpiRecords'),
-        '$prs ${context.t('progress:unitPrs')}'
-      ),
-      (context.t('progress:rankScore'), '$rankScore'),
+      (context.t('progress:kpiRecords'), '$prs', context.t('progress:unitPrs')),
+      (context.t('progress:rankScore'), '$rankScore', null),
     ];
 
     Widget titled(String title, String? sub, Widget child) => FitTrackCard(
@@ -298,11 +367,9 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
                 children: [
                   Text(
                     title,
-                    style: FitTrackText.body.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: FitTrackText.rowTitle.copyWith(color: c.ink),
                   ),
+                  const SizedBox(width: FitTrackSpacing.sm),
                   if (sub != null)
                     Flexible(
                       child: Text(
@@ -319,27 +386,15 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
           ),
         );
 
-    const gap = SizedBox(height: FitTrackSpacing.md);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.lg,
-        FitTrackSpacing.md,
-        FitTrackSpacing.lg,
-        0,
-      ),
-      child: Column(
+    const gap = SizedBox(height: FitTrackSpacing.gap);
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.45,
+          FitTrackGrid(
+            columns: 3,
             children: [
-              for (final (label, value) in kpis)
-                FitTrackStatTile(label: label, value: value),
+              for (final (label, value, unit) in kpis)
+                FitTrackStatTile(label: label, value: value, unit: unit),
             ],
           ),
           gap,
@@ -350,33 +405,12 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
           ),
           gap,
           titled(
-            context.t('progress:thisWeekVolume'),
-            null,
-            _WeekBars(
-              week: week,
-              values: [for (final day in week) volumeByDay[dateKey(day)] ?? 0],
-              color: c.workoutColor,
-            ),
-          ),
-          gap,
-          titled(
             context.t('progress:proteinTrend'),
             context.t(
               'progress:proteinTrendSub',
               args: {'goal': g.protein.round()},
             ),
             _ProteinLine(values: proteinTrend, goal: g.protein),
-          ),
-          gap,
-          titled(
-            context.t('progress:thisWeekProtein'),
-            null,
-            _WeekBars(
-              week: week,
-              values: [for (final day in week) proteinByDay[dateKey(day)] ?? 0],
-              color: c.nutritionColor,
-              goal: g.protein,
-            ),
           ),
           gap,
           titled(
@@ -411,7 +445,7 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
           gap,
           titled(
             context.t('progress:activityTitle'),
-            context.t('progress:last26Weeks'),
+            context.t('progress:last13Weeks'),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -449,7 +483,7 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
                     byDay: heatData.map,
                     max: heatData.max,
                     color: heatData.color,
-                    days: 182,
+                    days: 91,
                   ),
                 ),
               ],
@@ -458,7 +492,6 @@ class _AnalyticsState extends ConsumerState<_Analytics> {
           gap,
           const _BodyMetrics(),
         ],
-      ),
     );
   }
 }
@@ -481,11 +514,8 @@ class _BodyMetrics extends ConsumerWidget {
             if (change != null)
               '${change >= 0 ? '+' : '−'}${change.abs().toStringAsFixed(1)} ${context.t('progress:unitKg')}',
           ].join(' · ');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FitTrackCard(
-          onTap: () => context.push('/progress/weight'),
+    Widget link(String title, String sub, String route) => FitTrackCard(
+          onTap: () => context.push(route),
           child: Row(
             children: [
               Expanded(
@@ -493,53 +523,38 @@ class _BodyMetrics extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.t('progress:weightTrackingTitle'),
-                      style: FitTrackText.body.copyWith(
-                        color: c.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      title,
+                      style: FitTrackText.rowTitle.copyWith(color: c.ink),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      caption,
+                      sub,
                       style: FitTrackText.caption.copyWith(color: c.muted),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: FitTrackSpacing.md),
               Text(
                 context.t('progress:open'),
-                style: FitTrackText.label.copyWith(
-                  color: c.ink,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: FitTrackText.label.copyWith(color: c.accent),
               ),
             ],
           ),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        link(
+          context.t('progress:weightTrackingTitle'),
+          caption,
+          '/progress/weight',
         ),
-        const SizedBox(height: FitTrackSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: FitTrackButton(
-                label: context.t('progress:weightTitle'),
-                icon: Icons.monitor_weight_outlined,
-                variant: FitTrackButtonVariant.secondary,
-                fullWidth: true,
-                onPressed: () => context.push('/progress/weight'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FitTrackButton(
-                label: context.t('progress:sleepTitle'),
-                icon: Icons.bedtime_outlined,
-                variant: FitTrackButtonVariant.secondary,
-                fullWidth: true,
-                onPressed: () => context.push('/sleep'),
-              ),
-            ),
-          ],
+        const SizedBox(height: FitTrackSpacing.gap),
+        link(
+          context.t('progress:sleepTrackingTitle'),
+          context.t('progress:sleepTrackingSub'),
+          '/sleep',
         ),
       ],
     );
@@ -676,89 +691,6 @@ class _ProteinLine extends StatelessWidget {
   }
 }
 
-class _WeekBars extends StatelessWidget {
-  const _WeekBars({
-    required this.week,
-    required this.values,
-    required this.color,
-    this.goal,
-  });
-  final List<DateTime> week;
-  final List<double> values;
-  final Color color;
-  final double? goal;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    final today = startOfDay(DateTime.now());
-    final peak = [...values, goal ?? 0, 1.0].reduce((a, b) => a > b ? a : b);
-    return SizedBox(
-      height: 150,
-      child: BarChart(
-        BarChartData(
-          maxY: peak * 1.15,
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barTouchData: BarTouchData(enabled: false),
-          titlesData: FlTitlesData(
-            topTitles: const AxisTitles(),
-            rightTitles: const AxisTitles(),
-            leftTitles: const AxisTitles(),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (v, meta) {
-                  final i = v.toInt();
-                  if (i < 0 || i >= week.length) {
-                    return const SizedBox.shrink();
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      DateFormat('E').format(week[i]).substring(0, 1),
-                      style: FitTrackText.caption.copyWith(
-                        fontWeight: week[i] == today
-                            ? FontWeight.w800
-                            : FontWeight.w500,
-                        color: week[i] == today ? c.ink : c.muted,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          extraLinesData: goal == null
-              ? null
-              : ExtraLinesData(horizontalLines: [
-                  HorizontalLine(
-                    y: goal!,
-                    color: c.muted,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                ]),
-          barGroups: [
-            for (var i = 0; i < week.length; i++)
-              BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    toY: values[i],
-                    width: 16,
-                    borderRadius: BorderRadius.circular(4),
-                    color: week[i].isAfter(today) ? c.line : color,
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// One goal row: seven day cells, filled with a check when the goal was met.
 class _GoalRow extends StatelessWidget {
   const _GoalRow({
@@ -784,6 +716,8 @@ class _GoalRow extends StatelessWidget {
             width: 72,
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: FitTrackText.label.copyWith(
                 color: c.ink,
                 fontWeight: FontWeight.w500,
@@ -811,10 +745,10 @@ class _GoalRow extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: hits[i]
-                              ? Icon(Icons.check, size: 14, color: c.bg)
+                              ? Icon(FitIcons.check, size: 14, color: c.bg)
                               : (week[i].isAfter(today)
                                   ? null
-                                  : Icon(Icons.remove, size: 12, color: c.muted)),
+                                  : Icon(FitIcons.remove, size: 12, color: c.muted)),
                         ),
                       ),
                     ),
@@ -887,15 +821,12 @@ class _Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: FitTrackCard(
-        padding: const EdgeInsets.all(FitTrackSpacing.xl),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: FitTrackText.body.copyWith(color: c.muted),
-        ),
+    return FitTrackCard(
+      padding: const EdgeInsets.all(FitTrackSpacing.xl),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: FitTrackText.body.copyWith(color: c.muted),
       ),
     );
   }

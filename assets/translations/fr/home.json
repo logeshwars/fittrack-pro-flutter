@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "Objectifs",
   "setsCount": "{{count}} séries",
-  "starsLabel": "{{count}} sur 5"
+  "starsLabel": "{{count}} sur 5",
+  "nextLabel": "Suivant",
+  "unitG": "g",
+  "stepsNone": "Pas indisponibles"
 }

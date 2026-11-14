@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/fittrack_tokens.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Header for the two scan screens: back button, "Scan food" title and the
 /// Barcode / Photo scan switch. Drawn on the dark camera chrome in both themes.
@@ -61,7 +62,7 @@ class ScanHeader extends StatelessWidget {
                 child: IconButton(
                   tooltip: context.t('nutrition:goBackLink'),
                   onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back, color: FitTrackCamera.ink),
+                  icon: const Icon(FitIcons.back, color: FitTrackCamera.ink),
                 ),
               ),
               const SizedBox(width: 2),

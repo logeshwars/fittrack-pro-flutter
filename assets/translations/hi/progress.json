@@ -109,5 +109,9 @@
   "lbLoadFailed": "लीडरबोर्ड लोड नहीं हो सका।",
   "lbRowMeta": "{{volume}} किग्रा · {{days}} दिन",
   "lbUnknown": "अज्ञात",
-  "lbRankLabel": "रैंक {{n}}"
+  "lbRankLabel": "रैंक {{n}}",
+  "unitDays": "दिन",
+  "last13Weeks": "पिछले 13 सप्ताह",
+  "sleepTrackingTitle": "नींद ट्रैकिंग",
+  "sleepTrackingSub": "पिछली रात दर्ज करें और 7 रातों का रुझान देखें"
 }

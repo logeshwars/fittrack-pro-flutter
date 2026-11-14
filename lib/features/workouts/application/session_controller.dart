@@ -60,6 +60,7 @@ class SessionController extends Notifier<SessionState?> {
             name: p.exerciseName,
             muscleGroup: p.muscleGroup,
             logType: byId[p.exerciseId]?.logType ?? 'weight_reps',
+            plannedSets: p.defaultSets,
           ),
       ],
     );
@@ -91,6 +92,24 @@ class SessionController extends Notifier<SessionState?> {
         currentIndex: next.length - 1,
       );
     }
+    await _persist();
+  }
+
+  /// Adds one more row to [index]'s plan, for a set beyond the routine.
+  Future<void> addPlannedSet(int index) async {
+    final current = state;
+    if (current == null || index < 0 || index >= current.exercises.length) {
+      return;
+    }
+    final exercise = current.exercises[index];
+    final next = [...current.exercises];
+    next[index] = exercise.copyWith(
+      plannedSets: (exercise.plannedSets > exercise.sets.length
+              ? exercise.plannedSets
+              : exercise.sets.length) +
+          1,
+    );
+    state = current.copyWith(exercises: next);
     await _persist();
   }
 

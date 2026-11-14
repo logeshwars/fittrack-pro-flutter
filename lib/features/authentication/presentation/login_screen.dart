@@ -10,6 +10,7 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 enum _AuthTab { login, signup }
 
@@ -161,7 +162,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: FitTrackIconButton(
-                  icon: Icons.arrow_back,
+                  icon: FitIcons.back,
                   semanticLabel: context.t('settings:backLabel'),
                   onPressed: () =>
                       context.canPop() ? context.pop() : context.go('/today'),
@@ -182,7 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         children: [
                           Icon(
-                            Icons.verified_user,
+                            FitIcons.secure,
                             size: 38,
                             color: colors.accent,
                           ),
@@ -307,8 +308,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     setState(() => _showPassword = !_showPassword),
                 icon: Icon(
                   _showPassword
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
+                      ? FitIcons.eyeOff
+                      : FitIcons.eye,
                   size: 18,
                   color: colors.muted,
                 ),
@@ -372,7 +373,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             FitTrackButton(
               label: context.t('common:continueGoogle'),
-              icon: Icons.g_mobiledata,
+              icon: FitIcons.google,
               variant: FitTrackButtonVariant.secondary,
               size: FitTrackButtonSize.lg,
               fullWidth: true,

@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "الأهداف",
   "setsCount": "{{count}} مجموعات",
-  "starsLabel": "{{count}} من 5"
+  "starsLabel": "{{count}} من 5",
+  "nextLabel": "التالي",
+  "unitG": "غ",
+  "stepsNone": "الخطوات غير متاحة"
 }

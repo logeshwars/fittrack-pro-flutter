@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "இலக்குகள்",
   "setsCount": "{{count}} செட்கள்",
-  "starsLabel": "5 இல் {{count}}"
+  "starsLabel": "5 இல் {{count}}",
+  "nextLabel": "அடுத்து",
+  "unitG": "கி",
+  "stepsNone": "அடிகள் கிடைக்கவில்லை"
 }

@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "लक्ष्य",
   "setsCount": "{{count}} सेट",
-  "starsLabel": "5 में से {{count}}"
+  "starsLabel": "5 में से {{count}}",
+  "nextLabel": "अगला",
+  "unitG": "ग्रा",
+  "stepsNone": "कदम उपलब्ध नहीं"
 }

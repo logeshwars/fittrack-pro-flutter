@@ -20,6 +20,12 @@ abstract final class AppTheme {
   /// 50% black scrim behind sheets and dialogs.
   static const scrim = Color(0x80000000);
 
+  /// The one shadow in the system: a soft lift under a card that overlaps a
+  /// hero (`0 8px 24px rgba(0,0,0,.08)`).
+  static const lift = [
+    BoxShadow(color: Color(0x14000000), blurRadius: 24, offset: Offset(0, 8)),
+  ];
+
   static ThemeData _build({
     required Brightness brightness,
     required AppPalette palette,
@@ -49,12 +55,13 @@ abstract final class AppTheme {
 
     OutlineInputBorder inputBorder(Color color, [double width = 1]) =>
         OutlineInputBorder(
-          borderRadius: BorderRadius.circular(FitTrackRadius.md),
+          borderRadius: BorderRadius.circular(FitTrackRadius.control),
           borderSide: BorderSide(color: color, width: width),
         );
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: isDark ? FitTrackText.family : FitTrackText.familyPearl,
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: palette.bg,
@@ -64,8 +71,13 @@ abstract final class AppTheme {
       splashColor: palette.accent.withValues(alpha: 0.06),
       highlightColor: palette.accent.withValues(alpha: 0.04),
       appBarTheme: AppBarTheme(
-        backgroundColor: palette.bg,
+        backgroundColor: palette.header,
         foregroundColor: palette.ink,
+        titleTextStyle: FitTrackText.titleLg.copyWith(
+          color: palette.ink,
+          fontFamily: isDark ? FitTrackText.family : FitTrackText.familyPearl,
+        ),
+        shape: Border(bottom: BorderSide(color: palette.line)),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -76,7 +88,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+          borderRadius: BorderRadius.circular(FitTrackRadius.card),
           side: BorderSide(color: palette.line),
         ),
       ),

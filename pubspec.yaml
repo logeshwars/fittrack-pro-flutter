@@ -34,6 +34,7 @@ dependencies:
   timezone: ^0.10.0
   flutter_timezone: ^3.0.1
   flutter_svg: ^2.0.10
+  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,29 @@ flutter:
     - assets/translations/ja/
     - assets/translations/pt/
     - assets/translations/fr/
+  fonts:
+    - family: WorkSans
+      fonts:
+        - asset: assets/fonts/WorkSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/WorkSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/WorkSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/WorkSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/WorkSans-ExtraBold.ttf
+          weight: 800
+    - family: SourceSans3
+      fonts:
+        - asset: assets/fonts/SourceSans3-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SourceSans3-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SourceSans3-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/SourceSans3-Bold.ttf
+          weight: 700
 
 # App icon and splash match the React Native app (barbell + bolt mark on #0D0D0D).
 # Generated into the native projects by tool/bootstrap_native.sh.

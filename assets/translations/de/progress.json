@@ -109,5 +109,9 @@
   "lbLoadFailed": "Rangliste konnte nicht geladen werden.",
   "lbRowMeta": "{{volume}} kg · {{days}} Tage",
   "lbUnknown": "Unbekannt",
-  "lbRankLabel": "Platz {{n}}"
+  "lbRankLabel": "Platz {{n}}",
+  "unitDays": "Tage",
+  "last13Weeks": "Letzte 13 Wochen",
+  "sleepTrackingTitle": "Schlaf-Tracking",
+  "sleepTrackingSub": "Letzte Nacht eintragen und 7-Nächte-Trend ansehen"
 }

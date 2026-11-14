@@ -14,10 +14,10 @@
   "weekGrid": "THIS WEEK",
   "quickActions": "Quick actions",
   "recentWorkouts": "RECENT WORKOUTS",
-  "seeAll": "See All",
-  "startWorkout": "Start Workout",
+  "seeAll": "See all",
+  "startWorkout": "Start workout",
   "quickStart": "Quick start a session",
-  "logNutrition": "Log Nutrition",
+  "logNutrition": "Log nutrition",
   "trackProtein": "Track protein",
   "noWorkouts": "No workouts yet",
   "startFirstWorkout": "Start your first workout",
@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "Goals",
   "setsCount": "{{count}} sets",
-  "starsLabel": "{{count}} of 5"
+  "starsLabel": "{{count}} of 5",
+  "nextLabel": "Next",
+  "unitG": "g",
+  "stepsNone": "Steps not available"
 }

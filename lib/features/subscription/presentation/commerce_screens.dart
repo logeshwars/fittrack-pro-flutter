@@ -11,6 +11,7 @@ import '../../../core/widgets/fittrack_components.dart';
 import '../application/subscription_controller.dart';
 import '../data/purchase_gateway.dart';
 import '../domain/subscription_state.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 const _benefits = <String>[
   'common:payBenefitScans',
@@ -87,7 +88,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   right: FitTrackSpacing.sm,
                 ),
                 child: FitTrackIconButton(
-                  icon: Icons.close,
+                  icon: FitIcons.close,
                   semanticLabel: context.t('common:close'),
                   onPressed: () => context.pop(),
                 ),
@@ -141,7 +142,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 1),
                             child: Icon(
-                              Icons.check,
+                              FitIcons.check,
                               size: 18,
                               color: colors.ok,
                             ),
@@ -515,7 +516,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ),
                   ),
                   FitTrackIconButton(
-                    icon: Icons.close,
+                    icon: FitIcons.close,
                     semanticLabel: context.t('common:close'),
                     onPressed: () => context.pop(),
                   ),
@@ -606,7 +607,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     padding: EdgeInsets.zero,
                     child: ClipRRect(
                       borderRadius:
-                          BorderRadius.circular(FitTrackRadius.lg - 1),
+                          BorderRadius.circular(FitTrackRadius.card - 1),
                       child: Column(
                         children: [
                           if (!sub.isPro)
@@ -719,7 +720,7 @@ class _ActionRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 20, color: colors.muted),
+                Icon(FitIcons.chevronRight, size: 20, color: colors.muted),
               ],
             ),
           ),
@@ -762,7 +763,7 @@ class _Retry extends StatelessWidget {
         const SizedBox(height: FitTrackSpacing.sm),
         FitTrackButton(
           label: context.t('common:retry'),
-          icon: Icons.refresh,
+          icon: FitIcons.refresh,
           variant: FitTrackButtonVariant.secondary,
           onPressed: onRetry,
         ),

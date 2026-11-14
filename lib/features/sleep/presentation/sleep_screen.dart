@@ -9,6 +9,7 @@ import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
 import '../../progress/domain/progress_models.dart';
 import '../../settings/data/goal_targets.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 final sleepHistoryProvider =
     FutureProvider.autoDispose<List<SleepLog>>((ref) async {
@@ -117,7 +118,7 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           FitTrackIconButton(
-            icon: Icons.arrow_back,
+            icon: FitIcons.back,
             color: c.ink,
             semanticLabel: context.t('settings:backLabel'),
             onPressed: onBack,
@@ -135,7 +136,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          Icon(Icons.bedtime, color: c.sleepColor, size: 22),
+          Icon(FitIcons.sleep, color: c.sleepColor, size: 22),
         ],
       ),
     );
@@ -296,7 +297,7 @@ class _Content extends StatelessWidget {
         const SizedBox(height: FitTrackSpacing.lg),
         FitTrackButton(
           label: context.t('common:slLogCta'),
-          icon: Icons.add,
+          icon: FitIcons.add,
           size: FitTrackButtonSize.lg,
           fullWidth: true,
           onPressed: () => context.push('/sleep/log'),
@@ -331,10 +332,10 @@ class _Content extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 decoration: BoxDecoration(
                   color: c.danger,
-                  borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+                  borderRadius: BorderRadius.circular(FitTrackRadius.card),
                 ),
                 child: Icon(
-                  Icons.delete_outline,
+                  FitIcons.delete,
                   semanticLabel: context.t('common:slDelete'),
                   color: Colors.white,
                 ),
@@ -504,7 +505,7 @@ class _SleepRow extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: Icon(Icons.bedtime, size: 18, color: c.sleepColor),
+                child: Icon(FitIcons.sleep, size: 18, color: c.sleepColor),
               ),
               const SizedBox(width: FitTrackSpacing.md),
               Expanded(
@@ -569,7 +570,7 @@ class _Message extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.bedtime, size: 48, color: c.faint),
+          Icon(FitIcons.sleep, size: 48, color: c.faint),
           const SizedBox(height: FitTrackSpacing.lg),
           Text(
             title,

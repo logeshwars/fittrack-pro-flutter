@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
 import 'scan_chrome.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Live barcode scanner. A hit is looked up (OpenFoodFacts world, India
 /// mirror, v0, then USDA) and handed to the food log screen.
@@ -102,7 +103,7 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
                   0,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+                  borderRadius: BorderRadius.circular(FitTrackRadius.card),
                   child: ColoredBox(
                     color: FitTrackCamera.panel,
                     child: Stack(
@@ -153,7 +154,7 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
                               }
                             },
                             icon: Icon(
-                              _torch ? Icons.flash_on : Icons.flash_off,
+                              _torch ? FitIcons.flashOn : FitIcons.flashOff,
                               color: FitTrackCamera.ink,
                             ),
                           ),
@@ -173,7 +174,7 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen> {
               padding: const EdgeInsets.all(FitTrackSpacing.lg),
               child: FitTrackButton(
                 label: context.t('nutrition:enterManually'),
-                icon: Icons.edit_outlined,
+                icon: FitIcons.edit,
                 variant: FitTrackButtonVariant.secondary,
                 fullWidth: true,
                 onPressed: () => context.pushReplacement('/nutrition/log'),

@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
 import '../../workouts/domain/workout_metrics.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -144,7 +145,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Row(
                 children: [
                   FitTrackIconButton(
-                    icon: Icons.arrow_back,
+                    icon: FitIcons.back,
                     semanticLabel: context.t('settings:backLabel'),
                     onPressed: () =>
                         context.canPop() ? context.pop() : context.go('/today'),

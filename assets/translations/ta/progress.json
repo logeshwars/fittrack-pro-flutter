@@ -109,5 +109,9 @@
   "lbLoadFailed": "லீடர்போர்டை ஏற்ற முடியவில்லை.",
   "lbRowMeta": "{{volume}} கி · {{days}} நாட்கள்",
   "lbUnknown": "தெரியாதவர்",
-  "lbRankLabel": "தரவரிசை {{n}}"
+  "lbRankLabel": "தரவரிசை {{n}}",
+  "unitDays": "நாட்கள்",
+  "last13Weeks": "கடந்த 13 வாரங்கள்",
+  "sleepTrackingTitle": "தூக்க கண்காணிப்பு",
+  "sleepTrackingSub": "நேற்றிரவை பதிவு செய்து 7 இரவு போக்கைப் பாருங்கள்"
 }

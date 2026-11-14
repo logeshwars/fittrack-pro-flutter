@@ -16,6 +16,7 @@ import '../domain/photo_scan_models.dart';
 import 'food_log_screen.dart' show defaultMealForNow;
 import 'nutrition_screen.dart';
 import 'scan_chrome.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// Photograph a meal, let AI estimate it, adjust, then log.
 class PhotoScanScreen extends ConsumerStatefulWidget {
@@ -215,7 +216,7 @@ class _PhotoScanScreenState extends ConsumerState<PhotoScanScreen> {
                               Expanded(
                                 child: FitTrackButton(
                                   label: context.t('nutrition:photoTake'),
-                                  icon: Icons.photo_camera_outlined,
+                                  icon: FitIcons.camera,
                                   onPressed: _loading
                                       ? null
                                       : () => _pick(ImageSource.camera),
@@ -225,7 +226,7 @@ class _PhotoScanScreenState extends ConsumerState<PhotoScanScreen> {
                               Expanded(
                                 child: FitTrackButton(
                                   label: context.t('nutrition:photoGallery'),
-                                  icon: Icons.photo_library_outlined,
+                                  icon: FitIcons.gallery,
                                   variant: FitTrackButtonVariant.secondary,
                                   onPressed: _loading
                                       ? null
@@ -479,7 +480,7 @@ class _Preview extends StatelessWidget {
         0,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
         child: SizedBox(
           height: 300,
           child: ColoredBox(

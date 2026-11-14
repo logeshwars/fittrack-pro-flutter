@@ -1,5 +1,6 @@
 import 'package:fittrack_pro/core/theme/app_theme.dart';
 import 'package:fittrack_pro/core/widgets/fittrack_components.dart';
+import 'package:fittrack_pro/core/widgets/fittrack_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -42,7 +43,7 @@ void main() {
       testWidgets('icon button is 44 x 44', (tester) async {
         await tester.pumpWidget(_host(
           FitTrackIconButton(
-            icon: Icons.add,
+            icon: FitIcons.add,
             semanticLabel: 'Add',
             onPressed: () {},
           ),
@@ -60,7 +61,7 @@ void main() {
         expect(tester.getSize(find.byType(FitTrackBadge)).height, 26);
       });
 
-      testWidgets('tab bar is 60px with keyed tabs and fires onSelected',
+      testWidgets('tab bar is 64px with keyed tabs and fires onSelected',
           (tester) async {
         int? tapped;
         await tester.pumpWidget(MaterialApp(
@@ -70,7 +71,7 @@ void main() {
               selectedIndex: 0,
               labels: const ['A', 'B', 'C', 'D', 'E'],
               iconBuilder: (tab, color, {required focused}) =>
-                  Icon(Icons.circle, color: color, size: 22),
+                  Icon(FitIcons.dot, color: color, size: 22),
               onSelected: (i) => tapped = i,
             ),
           ),

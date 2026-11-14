@@ -13,6 +13,7 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../../settings/data/goal_targets.dart';
 import '../domain/nutrition_models.dart';
 import '../domain/rda.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 const mealOrder = [
   'breakfast',
@@ -72,12 +73,12 @@ String mealText(BuildContext context, String? meal) => switch (meal) {
     };
 
 IconData _mealIcon(String meal) => switch (meal) {
-      'breakfast' => Icons.wb_twilight_outlined,
-      'lunch' => Icons.lunch_dining_outlined,
-      'dinner' => Icons.nights_stay_outlined,
-      'snack' => Icons.cookie_outlined,
-      'post_workout' => Icons.fitness_center,
-      _ => Icons.restaurant,
+      'breakfast' => FitIcons.breakfast,
+      'lunch' => FitIcons.lunch,
+      'dinner' => FitIcons.dinner,
+      'snack' => FitIcons.snack,
+      'post_workout' => FitIcons.workout,
+      _ => FitIcons.nutrition,
     };
 
 String _n(num v) => NumberFormat.decimalPattern().format(v.round());
@@ -213,8 +214,12 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       onToday: () => setState(() => _day = dayOnly(DateTime.now())),
     );
 
+    final inset = MediaQuery.paddingOf(context).top;
+    // Boards: the hero is 118 (Night) or 170 (Pearl) tall including a 44px
+    // status bar; in Pearl the summary card rides 52px up over it.
+    final heroH = inset + (isDark ? 74.0 : 126.0);
+
     Widget top(Widget? summary) {
-      final heroH = isDark ? 118.0 : 170.0;
       return Stack(
         clipBehavior: Clip.none,
         children: [
@@ -223,17 +228,17 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             left: 0,
             right: 0,
             height: heroH,
-            child: const _PlateHero(),
+            child: _PlateHero(isDark: isDark, inset: inset),
           ),
-          Positioned(top: 0, left: 0, right: 0, child: header),
+          Positioned(top: inset, left: 0, right: 0, child: header),
           if (summary == null)
             SizedBox(height: heroH)
           else
             Padding(
               padding: EdgeInsets.fromLTRB(
-                FitTrackSpacing.lg,
+                FitTrackSpacing.gutter,
                 heroH - 52,
-                FitTrackSpacing.lg,
+                FitTrackSpacing.gutter,
                 0,
               ),
               child: summary,
@@ -244,12 +249,13 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
 
     final tabs = Padding(
       padding: const EdgeInsets.fromLTRB(
-        FitTrackSpacing.lg,
-        FitTrackSpacing.md,
-        FitTrackSpacing.lg,
+        FitTrackSpacing.gutter,
+        FitTrackSpacing.cardPad,
+        FitTrackSpacing.gutter,
         0,
       ),
       child: FitTrackSegmentedTabs(
+        hero: true,
         labels: [
           context.t('nutrition:dayTab'),
           context.t('nutrition:weekTab'),
@@ -259,209 +265,145 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _add,
-        tooltip: context.t('nutrition:logFood'),
-        backgroundColor: c.accent,
-        foregroundColor: c.onAccent,
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        color: c.accent,
-        backgroundColor: c.surface,
-        onRefresh: () async {
-          ref.invalidate(nutritionDayProvider(_day));
-          await ref.read(nutritionDayProvider(_day).future);
-        },
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(
-            bottom: FitTrackSpacing.tabBarClearance - 60 + 36,
-          ),
-          children: [
-            ...logs.when<List<Widget>>(
-              loading: () => [
-                top(null),
-                tabs,
-                Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Center(
-                    child: CircularProgressIndicator(color: c.accent),
-                  ),
+    return RefreshIndicator(
+      color: c.accent,
+      backgroundColor: c.surface,
+      edgeOffset: inset,
+      onRefresh: () async {
+        ref.invalidate(nutritionDayProvider(_day));
+        await ref.read(nutritionDayProvider(_day).future);
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: FitTrackSpacing.xxl),
+        children: [
+          ...logs.when<List<Widget>>(
+            loading: () => [
+              top(null),
+              tabs,
+              Padding(
+                padding: const EdgeInsets.all(FitTrackSpacing.xxl),
+                child: Center(
+                  child: CircularProgressIndicator(color: c.accent),
                 ),
-              ],
-              error: (_, __) => [
-                top(null),
+              ),
+            ],
+            error: (_, __) => [
+              top(null),
+              tabs,
+              _Info(text: context.t('nutrition:unableLoad')),
+            ],
+            data: (items) {
+              final totals = NutritionTotals.fromLogs(items);
+              final fiber =
+                  items.fold<double>(0, (s, l) => s + (l.fiberG ?? 0));
+              _awardDailyGoalXp(totals, goals);
+              final micro =
+                  sumMicronutrients([for (final l in items) l.micronutrients]);
+              final groups = groupByMeal(items);
+              final macros = [
+                _Macro(context.t('nutrition:protein'), totals.proteinG,
+                    goals.protein),
+                _Macro(
+                    context.t('nutrition:carbs'), totals.carbsG, goals.carbs),
+                _Macro(context.t('nutrition:fat'), totals.fatG, goals.fat),
+                _Macro(context.t('nutrition:fiber'), fiber, goals.fiber),
+              ];
+              final summary = _PearlSummary(
+                totals: totals,
+                goals: goals,
+                macros: macros.take(3).toList(),
+              );
+              final gap = SizedBox(height: isDark ? 12 : 10);
+              // Board order: breakfast, lunch, snack, dinner.
+              final meals = [
+                'breakfast',
+                'lunch',
+                'snack',
+                'dinner',
+                if (groups.containsKey('post_workout')) 'post_workout',
+                if (groups.containsKey('other')) 'other',
+              ];
+              return [
+                top(isDark || _week ? null : summary),
                 tabs,
-                _Info(text: context.t('nutrition:unableLoad')),
-              ],
-              data: (items) {
-                final totals = NutritionTotals.fromLogs(items);
-                final fiber =
-                    items.fold<double>(0, (s, l) => s + (l.fiberG ?? 0));
-                _awardDailyGoalXp(totals, goals);
-                final micro = sumMicronutrients(
-                    [for (final l in items) l.micronutrients]);
-                final groups = groupByMeal(items);
-                final macros = [
-                  _Macro(context.t('nutrition:protein'), totals.proteinG,
-                      goals.protein),
-                  _Macro(context.t('nutrition:carbs'), totals.carbsG,
-                      goals.carbs),
-                  _Macro(context.t('nutrition:fat'), totals.fatG, goals.fat),
-                  _Macro(context.t('nutrition:fiber'), fiber, goals.fiber),
-                ];
-                final summary = _PearlSummary(
-                  totals: totals,
-                  goals: goals,
-                  macros: macros,
-                );
-                return [
-                  top(isDark || _week ? null : summary),
-                  tabs,
-                  if (_week)
-                    _WeekList(
-                      weekStart: _day.subtract(
-                        Duration(days: _day.weekday - DateTime.monday),
-                      ),
-                      goals: goals,
-                      onPick: (d) => setState(() {
-                        _day = d;
-                        _week = false;
-                      }),
-                    )
-                  else
+                if (_week)
+                  _WeekList(
+                    weekStart: _day.subtract(
+                      Duration(days: _day.weekday - DateTime.monday),
+                    ),
+                    goals: goals,
+                    onPick: (d) => setState(() {
+                      _day = d;
+                      _week = false;
+                    }),
+                  )
+                else ...[
+                  if (isDark)
                     Padding(
-                      padding: const EdgeInsets.only(top: FitTrackSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (isDark)
-                            _NightStats(
-                              totals: totals,
-                              goals: goals,
-                              macros: macros,
-                            ),
-                          _Pad(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (isDark)
-                                  const SizedBox(height: FitTrackSpacing.md),
-                                if (micro.isNotEmpty) ...[
-                                  _MicroCard(
-                                    totals: micro,
-                                    expanded: _showMicro,
-                                    onToggle: () => setState(
-                                      () => _showMicro = !_showMicro,
-                                    ),
-                                  ),
-                                  const SizedBox(height: FitTrackSpacing.md),
-                                ],
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: FitTrackButton(
-                                        label: context.t('nutrition:logFood'),
-                                        icon: Icons.edit_outlined,
-                                        fullWidth: true,
-                                        onPressed: _add,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      flex: 2,
-                                      child: FitTrackButton(
-                                        label: context.t('nutrition:scanShort'),
-                                        icon: Icons.qr_code_scanner,
-                                        variant: FitTrackButtonVariant.secondary,
-                                        fullWidth: true,
-                                        onPressed: () =>
-                                            context.push('/nutrition/scan'),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      flex: 2,
-                                      child: FitTrackButton(
-                                        label:
-                                            context.t('nutrition:photoShort'),
-                                        icon: Icons.photo_camera_outlined,
-                                        variant: FitTrackButtonVariant.secondary,
-                                        fullWidth: true,
-                                        onPressed: () =>
-                                            context.push('/nutrition/photo'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: FitTrackSpacing.md),
-                                if (items.isEmpty) ...[
-                                  _Empty(onTap: _add),
-                                  const SizedBox(height: FitTrackSpacing.md),
-                                ],
-                                for (final meal in [
-                                  for (final m in mealOrder)
-                                    if (m != 'post_workout' ||
-                                        groups.containsKey(m))
-                                      m,
-                                  if (groups.containsKey('other')) 'other',
-                                ]) ...[
-                                  if (groups[meal] == null)
-                                    _EmptyMeal(
-                                      meal: meal,
-                                      remainingKcal:
-                                          goals.calories - totals.calories,
-                                      remainingProtein:
-                                          goals.protein - totals.proteinG,
-                                      isDark: isDark,
-                                      onAdd: () => _add(meal),
-                                    )
-                                  else
-                                    _MealCard(
-                                      meal: meal,
-                                      items: groups[meal]!,
-                                      isDark: isDark,
-                                      collapsed: _collapsed.contains(meal),
-                                      onToggle: () => setState(() {
-                                        if (!_collapsed.remove(meal)) {
-                                          _collapsed.add(meal);
-                                        }
-                                      }),
-                                      onAdd: () =>
-                                          _add(meal == 'other' ? null : meal),
-                                      onDelete: _delete,
-                                      onEdit: _edit,
-                                    ),
-                                  const SizedBox(height: FitTrackSpacing.md),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
+                      padding:
+                          const EdgeInsets.only(top: FitTrackSpacing.cardPad),
+                      child: _NightStats(
+                        totals: totals,
+                        goals: goals,
+                        macros: macros,
                       ),
                     ),
-                ];
-              },
-            ),
-          ],
-        ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      FitTrackSpacing.gutter,
+                      isDark ? 16 : 14,
+                      FitTrackSpacing.gutter,
+                      0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final meal in meals) ...[
+                          if (groups[meal] == null)
+                            _EmptyMeal(
+                              meal: meal,
+                              remainingKcal: goals.calories - totals.calories,
+                              remainingProtein:
+                                  goals.protein - totals.proteinG,
+                              isDark: isDark,
+                              onAdd: () => _add(meal),
+                            )
+                          else
+                            _MealCard(
+                              meal: meal,
+                              items: groups[meal]!,
+                              isDark: isDark,
+                              collapsed: _collapsed.contains(meal),
+                              onToggle: () => setState(() {
+                                if (!_collapsed.remove(meal)) {
+                                  _collapsed.add(meal);
+                                }
+                              }),
+                              onAdd: () => _add(meal == 'other' ? null : meal),
+                              onDelete: _delete,
+                              onEdit: _edit,
+                            ),
+                          gap,
+                        ],
+                        if (micro.isNotEmpty)
+                          _MicroCard(
+                            totals: micro,
+                            expanded: _showMicro,
+                            onToggle: () =>
+                                setState(() => _showMicro = !_showMicro),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ];
+            },
+          ),
+        ],
       ),
     );
   }
-}
-
-class _Pad extends StatelessWidget {
-  const _Pad({required this.child});
-  final Widget child;
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.lg),
-        child: child,
-      );
 }
 
 class _Macro {
@@ -473,22 +415,37 @@ class _Macro {
       goal > 0 ? (value / goal).clamp(0, 1).toDouble() : 0.0;
 }
 
-/// Decorative hero behind the header (tokens only).
+/// Decorative hero behind the header: a plate drawn in rings.
 class _PlateHero extends StatelessWidget {
-  const _PlateHero();
+  const _PlateHero({required this.isDark, required this.inset});
+  final bool isDark;
+
+  /// Height of the status bar; the art is placed below it.
+  final double inset;
 
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
     return ExcludeSemantics(
-      child: Container(
-        color: c.line,
-        child: CustomPaint(
-          painter: _PlatePainter(
-            ring: c.lineStrong,
-            plate: c.surface,
-            dot: c.accentSoft,
-            accent: c.accent,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? const [AppColors.heroDarkStart, AppColors.heroDarkEnd]
+                : const [AppColors.heroLightStart, AppColors.heroLightEnd],
+          ),
+        ),
+        child: ClipRect(
+          child: CustomPaint(
+            painter: _PlatePainter(
+              ring: isDark ? AppColors.heroDarkRing : AppColors.heroLightDot,
+              plate: c.surface,
+              dot: c.accentSoft,
+              accent: c.accent,
+              inset: inset,
+            ),
           ),
         ),
       ),
@@ -502,24 +459,31 @@ class _PlatePainter extends CustomPainter {
     required this.plate,
     required this.dot,
     required this.accent,
+    required this.inset,
   });
   final Color ring;
   final Color plate;
   final Color dot;
   final Color accent;
+  final double inset;
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Board: centre 70px from the right and 104px down a 44px status bar.
     final cx = size.width - 70;
-    final cy = size.height * 0.52;
-    final stroke = Paint()
+    final cy = inset + 60;
+    Paint stroke(double alpha) => Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = ring;
+      ..color = ring.withValues(alpha: alpha);
     canvas
-      ..drawCircle(Offset(cx, cy), 92, stroke)
-      ..drawCircle(Offset(cx, cy), 68, Paint()..color = plate.withValues(alpha: .92))
-      ..drawCircle(Offset(cx, cy), 48, stroke..color = ring.withValues(alpha: .7));
+      ..drawCircle(Offset(cx, cy), 92, stroke(1))
+      ..drawCircle(
+        Offset(cx, cy),
+        68,
+        Paint()..color = plate.withValues(alpha: .92),
+      )
+      ..drawCircle(Offset(cx, cy), 48, stroke(.7));
     final fill = Paint()..color = dot;
     canvas
       ..drawCircle(Offset(cx - 14, cy - 10), 13, fill)
@@ -533,7 +497,8 @@ class _PlatePainter extends CustomPainter {
       old.ring != ring ||
       old.plate != plate ||
       old.dot != dot ||
-      old.accent != accent;
+      old.accent != accent ||
+      old.inset != inset;
 }
 
 class _Header extends StatelessWidget {
@@ -553,11 +518,44 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 36px disc on a wash of the surface, inside a 44px tap area.
+    Widget round(IconData icon, String label, VoidCallback? onTap) =>
+        Semantics(
+          button: true,
+          enabled: onTap != null,
+          label: label,
+          child: ExcludeSemantics(
+            child: InkResponse(
+              onTap: onTap,
+              radius: 24,
+              child: SizedBox(
+                width: FitTrackSpacing.touchMin,
+                height: FitTrackSpacing.touchMin,
+                child: Center(
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: c.surface.withValues(alpha: 0.72),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 18,
+                      color: onTap == null ? c.muted : c.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         FitTrackSpacing.xl,
-        FitTrackSpacing.lg,
-        FitTrackSpacing.sm,
+        FitTrackSpacing.md,
+        FitTrackSpacing.cardPad,
         0,
       ),
       child: Row(
@@ -569,14 +567,22 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   DateFormat('EEEE, d MMMM').format(day),
-                  style: FitTrackText.label.copyWith(
-                    color: c.ink,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: FitTrackText.label.copyWith(color: c.ink),
                 ),
-                Text(
-                  context.t('nutrition:foodLog'),
-                  style: FitTrackText.statLg.copyWith(color: c.ink),
+                const SizedBox(height: 2),
+                Semantics(
+                  header: true,
+                  child: Text(
+                    context.t('nutrition:foodLog'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: (isDark
+                            ? FitTrackText.display
+                            : FitTrackText.macroStat)
+                        .copyWith(color: c.ink, height: 1.1),
+                  ),
                 ),
               ],
             ),
@@ -588,20 +594,15 @@ class _Header extends StatelessWidget {
               size: FitTrackButtonSize.sm,
               onPressed: onToday,
             ),
-          FitTrackIconButton(
-            icon: Icons.chevron_left,
-            semanticLabel: context.t('nutrition:previousDay'),
-            color: c.ink,
-            onPressed: onPrev,
+          round(
+            FitIcons.chevronLeft,
+            context.t('nutrition:previousDay'),
+            onPrev,
           ),
-          Opacity(
-            opacity: onNext == null ? .6 : 1,
-            child: FitTrackIconButton(
-              icon: Icons.chevron_right,
-              semanticLabel: context.t('nutrition:nextDay'),
-              color: onNext == null ? c.muted : c.ink,
-              onPressed: onNext,
-            ),
+          round(
+            FitIcons.chevronRight,
+            context.t('nutrition:nextDay'),
+            onNext,
           ),
         ],
       ),
@@ -623,68 +624,79 @@ class _NightStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
+    final radius = FitTrackRadius.hero(Theme.of(context).brightness);
     final left = (goals.calories - totals.calories).round();
     final pct = goals.calories > 0
         ? (totals.calories / goals.calories).clamp(0, 1).toDouble()
         : 0.0;
+    final soft = c.onAccent.withValues(alpha: 0.9);
     return SizedBox(
-      height: 150,
+      height: 122,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: FitTrackSpacing.lg),
+        padding:
+            const EdgeInsets.symmetric(horizontal: FitTrackSpacing.gutter),
         children: [
-          Container(
-            width: 156,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: c.accent,
-              borderRadius: BorderRadius.circular(FitTrackRadius.lg),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.t('nutrition:caloriesLeft'),
-                  style: FitTrackText.caption.copyWith(
-                    color: c.onAccent,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Semantics(
+            container: true,
+            label:
+                '${context.t('nutrition:caloriesLeft')}, ${left > 0 ? _n(left) : 0}',
+            child: ExcludeSemantics(
+              child: Container(
+                width: 156,
+                padding: const EdgeInsets.all(FitTrackSpacing.cardPad),
+                decoration: BoxDecoration(
+                  color: c.accent,
+                  borderRadius: BorderRadius.circular(radius),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  left > 0 ? _n(left) : '0',
-                  style: FitTrackText.statLg.copyWith(color: c.onAccent),
-                ),
-                Text(
-                  left > 0
-                      ? context.t(
-                          'nutrition:ofGoalKcal',
-                          args: {'goal': _n(goals.calories)},
-                        )
-                      : context.t('nutrition:goalReached'),
-                  style: FitTrackText.caption.copyWith(color: c.onAccent),
-                ),
-                Text(
-                  context.t(
-                    'nutrition:eatenKcal',
-                    args: {'kcal': _n(totals.calories)},
-                  ),
-                  style: FitTrackText.caption.copyWith(color: c.onAccent),
-                ),
-                const Spacer(),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: Stack(
-                    children: [
-                      Container(height: 5, color: c.onAccent.withValues(alpha: .3)),
-                      FractionallySizedBox(
-                        widthFactor: pct,
-                        child: Container(height: 5, color: c.onAccent),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.t('nutrition:caloriesLeft'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.caption.copyWith(
+                        color: soft,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      left > 0 ? _n(left) : '0',
+                      style:
+                          FitTrackText.macroStat.copyWith(color: c.onAccent),
+                    ),
+                    Text(
+                      left > 0
+                          ? context.t(
+                              'nutrition:ofGoalKcal',
+                              args: {'goal': _n(goals.calories)},
+                            )
+                          : context.t('nutrition:goalReached'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.caption.copyWith(color: soft),
+                    ),
+                    const Spacer(),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: 5,
+                            color: c.onAccent.withValues(alpha: .3),
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: pct,
+                            child: Container(height: 5, color: c.onAccent),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           for (final m in macros) ...[
@@ -692,7 +704,7 @@ class _NightStats extends StatelessWidget {
             SizedBox(
               width: 156,
               child: FitTrackCard(
-                padding: const EdgeInsets.all(14),
+                radius: radius,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -703,7 +715,9 @@ class _NightStats extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       '${m.value.round()} ${context.t('nutrition:unitG')}',
-                      style: FitTrackText.statLg.copyWith(color: c.ink),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.macroStat.copyWith(color: c.ink),
                     ),
                     Text(
                       context.t(
@@ -749,7 +763,16 @@ class _PearlSummary extends StatelessWidget {
     return Semantics(
       container: true,
       label: context.t('nutrition:dailyProgress'),
-      child: FitTrackCard(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            FitTrackRadius.hero(Theme.of(context).brightness),
+          ),
+          boxShadow: AppTheme.lift,
+        ),
+        child: FitTrackCard(
+        radius: FitTrackRadius.hero(Theme.of(context).brightness),
+        padding: const EdgeInsets.all(FitTrackSpacing.lg),
         child: Row(
           children: [
             FitTrackStatRing(
@@ -762,8 +785,9 @@ class _PearlSummary extends StatelessWidget {
                 children: [
                   Text(
                     left > 0 ? _n(left) : '0',
-                    style: FitTrackText.stat.copyWith(color: c.ink),
+                    style: FitTrackText.ringStat.copyWith(color: c.ink),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     left > 0
                         ? context.t('nutrition:kcalLeft')
@@ -801,6 +825,7 @@ class _PearlSummary extends StatelessWidget {
                                     ' / ${m.goal.round()} ${context.t('nutrition:unitG')}',
                                 style: FitTrackText.label.copyWith(
                                   color: c.muted,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -813,12 +838,14 @@ class _PearlSummary extends StatelessWidget {
                       progress: m.progress,
                       semanticLabel: m.label,
                     ),
-                    if (m != macros.last) const SizedBox(height: 10),
+                    if (m != macros.last)
+                      const SizedBox(height: FitTrackSpacing.md),
                   ],
                 ],
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -840,12 +867,13 @@ class _WeekList extends ConsumerWidget {
     final c = AppPalette.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.gutter,
         FitTrackSpacing.lg,
-        FitTrackSpacing.md,
-        FitTrackSpacing.lg,
+        FitTrackSpacing.gutter,
         0,
       ),
       child: FitTrackCard(
+        radius: FitTrackRadius.hero(Theme.of(context).brightness),
         padding: EdgeInsets.zero,
         child: Column(
           children: [
@@ -898,7 +926,7 @@ class _WeekList extends ConsumerWidget {
                           width: 92,
                           child: Text(
                             totals == null
-                                ? '—'
+                                ? '–'
                                 : '${_n(totals.calories)} ${context.t('nutrition:unitKcal')}',
                             textAlign: TextAlign.end,
                             style: FitTrackText.label.copyWith(
@@ -942,6 +970,7 @@ class _MicroCard extends StatelessWidget {
         ) /
         tracked.length;
     return FitTrackCard(
+      radius: FitTrackRadius.hero(Theme.of(context).brightness),
       padding: EdgeInsets.zero,
       child: Column(
         children: [
@@ -955,18 +984,25 @@ class _MicroCard extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    Icon(Icons.medication_outlined, color: c.ink),
-                    const SizedBox(width: 12),
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: c.accentSoft,
+                        shape: BoxShape.circle,
+                      ),
+                      child:
+                          Icon(FitIcons.supplement, size: 20, color: c.accent),
+                    ),
+                    const SizedBox(width: FitTrackSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             context.t('nutrition:vitamins'),
-                            style: FitTrackText.body.copyWith(
-                              color: c.ink,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style:
+                                FitTrackText.titleHeavy.copyWith(color: c.ink),
                           ),
                           Text(
                             context.t(
@@ -983,8 +1019,9 @@ class _MicroCard extends StatelessWidget {
                       ),
                     ),
                     Icon(
-                      expanded ? Icons.expand_less : Icons.expand_more,
-                      color: c.muted,
+                      expanded ? FitIcons.chevronUp : FitIcons.chevronDown,
+                      size: 18,
+                      color: c.ink,
                     ),
                   ],
                 ),
@@ -1065,35 +1102,43 @@ class _MealCard extends StatelessWidget {
     final kcal = items.fold<double>(0, (s, l) => s + (l.calories ?? 0));
     final protein = items.fold<double>(0, (s, l) => s + l.proteinG);
     final name = mealText(context, meal);
+    final radius = FitTrackRadius.hero(Theme.of(context).brightness);
     final addButton = FitTrackIconButton(
-      icon: Icons.add,
+      icon: FitIcons.add,
       semanticLabel: context.t('nutrition:addTo', args: {'meal': name}),
-      color: isDark ? c.accent : c.ink,
-      style: FitTrackIconButtonStyle.filled,
+      color: c.accent,
       onPressed: onAdd,
     );
     final header = isDark
         ? Container(
             height: 48,
             color: c.accentSoft,
-            padding: const EdgeInsetsDirectional.only(start: 16, end: 2),
+            padding: const EdgeInsetsDirectional.only(start: 16, end: 6),
             child: Row(
               children: [
                 Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      text: name,
-                      style: FitTrackText.body.copyWith(
+                  child: Semantics(
+                    header: true,
+                    child: Text.rich(
+                      TextSpan(
+                        text: name,
+                        children: [
+                          TextSpan(
+                            text:
+                                ' · ${_n(kcal)} ${context.t('nutrition:unitKcal')}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: c.accent.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FitTrackText.rowTitle.copyWith(
                         color: c.accent,
                         fontWeight: FontWeight.w800,
                       ),
-                      children: [
-                        TextSpan(
-                          text:
-                              ' · ${_n(kcal)} ${context.t('nutrition:unitKcal')}',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -1103,7 +1148,7 @@ class _MealCard extends StatelessWidget {
           )
         : Container(
             constraints: const BoxConstraints(minHeight: 64),
-            padding: const EdgeInsetsDirectional.only(start: 16, end: 2),
+            padding: const EdgeInsetsDirectional.only(start: 16, end: 6),
             child: Row(
               children: [
                 Container(
@@ -1111,18 +1156,18 @@ class _MealCard extends StatelessWidget {
                   height: 38,
                   decoration:
                       BoxDecoration(color: c.accentSoft, shape: BoxShape.circle),
-                  child: Icon(_mealIcon(meal), size: 20, color: c.ink),
+                  child: Icon(_mealIcon(meal), size: 20, color: c.accent),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: FitTrackSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        name,
-                        style: FitTrackText.titleLg.copyWith(
-                          color: c.ink,
-                          fontWeight: FontWeight.w800,
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          name,
+                          style: FitTrackText.section.copyWith(color: c.ink),
                         ),
                       ),
                       Text(
@@ -1137,7 +1182,7 @@ class _MealCard extends StatelessWidget {
                 ),
                 addButton,
                 FitTrackIconButton(
-                  icon: collapsed ? Icons.expand_more : Icons.expand_less,
+                  icon: collapsed ? FitIcons.chevronDown : FitIcons.chevronUp,
                   semanticLabel: context.t(
                     collapsed ? 'nutrition:expandMeal' : 'nutrition:collapseMeal',
                     args: {'meal': name},
@@ -1149,32 +1194,35 @@ class _MealCard extends StatelessWidget {
             ),
           );
     return FitTrackCard(
+      radius: radius,
       padding: EdgeInsets.zero,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg - 1),
-        child: Column(
-          children: [
-            header,
-            if (isDark || !collapsed)
-              for (final item in items)
-                Dismissible(
-                  key: ValueKey(item.id),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    padding: const EdgeInsets.only(right: 20),
-                    alignment: Alignment.centerRight,
-                    color: c.bad,
-                    child: Icon(Icons.delete_outline, color: c.bg),
+      child: Column(
+        children: [
+          header,
+          if (isDark || !collapsed)
+            for (var i = 0; i < items.length; i++)
+              Dismissible(
+                key: ValueKey(items[i].id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  padding: const EdgeInsetsDirectional.only(
+                    end: FitTrackSpacing.xl,
                   ),
-                  onDismissed: (_) => onDelete(item),
-                  child: _LogRow(
-                    item: item,
-                    thumb: isDark ? 36 : 40,
-                    onTap: () => onEdit(item),
-                  ),
+                  alignment: AlignmentDirectional.centerEnd,
+                  color: c.bad,
+                  child: Icon(FitIcons.delete, color: c.bg),
                 ),
-          ],
-        ),
+                onDismissed: (_) => onDelete(items[i]),
+                child: _LogRow(
+                  item: items[i],
+                  meal: meal,
+                  thumb: isDark ? 36 : 40,
+                  // The Night header is tinted, so the first row needs no rule.
+                  divider: !(isDark && i == 0),
+                  onTap: () => onEdit(items[i]),
+                ),
+              ),
+        ],
       ),
     );
   }
@@ -1183,11 +1231,15 @@ class _MealCard extends StatelessWidget {
 class _LogRow extends StatelessWidget {
   const _LogRow({
     required this.item,
+    required this.meal,
     required this.thumb,
+    required this.divider,
     required this.onTap,
   });
   final NutritionLog item;
+  final String meal;
   final double thumb;
+  final bool divider;
   final VoidCallback onTap;
 
   @override
@@ -1199,24 +1251,29 @@ class _LogRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           constraints: const BoxConstraints(minHeight: 60),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration:
-              BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+          padding: const EdgeInsets.symmetric(
+            horizontal: FitTrackSpacing.lg,
+            vertical: FitTrackSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            border: divider ? Border(top: BorderSide(color: c.line)) : null,
+          ),
           child: Row(
             children: [
               Container(
                 width: thumb,
                 height: thumb,
                 decoration: BoxDecoration(
-                  color: c.line,
-                  borderRadius: BorderRadius.circular(FitTrackRadius.md),
+                  color: c.accentSoft,
+                  borderRadius: BorderRadius.circular(thumb * 0.28),
                 ),
-                child: Icon(Icons.restaurant, size: 18, color: c.muted),
+                child: Icon(_mealIcon(meal), size: thumb * 0.5, color: c.accent),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: FitTrackSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       item.foodName,
@@ -1235,19 +1292,24 @@ class _LogRow extends StatelessWidget {
                           'protein': item.proteinG.toStringAsFixed(1),
                         },
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: FitTrackText.caption.copyWith(color: c.muted),
                     ),
                   ],
                 ),
               ),
-              if (item.calories != null)
+              if (item.calories != null) ...[
+                const SizedBox(width: FitTrackSpacing.md),
                 Text(
                   '${item.calories!.round()}',
                   style: FitTrackText.title.copyWith(
                     color: c.ink,
                     fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -1283,77 +1345,89 @@ class _EmptyMeal extends StatelessWidget {
             },
           )
         : null;
-    return FitTrackCard(
-      onTap: onAdd,
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 12, 8),
-      child: Row(
-        children: [
-          if (!isDark) ...[
-            Container(
-              width: 38,
-              height: 38,
-              decoration:
-                  BoxDecoration(color: c.accentSoft, shape: BoxShape.circle),
-              child: Icon(_mealIcon(meal), size: 20, color: c.ink),
-            ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: FitTrackText.title.copyWith(
-                    color: c.ink,
-                    fontWeight: FontWeight.w800,
+    final radius = FitTrackRadius.hero(Theme.of(context).brightness);
+    final shape = BorderRadius.circular(radius);
+    return Semantics(
+      button: true,
+      label: context.t('nutrition:addTo', args: {'meal': name}),
+      child: ExcludeSemantics(
+        child: Material(
+          color: c.surface,
+          borderRadius: shape,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onAdd,
+            child: FitTrackDashedBorder(
+              color: c.line,
+              radius: radius,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: isDark ? 68 : 72),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 12, 8),
+                  child: Row(
+                    children: [
+                      if (!isDark) ...[
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: c.accentSoft,
+                            shape: BoxShape.circle,
+                          ),
+                          child:
+                              Icon(_mealIcon(meal), size: 20, color: c.accent),
+                        ),
+                        const SizedBox(width: FitTrackSpacing.md),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              name,
+                              style: (isDark
+                                      ? FitTrackText.rowTitle
+                                      : FitTrackText.section)
+                                  .copyWith(
+                                color: c.ink,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (plan != null)
+                              Text(
+                                plan,
+                                style: FitTrackText.caption
+                                    .copyWith(color: c.muted),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: FitTrackSpacing.md),
+                      Container(
+                        height: FitTrackSpacing.touchMin,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: c.accent,
+                          borderRadius:
+                              BorderRadius.circular(FitTrackRadius.pill),
+                        ),
+                        child: Text(
+                          context.t('nutrition:addShort'),
+                          style: FitTrackText.label.copyWith(
+                            color: c.onAccent,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (plan != null)
-                  Text(plan, style: FitTrackText.caption.copyWith(color: c.muted)),
-              ],
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          FitTrackButton(
-            label: context.t('nutrition:addShort'),
-            size: FitTrackButtonSize.pill,
-            onPressed: onAdd,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Empty extends StatelessWidget {
-  const _Empty({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    return FitTrackCard(
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-      child: Column(
-        children: [
-          Icon(Icons.restaurant, size: 32, color: c.muted),
-          const SizedBox(height: 10),
-          Text(
-            context.t('nutrition:nothingLogged'),
-            style: FitTrackText.title.copyWith(
-              color: c.ink,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.t('nutrition:emptyDesc'),
-            textAlign: TextAlign.center,
-            style: FitTrackText.caption.copyWith(color: c.muted),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1367,7 +1441,12 @@ class _Info extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppPalette.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        FitTrackSpacing.gutter,
+        FitTrackSpacing.gap,
+        FitTrackSpacing.gutter,
+        0,
+      ),
       child: FitTrackCard(
         padding: const EdgeInsets.all(FitTrackSpacing.xl),
         child: Text(

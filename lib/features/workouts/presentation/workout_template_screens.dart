@@ -16,6 +16,7 @@ import '../data/workout_splits_data.dart';
 import '../domain/split_models.dart';
 import 'workout_screen.dart' show allExercisesProvider, presetsProvider;
 import 'workout_secondary_screens.dart' show DetailHeader;
+import '../../../core/widgets/fittrack_icons.dart';
 
 /// A planned exercise matched against the exercise table.
 class ResolvedExercise {
@@ -336,7 +337,7 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
                       const SizedBox(height: FitTrackSpacing.xs),
                       FitTrackButton(
                         label: context.t('workout:spStart'),
-                        icon: Icons.play_arrow,
+                        icon: FitIcons.play,
                         size: FitTrackButtonSize.lg,
                         fullWidth: true,
                         loading: _busy,
@@ -345,7 +346,7 @@ class _WorkoutSplitScreenState extends ConsumerState<WorkoutSplitScreen> {
                       const SizedBox(height: FitTrackSpacing.sm + 2),
                       FitTrackButton(
                         label: context.t('workout:spCopy'),
-                        icon: Icons.bookmark_add_outlined,
+                        icon: FitIcons.save,
                         variant: FitTrackButtonVariant.secondary,
                         size: FitTrackButtonSize.lg,
                         fullWidth: true,
@@ -440,7 +441,7 @@ class _DayRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (selected) Icon(Icons.check, size: 18, color: c.accent),
+                if (selected) Icon(FitIcons.check, size: 18, color: c.accent),
               ],
             ),
           ),
@@ -482,7 +483,7 @@ class _ExerciseTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
         border: Border.all(color: item.isSwapped ? c.accent : c.line),
       ),
       child: Row(
@@ -513,7 +514,7 @@ class _ExerciseTile extends StatelessWidget {
           ),
           if (onSwap != null)
             FitTrackIconButton(
-              icon: Icons.swap_horiz,
+              icon: FitIcons.swap,
               color: c.accent,
               semanticLabel: context.t('workout:spSwap'),
               onPressed: onSwap,
@@ -713,7 +714,7 @@ class WorkoutPresetScreen extends ConsumerWidget {
       message: context.t('workout:reDeleteMsg', args: {'name': preset.name}),
       confirmLabel: context.t('common:delete'),
       cancelLabel: context.t('common:cancel'),
-      icon: Icons.delete_outline,
+      icon: FitIcons.delete,
       destructive: true,
     );
     if (!ok) {
@@ -769,14 +770,14 @@ class WorkoutPresetScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       FitTrackIconButton(
-                        icon: Icons.edit_outlined,
+                        icon: FitIcons.edit,
                         color: c.ink,
                         semanticLabel: context.t('workout:reEdit'),
                         onPressed: () =>
                             context.push('/workout/preset-edit/${current.id}'),
                       ),
                       FitTrackIconButton(
-                        icon: Icons.delete_outline,
+                        icon: FitIcons.delete,
                         color: c.textBad,
                         semanticLabel: context.t('common:delete'),
                         onPressed: () => _delete(context, ref, current),
@@ -813,7 +814,7 @@ class WorkoutPresetScreen extends ConsumerWidget {
                       const SizedBox(height: FitTrackSpacing.xs),
                       FitTrackButton(
                         label: context.t('workout:spStart'),
-                        icon: Icons.play_arrow,
+                        icon: FitIcons.play,
                         size: FitTrackButtonSize.lg,
                         fullWidth: true,
                         onPressed: () => _start(context, ref, current),
@@ -1024,7 +1025,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
       message: context.t('workout:reDeleteMsg', args: {'name': _name.text}),
       confirmLabel: context.t('common:delete'),
       cancelLabel: context.t('common:cancel'),
-      icon: Icons.delete_outline,
+      icon: FitIcons.delete,
       destructive: true,
     );
     if (!ok) {
@@ -1134,7 +1135,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
           const SizedBox(height: FitTrackSpacing.md),
           FitTrackButton(
             label: context.t('workout:reAdd'),
-            icon: Icons.add,
+            icon: FitIcons.add,
             variant: FitTrackButtonVariant.secondary,
             size: FitTrackButtonSize.lg,
             fullWidth: true,
@@ -1165,7 +1166,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
                   ),
                 ),
                 _StepperButton(
-                  icon: Icons.remove,
+                  icon: FitIcons.remove,
                   label: context.t('workout:reRestDown'),
                   onTap: _rest > 15 ? () => unawaited(_setRest(_rest - 15)) : null,
                 ),
@@ -1184,7 +1185,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
                   ),
                 ),
                 _StepperButton(
-                  icon: Icons.add,
+                  icon: FitIcons.add,
                   label: context.t('workout:reRestUp'),
                   onTap: _rest < 300 ? () => unawaited(_setRest(_rest + 15)) : null,
                 ),
@@ -1204,7 +1205,7 @@ class _PresetEditorScreenState extends ConsumerState<PresetEditorScreen> {
         scrolledUnderElevation: 0,
         shape: Border(bottom: BorderSide(color: c.line)),
         leading: FitTrackIconButton(
-          icon: Icons.arrow_back,
+          icon: FitIcons.back,
           color: c.ink,
           semanticLabel: context.t('settings:backLabel'),
           onPressed: () => context.pop(),
@@ -1328,7 +1329,7 @@ class _EditorRow extends StatelessWidget {
             ),
           ),
           _StepperButton(
-            icon: Icons.remove,
+            icon: FitIcons.remove,
             label: context.t('workout:reSetsDown', args: {'name': name}),
             onTap: item.defaultSets > 1 ? () => onSets(item.defaultSets - 1) : null,
           ),
@@ -1347,12 +1348,12 @@ class _EditorRow extends StatelessWidget {
             ),
           ),
           _StepperButton(
-            icon: Icons.add,
+            icon: FitIcons.add,
             label: context.t('workout:reSetsUp', args: {'name': name}),
             onTap: () => onSets(item.defaultSets + 1),
           ),
           FitTrackIconButton(
-            icon: Icons.close,
+            icon: FitIcons.close,
             color: c.textBad,
             semanticLabel: context.t('workout:reRemove', args: {'name': name}),
             onPressed: onRemove,

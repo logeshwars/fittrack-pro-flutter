@@ -109,5 +109,9 @@
   "lbLoadFailed": "Unable to load the leaderboard.",
   "lbRowMeta": "{{volume}} kg · {{days}} days",
   "lbUnknown": "Unknown",
-  "lbRankLabel": "Rank {{n}}"
+  "lbRankLabel": "Rank {{n}}",
+  "unitDays": "days",
+  "last13Weeks": "Last 13 weeks",
+  "sleepTrackingTitle": "Sleep tracking",
+  "sleepTrackingSub": "Log last night and see your 7-night trend"
 }

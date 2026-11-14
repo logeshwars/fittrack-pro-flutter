@@ -11,6 +11,7 @@ import '../../../core/widgets/fittrack_ui.dart';
 import '../data/badges_data.dart';
 import '../domain/badge_definition.dart';
 import '../domain/badge_progress.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class AchievementsData {
   const AchievementsData({
@@ -99,7 +100,7 @@ class _GamificationScreenState extends ConsumerState<GamificationScreen> {
               child: Row(
                 children: [
                   FitTrackIconButton(
-                    icon: Icons.arrow_back,
+                    icon: FitIcons.back,
                     semanticLabel: context.t('settings:backLabel'),
                     onPressed: () => context.pop(),
                   ),
@@ -303,7 +304,7 @@ class _Body extends StatelessWidget {
           const SizedBox(height: FitTrackSpacing.md),
           FitTrackButton(
             label: context.t('profile:monthlyLeaderboard'),
-            icon: Icons.leaderboard_outlined,
+            icon: FitIcons.leaderboard,
             variant: FitTrackButtonVariant.secondary,
             fullWidth: true,
             onPressed: () => context.push('/leaderboard'),
@@ -473,13 +474,13 @@ class _BadgeTile extends StatelessWidget {
                       opacity: earned ? 1 : .45,
                       child: Text(
                         badge.emoji,
-                        style: const TextStyle(fontSize: 18),
+                        style: FitTrackText.emoji,
                       ),
                     ),
                   ),
                   const Spacer(),
                   if (!earned) ...[
-                    Icon(Icons.lock_outline, size: 14, color: c.muted),
+                    Icon(FitIcons.lock, size: 14, color: c.muted),
                     const SizedBox(width: 6),
                   ],
                   Text(
@@ -555,7 +556,7 @@ class _Message extends StatelessWidget {
               const SizedBox(height: FitTrackSpacing.md),
               FitTrackButton(
                 label: action!,
-                icon: Icons.refresh,
+                icon: FitIcons.refresh,
                 variant: FitTrackButtonVariant.secondary,
                 onPressed: onAction,
               ),

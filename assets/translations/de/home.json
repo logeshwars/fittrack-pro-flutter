@@ -75,5 +75,8 @@
   "xpReward": "+{{xp}} XP",
   "goals": "Ziele",
   "setsCount": "{{count}} Sätze",
-  "starsLabel": "{{count}} von 5"
+  "starsLabel": "{{count}} von 5",
+  "nextLabel": "Als Nächstes",
+  "unitG": "g",
+  "stepsNone": "Schritte nicht verfügbar"
 }

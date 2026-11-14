@@ -109,5 +109,9 @@
   "lbLoadFailed": "ランキングを読み込めませんでした。",
   "lbRowMeta": "{{volume}} kg · {{days}}日",
   "lbUnknown": "不明",
-  "lbRankLabel": "{{n}}位"
+  "lbRankLabel": "{{n}}位",
+  "unitDays": "日",
+  "last13Weeks": "過去13週間",
+  "sleepTrackingTitle": "睡眠の記録",
+  "sleepTrackingSub": "昨夜を記録して7日間の傾向を確認"
 }

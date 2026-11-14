@@ -87,6 +87,7 @@ class SessionExercise {
     required this.muscleGroup,
     this.logType = 'weight_reps',
     this.sets = const [],
+    this.plannedSets = 0,
   });
 
   final String exerciseId;
@@ -97,14 +98,25 @@ class SessionExercise {
   final String logType;
   final List<SessionSet> sets;
 
+  /// How many sets the routine asks for, so the card can show "2 of 4" and
+  /// lay out the rows still to come. 0 means open-ended: the exercise was
+  /// added by hand, with no plan behind it.
+  final int plannedSets;
+
   int get nextSetNumber => sets.isEmpty ? 1 : sets.last.setNumber + 1;
 
-  SessionExercise copyWith({List<SessionSet>? sets}) => SessionExercise(
+  /// Rows the card draws: every planned set, and any logged past the plan.
+  int get rowCount =>
+      plannedSets > sets.length ? plannedSets : sets.length + 1;
+
+  SessionExercise copyWith({List<SessionSet>? sets, int? plannedSets}) =>
+      SessionExercise(
         exerciseId: exerciseId,
         name: name,
         muscleGroup: muscleGroup,
         logType: logType,
         sets: sets ?? this.sets,
+        plannedSets: plannedSets ?? this.plannedSets,
       );
 
   Map<String, dynamic> toJson() => {
@@ -112,6 +124,7 @@ class SessionExercise {
         'name': name,
         'muscleGroup': muscleGroup,
         'logType': logType,
+        'plannedSets': plannedSets,
         'sets': [for (final s in sets) s.toJson()],
       };
 
@@ -121,6 +134,7 @@ class SessionExercise {
         name: json['name'] as String,
         muscleGroup: (json['muscleGroup'] as String?) ?? '',
         logType: (json['logType'] as String?) ?? 'weight_reps',
+        plannedSets: (json['plannedSets'] as num?)?.toInt() ?? 0,
         sets: [
           for (final s in (json['sets'] as List?) ?? const [])
             SessionSet.fromJson(Map<String, dynamic>.from(s as Map)),

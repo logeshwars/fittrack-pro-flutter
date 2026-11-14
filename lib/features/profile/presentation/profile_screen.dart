@@ -13,6 +13,7 @@ import '../../gamification/domain/badge_definition.dart';
 import '../../gamification/presentation/gamification_screen.dart';
 import '../../gamification/presentation/leaderboard_screen.dart';
 import '../../subscription/application/subscription_controller.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 const _knownTiers = {'bronze', 'silver', 'gold', 'elite', 'legend'};
 
@@ -74,7 +75,7 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           FitTrackIconButton(
-            icon: Icons.arrow_back,
+            icon: FitIcons.back,
             color: c.ink,
             semanticLabel: context.t('settings:backLabel'),
             onPressed: onBack,
@@ -93,7 +94,7 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           FitTrackIconButton(
-            icon: Icons.settings_outlined,
+            icon: FitIcons.settings,
             color: c.ink,
             semanticLabel: context.t('profile:settingsLabel'),
             onPressed: onSettings,
@@ -228,33 +229,33 @@ class _ProfileBody extends ConsumerWidget {
           child: Column(
             children: [
               _ListRow(
-                icon: Icons.monitor_heart_outlined,
+                icon: FitIcons.health,
                 title: context.t('profile:personalSettings'),
                 first: true,
                 onTap: () => context.push('/settings/personal'),
               ),
               _ListRow(
-                icon: Icons.notifications_none,
+                icon: FitIcons.bell,
                 title: context.t('profile:supplementAlerts'),
                 onTap: () => context.push('/settings/alerts'),
               ),
               _ListRow(
-                icon: Icons.local_fire_department_outlined,
+                icon: FitIcons.calories,
                 title: context.t('profile:dailyGoals'),
                 onTap: () => context.push('/settings/goals'),
               ),
               _ListRow(
-                icon: Icons.palette_outlined,
+                icon: FitIcons.palette,
                 title: context.t('profile:appearance'),
                 onTap: () => context.push('/settings/theme'),
               ),
               _ListRow(
-                icon: Icons.settings_outlined,
+                icon: FitIcons.settings,
                 title: context.t('profile:appSettings'),
                 onTap: () => context.push('/settings/app-settings'),
               ),
               _ListRow(
-                icon: Icons.emoji_events_outlined,
+                icon: FitIcons.trophy,
                 title: context.t('profile:achievementsRow'),
                 onTap: () => context.push('/achievements'),
               ),
@@ -446,7 +447,7 @@ class _StatGrid extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.surface,
         border: Border.all(color: c.line),
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -715,7 +716,7 @@ class _ListRow extends StatelessWidget {
                     style: FitTrackText.label.copyWith(color: c.accentText),
                   )
                 else
-                  Icon(Icons.chevron_right, size: 20, color: c.faint),
+                  Icon(FitIcons.chevronRight, size: 20, color: c.faint),
               ],
             ),
           ),

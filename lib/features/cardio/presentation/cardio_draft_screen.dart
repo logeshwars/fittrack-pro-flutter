@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/local/local_draft_store.dart';
 import '../../../core/theme/app_colors.dart';
 import '../domain/cardio_draft.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class CardioDraftScreen extends StatefulWidget {
   const CardioDraftScreen({this.activityType, super.key});
@@ -24,17 +25,17 @@ class _CardioDraftScreenState extends State<CardioDraftScreen> {
   String? _error;
 
   static const _types = <_CardioType>[
-    _CardioType('running', 'Run', Icons.directions_run, Color(0xFFFF6B35),
+    _CardioType('running', 'Run', FitIcons.run, Color(0xFFFF6B35),
         '+50 XP for 5km'),
-    _CardioType('cycling', 'Cycle', Icons.directions_bike, Color(0xFF4FC3F7),
+    _CardioType('cycling', 'Cycle', FitIcons.cycle, Color(0xFF4FC3F7),
         '+30 XP base'),
-    _CardioType('walking', 'Walk', Icons.directions_walk, Color(0xFF81C784),
+    _CardioType('walking', 'Walk', FitIcons.walk, Color(0xFF81C784),
         '+20 XP for 30min'),
     _CardioType(
-        'swimming', 'Swim', Icons.pool, Color(0xFF4DD0E1), '+30 XP base'),
-    _CardioType('hiit', 'HIIT', Icons.local_fire_department, Colors.white,
+        'swimming', 'Swim', FitIcons.swim, Color(0xFF4DD0E1), '+30 XP base'),
+    _CardioType('hiit', 'HIIT', FitIcons.streakFilled, Colors.white,
         '+50 XP for 30min'),
-    _CardioType('other', 'Other', Icons.bolt, Color(0xFF9B9DAC), '+30 XP base'),
+    _CardioType('other', 'Other', FitIcons.xp, Color(0xFF9B9DAC), '+30 XP base'),
   ];
 
   @override
@@ -315,7 +316,7 @@ class _CardioDraftScreenState extends State<CardioDraftScreen> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _store == null ? null : _add,
-                  icon: const Icon(Icons.check_circle_outline),
+                  icon: const Icon(FitIcons.checkCircle),
                   label: const Text('SAVE SESSION LOCALLY'),
                   style: FilledButton.styleFrom(
                     backgroundColor: colors.accent,
@@ -401,7 +402,7 @@ class _Header extends StatelessWidget {
             onTap: onBack,
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: Icon(Icons.arrow_back, size: 20, color: colors.text),
+              child: Icon(FitIcons.back, size: 20, color: colors.text),
             ),
           ),
           const SizedBox(width: 8),
@@ -598,7 +599,7 @@ class _SavedSession extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.directions_run,
+            child: const Icon(FitIcons.run,
                 size: 20, color: AppColors.cardio),
           ),
           const SizedBox(width: 12),

@@ -9,10 +9,12 @@ import '../../../core/l10n/language_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/fittrack_tokens.dart';
 import '../../../core/widgets/fittrack_components.dart';
+import '../../../core/widgets/fittrack_ui.dart';
 import '../data/preset_service.dart';
 import '../domain/workout_models.dart';
 import 'workout_screen.dart' show allExercisesProvider, workoutHistoryProvider;
 import 'workout_template_screens.dart' show startSessionFor;
+import '../../../core/widgets/fittrack_icons.dart';
 
 final _workoutDetailProvider =
     FutureProvider.autoDispose.family<Workout?, String>((ref, id) async {
@@ -139,7 +141,7 @@ class _WorkoutDetail extends ConsumerWidget {
       message: context.t('workout:sdDeleteMsg'),
       confirmLabel: context.t('common:delete'),
       cancelLabel: context.t('common:cancel'),
-      icon: Icons.delete_outline,
+      icon: FitIcons.delete,
       destructive: true,
     );
     if (!ok) {
@@ -230,7 +232,7 @@ class _WorkoutDetail extends ConsumerWidget {
           onBack: () => context.pop(),
           trailing: PopupMenuButton<String>(
             tooltip: context.t('workout:sdMore'),
-            icon: Icon(Icons.more_vert, color: c.ink),
+            icon: Icon(FitIcons.more, color: c.ink),
             color: c.surface,
             onSelected: (value) {
               if (value == 'rename') {
@@ -351,6 +353,8 @@ class _WorkoutDetail extends ConsumerWidget {
 }
 
 /// Shared back-arrow header used by the workout detail screens.
+/// Pushed-screen header. Kept as a name so older call sites compile; the
+/// look comes from [FitTrackTopBar].
 class DetailHeader extends StatelessWidget {
   const DetailHeader({
     required this.title,
@@ -366,55 +370,13 @@ class DetailHeader extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) {
-    final c = AppPalette.of(context);
-    return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(
-        FitTrackSpacing.xs,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.sm,
-        FitTrackSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: c.header,
-        border: Border(bottom: BorderSide(color: c.line)),
-      ),
-      child: Row(
-        children: [
-          FitTrackIconButton(
-            icon: Icons.arrow_back,
-            color: c.ink,
-            semanticLabel: context.t('settings:backLabel'),
-            onPressed: onBack,
-          ),
-          const SizedBox(width: 2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    title,
-                    style: FitTrackText.titleLg.copyWith(
-                      color: c.ink,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  style: FitTrackText.label.copyWith(color: c.muted),
-                ),
-              ],
-            ),
-          ),
-          if (trailing != null) trailing!,
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => FitTrackTopBar(
+        title: title,
+        subtitle: subtitle.isEmpty ? null : subtitle,
+        backLabel: context.t('settings:backLabel'),
+        onBack: onBack,
+        trailing: trailing,
+      );
 }
 
 class _CompleteCard extends StatelessWidget {
@@ -433,7 +395,7 @@ class _CompleteCard extends StatelessWidget {
           padding: const EdgeInsets.all(FitTrackSpacing.md + 2),
           decoration: BoxDecoration(
             color: c.ok,
-            borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+            borderRadius: BorderRadius.circular(FitTrackRadius.card),
             border: Border.all(color: c.ok),
           ),
           child: Column(
@@ -676,7 +638,7 @@ class _ExerciseHistory extends StatelessWidget {
                 FitTrackBadge(
                   label: context.t('workout:prBadge'),
                   tone: FitTrackBadgeTone.ok,
-                  icon: Icons.emoji_events_outlined,
+                  icon: FitIcons.trophy,
                 ),
             ],
           ),
@@ -711,7 +673,7 @@ class _Missing extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.fitness_center, size: 48, color: c.lineStrong),
+            Icon(FitIcons.workout, size: 48, color: c.lineStrong),
             const SizedBox(height: FitTrackSpacing.md),
             Text(
               context.t('workout:sdNotFound'),

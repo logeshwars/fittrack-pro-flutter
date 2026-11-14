@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../data/workout_draft_store.dart';
 import '../domain/workout_draft.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class WorkoutDraftScreen extends StatefulWidget {
   const WorkoutDraftScreen({super.key});
@@ -174,7 +175,7 @@ class _WorkoutDraftScreenState extends State<WorkoutDraftScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: OutlinedButton.icon(
                       onPressed: _discard,
-                      icon: const Icon(Icons.delete_outline, size: 18),
+                      icon: const Icon(FitIcons.delete, size: 18),
                       label: const Text('Discard local workout'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colors.muted,
@@ -256,7 +257,7 @@ class _WorkoutHeader extends StatelessWidget {
                 border: Border.all(color: colors.border2),
               ),
               alignment: Alignment.center,
-              child: Icon(Icons.arrow_back, size: 18, color: colors.text),
+              child: Icon(FitIcons.back, size: 18, color: colors.text),
             ),
           ),
           const SizedBox(width: 12),
@@ -277,7 +278,7 @@ class _WorkoutHeader extends StatelessWidget {
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Icon(Icons.schedule, size: 11, color: colors.accent),
+                    Icon(FitIcons.clock, size: 11, color: colors.accent),
                     const SizedBox(width: 4),
                     Text(
                       timer,
@@ -444,7 +445,7 @@ class _SetEntryCard extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(
-                  Icons.fitness_center,
+                  FitIcons.workout,
                   size: 18,
                   color: AppColors.workout,
                 ),
@@ -470,7 +471,7 @@ class _SetEntryCard extends StatelessWidget {
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
                     hintText: 'Exercise name',
-                    prefixIcon: Icon(Icons.search, size: 18),
+                    prefixIcon: Icon(FitIcons.search, size: 18),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -513,7 +514,7 @@ class _SetEntryCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Icon(Icons.check, size: 22),
+                        child: const Icon(FitIcons.check, size: 22),
                       ),
                     ),
                   ],
@@ -701,7 +702,7 @@ class _SetRow extends StatelessWidget {
               padding: EdgeInsets.zero,
               visualDensity: VisualDensity.compact,
               icon: Icon(
-                Icons.close,
+                FitIcons.close,
                 size: 16,
                 color: colors.faint,
               ),
@@ -729,7 +730,7 @@ class _EmptyExerciseState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.fitness_center, size: 40, color: colors.border2),
+          Icon(FitIcons.workout, size: 40, color: colors.border2),
           const SizedBox(height: 10),
           Text(
             'No sets recorded',

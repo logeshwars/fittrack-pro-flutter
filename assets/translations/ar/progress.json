@@ -109,5 +109,9 @@
   "lbLoadFailed": "تعذّر تحميل لوحة المتصدرين.",
   "lbRowMeta": "{{volume}} كغ · {{days}} أيام",
   "lbUnknown": "غير معروف",
-  "lbRankLabel": "المرتبة {{n}}"
+  "lbRankLabel": "المرتبة {{n}}",
+  "unitDays": "أيام",
+  "last13Weeks": "آخر 13 أسبوعًا",
+  "sleepTrackingTitle": "تتبع النوم",
+  "sleepTrackingSub": "سجّل ليلة أمس وشاهد اتجاه 7 ليالٍ"
 }

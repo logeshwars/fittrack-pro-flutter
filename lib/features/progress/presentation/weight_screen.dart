@@ -13,6 +13,7 @@ import '../../../core/widgets/fittrack_components.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../../settings/data/goal_targets.dart';
 import '../domain/progress_models.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 final weightHistoryProvider =
     FutureProvider.autoDispose<List<WeightLog>>((ref) async {
@@ -146,7 +147,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
         scrolledUnderElevation: 0,
         shape: Border(bottom: BorderSide(color: c.line)),
         leading: FitTrackIconButton(
-          icon: Icons.arrow_back,
+          icon: FitIcons.back,
           color: c.ink,
           semanticLabel: context.t('settings:backLabel'),
           onPressed: () => context.pop(),
@@ -284,7 +285,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                             child: FitTrackButton(
                               label: DateFormat('EEE, MMM d').format(_date),
                               variant: FitTrackButtonVariant.secondary,
-                              icon: Icons.event,
+                              icon: FitIcons.calendar,
                               fullWidth: true,
                               onPressed: _pickDate,
                             ),
@@ -356,7 +357,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
                             ),
                             alignment: AlignmentDirectional.centerEnd,
                             child: Icon(
-                              Icons.delete_outline,
+                              FitIcons.delete,
                               semanticLabel: context.t('common:wtDelete'),
                               color: c.accentText,
                             ),
@@ -462,7 +463,7 @@ class _StatStrip extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: BorderRadius.circular(FitTrackRadius.lg),
+        borderRadius: BorderRadius.circular(FitTrackRadius.card),
         border: Border.all(color: c.line),
       ),
       child: Row(

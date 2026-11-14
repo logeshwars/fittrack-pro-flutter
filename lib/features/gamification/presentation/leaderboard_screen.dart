@@ -12,6 +12,7 @@ import '../../../core/widgets/fittrack_components.dart';
 import '../../../core/widgets/fittrack_ui.dart';
 import '../data/gamification_service.dart';
 import '../domain/badge_progress.dart' show monthlyTotals;
+import '../../../core/widgets/fittrack_icons.dart';
 
 class LeaderboardData {
   const LeaderboardData({required this.entries, required this.myId});
@@ -104,7 +105,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   args: {'days': days},
                 ),
                 trailing: FitTrackIconButton(
-                  icon: Icons.close,
+                  icon: FitIcons.close,
                   semanticLabel: context.t('common:close'),
                   onPressed: () => context.pop(),
                 ),
@@ -145,7 +146,7 @@ class LeaderboardScreen extends ConsumerWidget {
                       const SizedBox(height: FitTrackSpacing.md),
                       FitTrackButton(
                         label: context.t('common:retry'),
-                        icon: Icons.refresh,
+                        icon: FitIcons.refresh,
                         variant: FitTrackButtonVariant.secondary,
                         onPressed: () => ref.invalidate(leaderboardProvider),
                       ),
@@ -184,7 +185,7 @@ class LeaderboardScreen extends ConsumerWidget {
                           padding: EdgeInsets.zero,
                           child: ClipRRect(
                             borderRadius:
-                                BorderRadius.circular(FitTrackRadius.lg - 1),
+                                BorderRadius.circular(FitTrackRadius.card - 1),
                             child: Column(
                               children: [
                                 const _TableHeader(),

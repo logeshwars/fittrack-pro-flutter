@@ -11,8 +11,7 @@ void main() {
     for (var index = 0; index < 5; index++) {
       expect(find.byKey(Key('fittrack-tab-$index')), findsOneWidget);
     }
-    // The dashboard restyle replaced the old "Today's Progress" header.
-    // "Quick actions" is shown in both Night and Pearl.
-    expect(find.text('QUICK ACTIONS'), findsOneWidget);
+// Shown on the Today screen in both Night and Pearl.
+    expect(find.text('This week'), findsOneWidget);
   });
 }

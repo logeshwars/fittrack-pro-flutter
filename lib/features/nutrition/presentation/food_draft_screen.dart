@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../data/food_draft_store.dart';
 import '../domain/food_draft.dart';
+import '../../../core/widgets/fittrack_icons.dart';
 
 class FoodDraftScreen extends StatefulWidget {
   const FoodDraftScreen({super.key});
@@ -257,7 +258,7 @@ class _FoodDraftScreenState extends State<FoodDraftScreen> {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: _store == null ? null : _add,
-                      icon: const Icon(Icons.check_circle_outline, size: 18),
+                      icon: const Icon(FitIcons.checkCircle, size: 18),
                       label: const Text('LOG FOOD'),
                       style: FilledButton.styleFrom(
                         backgroundColor: colors.accent,
@@ -369,7 +370,7 @@ class _Header extends StatelessWidget {
                 border: Border.all(color: colors.border2),
               ),
               alignment: Alignment.center,
-              child: Icon(Icons.arrow_back, size: 18, color: colors.text),
+              child: Icon(FitIcons.back, size: 18, color: colors.text),
             ),
           ),
           const SizedBox(width: 12),
@@ -587,7 +588,7 @@ class _DraftFoodRow extends StatelessWidget {
           ),
           IconButton(
             onPressed: onRemove,
-            icon: Icon(Icons.close, size: 17, color: colors.faint),
+            icon: Icon(FitIcons.close, size: 17, color: colors.faint),
           ),
         ],
       ),
